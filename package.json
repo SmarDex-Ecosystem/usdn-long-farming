@@ -11,7 +11,6 @@
     "node": ">=20.0.0"
   },
   "license": "BUSL-1.1",
-  "dockerize": false,
   "scripts": {
     "clean": "rm -rf dist && rm -rf node_modules && rm -rf .coverage && rm -rf out && rm -rf dependencies && forge clean && npm i && forge soldeer install",
     "cov": "forge build --skip .sol && forge coverage --no-match-test \"(FFI|Fork|Fuzz|invariant)\" --no-match-contract Fork -vvv --offline",
