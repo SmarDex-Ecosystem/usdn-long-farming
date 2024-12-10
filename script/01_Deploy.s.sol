@@ -2,21 +2,17 @@
 pragma solidity 0.8.28;
 
 import { Script } from "forge-std/Script.sol";
-import { Contract } from "src/Contract.sol";
+import { UsdnLongStaking } from "../src/usdnLongStaking/UsdnLongStaking.sol";
 
-/**
- * @title DeployScript
- * @dev This script is a deploy script template that creates a new Contract instance
- */
-contract Deploy is Script {
+contract DeployUsdnLongStaking is Script {
     address _deployerAddress;
 
-    function run() external returns (Contract Contract_) {
+    function run() external returns (UsdnLongStaking Staking_) {
         _handleEnvVariables();
 
         vm.startBroadcast(_deployerAddress);
 
-        Contract_ = new Contract();
+        Staking_ = new UsdnLongStaking();
 
         vm.stopBroadcast();
     }
