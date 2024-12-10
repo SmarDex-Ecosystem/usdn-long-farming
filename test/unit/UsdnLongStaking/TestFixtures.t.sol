@@ -4,8 +4,8 @@ pragma solidity 0.8.28;
 import { UsdnLongStakingBaseFixture } from "./utils/Fixtures.sol";
 
 /**
- * @custom:feature The fixtures of the usdn long staking
- * @custom:background Given a deployed staking
+ * @custom:feature The base fixture of the USDN long staking
+ * @custom:background Given a deployed staking contract and USDN protocol
  */
 contract TestUsdnLongStakingFixtures is UsdnLongStakingBaseFixture {
     function setUp() public {
@@ -13,7 +13,7 @@ contract TestUsdnLongStakingFixtures is UsdnLongStakingBaseFixture {
     }
 
     /**
-     * @custom:scenario Tests the staking fixtures deployment
+     * @custom:scenario Tests the fixture deployment
      * @custom:when The address of the staking is called
      * @custom:then The address should be a valid address
      */
