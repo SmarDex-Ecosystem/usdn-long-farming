@@ -1,8 +1,8 @@
 {
-  "name": "foundry-template",
+  "name": "@smardex/usdn-long-staking",
   "version": "0.1.0",
-  "description": "Template repository for creating a new Foundry project quickly and in accordance with the Real Estate Executive standards",
-  "repository": "github:Blockchain-RA2-Tech/foundry-template",
+  "description": "Contracts for the USDN long staking",
+  "repository": "git@github.com:SmarDex-Ecosystem/usdn-long-staking.git",
   "author": {
     "name": "RA2 Tech SA",
     "url": "https://ra2.tech"
@@ -11,6 +11,7 @@
     "node": ">=20.0.0"
   },
   "license": "BUSL-1.1",
+  "dockerize": false,
   "scripts": {
     "clean": "rm -rf dist && rm -rf node_modules && rm -rf .coverage && rm -rf out && rm -rf dependencies && forge clean && npm i && forge soldeer install",
     "cov": "forge build --skip .sol && forge coverage --no-match-test \"(FFI|Fork|Fuzz|invariant)\" --no-match-contract Fork -vvv --offline",
@@ -32,7 +33,11 @@
     "snapshot:check": "FOUNDRY_PROFILE=ci forge build && FOUNDRY_PROFILE=ci forge snapshot --no-match-test \"(FFI|Fork|Fuzz)\" --no-match-contract Fork --check --offline",
     "test": "forge test -vvv"
   },
-  "files": ["dist", "broadcast", "docs"],
+  "files": [
+    "dist",
+    "broadcast",
+    "docs"
+  ],
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@defi-wonderland/natspec-smells": "^1.1.5",
