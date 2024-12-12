@@ -1,5 +1,4 @@
 {
   "include": "src/**/*.sol",
-  "exclude": [""],
   "constructorNatspec": true
 }
