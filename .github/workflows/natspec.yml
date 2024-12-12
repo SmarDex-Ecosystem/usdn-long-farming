@@ -12,9 +12,15 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/create-github-app-token@v1
+        id: app-token
         with:
-          submodules: recursive
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: 'usdn-contracts,natspec-smells-action'
+
+      - uses: actions/checkout@v4
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -26,12 +32,18 @@ jobs:
         with:
           node-version: 20
 
+      - name: Add app token to git config for soldeer to use
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          git config --global url."https://x-access-token:$APP_TOKEN@github.com/".insteadOf "git@github.com:"
+
       - name: Install deps
         run: npm ci && forge soldeer install
 
       - name: Report natspec smells findings
         uses: SmarDex-Ecosystem/natspec-smells-action@v1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ steps.app-token.outputs.token }}
           working-directory: ./
           update-comment: true
