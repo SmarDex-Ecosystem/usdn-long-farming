@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
-// interfaces
 import { IERC20 } from "@openzeppelin-contracts-5/interfaces/IERC20.sol";
 
 interface IFarmingRange {
@@ -66,12 +65,11 @@ interface IFarmingRange {
 
     /**
      * @notice emitted at each withdraw
-     * @param rewardTo address to which the reward tokens will be sent
-     * @param stakingTo address to which the staking tokens will be sent
+     * @param user address that withdrawn its funds
      * @param amount amount withdrawn
-     * @param campaign campaingId on which the user has deposited funds
+     * @param campaign campaingId on which the user has withdrawn funds
      */
-    event Withdraw(address indexed rewardTo, address indexed stakingTo, uint256 amount, uint256 campaign);
+    event Withdraw(address indexed user, uint256 amount, uint256 campaign);
 
     /**
      * @notice emitted at each emergency withdraw
@@ -200,56 +198,49 @@ interface IFarmingRange {
     function removeLastRewardInfo(uint256 campaignID) external;
 
     /**
-     * @notice remove the _number last RewardInfos for specified campaign.
-     * @param campaignID campaign id
-     * @param number number of RewardInfos to remove
-     */
-    function removeLastRewardInfoMultiple(uint256 campaignID, uint256 number) external;
-
-    /**
      * @notice return the entries amount of reward info for one campaign.
      * @param campaignID campaign id
-     * @return length_ number of reward info items in the campaign
+     * @return reward info quantity
      */
-    function rewardInfoLen(uint256 campaignID) external view returns (uint256 length_);
+    function rewardInfoLen(uint256 campaignID) external view returns (uint256);
 
     /**
      * @notice return the number of campaigns.
-     * @return length_ total number of campaigns
+     * @return campaign quantity
      */
-    function campaignInfoLen() external view returns (uint256 length_);
+    function campaignInfoLen() external view returns (uint256);
 
     /**
      * @notice return the end block of the current reward info for a given campaign.
      * @param campaignID campaign id
-     * @return endBlock_ end block number
+     * @return reward info end block number
      */
-    function currentEndBlock(uint256 campaignID) external view returns (uint256 endBlock_);
+    function currentEndBlock(uint256 campaignID) external view returns (uint256);
 
     /**
      * @notice return the reward per block of the current reward info for a given campaign.
      * @param campaignID campaign id
-     * @return rewardPerBlock_ reward per block
+     * @return current reward per block
      */
-    function currentRewardPerBlock(uint256 campaignID) external view returns (uint256 rewardPerBlock_);
+    function currentRewardPerBlock(uint256 campaignID) external view returns (uint256);
 
     /**
-     * @notice Return reward multiplier over the given `from` to `to` block.
+     * @notice Return reward multiplier over the given from to to block.
      * Reward multiplier is the amount of blocks between from and to
      * @param from start block number
      * @param to end block number
      * @param endBlock end block number of the reward info
-     * @return distance_ block distance
+     * @return block distance
      */
-    function getMultiplier(uint256 from, uint256 to, uint256 endBlock) external returns (uint256 distance_);
+    function getMultiplier(uint256 from, uint256 to, uint256 endBlock) external returns (uint256);
 
     /**
      * @notice View function to retrieve pending Reward.
      * @param campaignID pending reward of campaign id
      * @param user address to retrieve pending reward
-     * @return reward_ current pending reward
+     * @return current pending reward
      */
-    function pendingReward(uint256 campaignID, address user) external view returns (uint256 reward_);
+    function pendingReward(uint256 campaignID, address user) external view returns (uint256);
 
     /**
      * @notice Update reward variables of the given campaign to be up-to-date.
@@ -266,9 +257,8 @@ interface IFarmingRange {
      * @notice Deposit staking token in a campaign.
      * @param campaignID campaign id
      * @param amount amount to deposit
-     * @param to address to deposit for
      */
-    function deposit(uint256 campaignID, uint256 amount, address to) external;
+    function deposit(uint256 campaignID, uint256 amount) external;
 
     /**
      * @notice Deposit staking token in a campaign with the EIP-2612 signature off chain
@@ -294,17 +284,14 @@ interface IFarmingRange {
      * @notice Withdraw staking token in a campaign. Also withdraw the current pending reward
      * @param campaignID campaign id
      * @param amount amount to withdraw
-     * @param rewardTo address to which the reward tokens will be sent
-     * @param stakingTo address to which the staking tokens will be sent
      */
-    function withdraw(uint256 campaignID, uint256 amount, address rewardTo, address stakingTo) external;
+    function withdraw(uint256 campaignID, uint256 amount) external;
 
     /**
      * @notice Harvest campaigns, will claim rewards token of every campaign ids in the array
      * @param campaignIDs array of campaign id
-     * @param rewardTo address to which the reward tokens will be sent
      */
-    function harvest(uint256[] calldata campaignIDs, address rewardTo) external;
+    function harvest(uint256[] calldata campaignIDs) external;
 
     /**
      * @notice Withdraw without caring about rewards. EMERGENCY ONLY.
@@ -317,38 +304,38 @@ interface IFarmingRange {
      *  indexed by campaign ID
      * @param campaignID campaign id
      * @param rewardIndex index of the reward info
-     * @return endBlock_ end block of this reward info
-     * @return rewardPerBlock_ reward per block to distribute
+     * @return endBlock end block of this reward info
+     * @return rewardPerBlock reward per block to distribute
      */
     function campaignRewardInfo(uint256 campaignID, uint256 rewardIndex)
         external
         view
-        returns (uint256 endBlock_, uint256 rewardPerBlock_);
+        returns (uint256 endBlock, uint256 rewardPerBlock);
 
     /**
      * @notice get a Campaign Reward info for a campaign ID
      * @param campaignID campaign id
-     * @return campaignInfo_ params from CampaignInfo struct
+     * @return info_ all params from CampaignInfo struct
      */
-    function campaignInfo(uint256 campaignID) external view returns (CampaignInfo memory campaignInfo_);
+    function campaignInfo(uint256 campaignID) external view returns (CampaignInfo memory info_);
 
     /**
      * @notice get a User Reward info for a campaign ID and user address
      * @param campaignID campaign id
      * @param user user address
-     * @return userInfo_ params from UserInfo struct
+     * @return info_ all params from UserInfo struct
      */
-    function userInfo(uint256 campaignID, address user) external view returns (UserInfo memory userInfo_);
+    function userInfo(uint256 campaignID, address user) external view returns (UserInfo memory info_);
 
     /**
      * @notice how many reward phases can be set for a campaign
-     * @return limit_ rewards phases size limit
+     * @return rewards phases size limit
      */
-    function rewardInfoLimit() external view returns (uint256 limit_);
+    function rewardInfoLimit() external view returns (uint256);
 
     /**
      * @notice get reward Manager address holding rewards to distribute
-     * @return manager_ address of reward manager
+     * @return address of reward manager
      */
-    function rewardManager() external view returns (address manager_);
+    function rewardManager() external view returns (address);
 }

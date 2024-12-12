@@ -6,6 +6,7 @@ pragma solidity >=0.8.0;
  * @notice Interface for the USDN Long Staking types
  */
 interface IUsdnLongStakingTypes {
+    /// @dev The `PositionId` is destructured into its individual components to pack the struct more closely
     struct PositionInfo {
         address owner; // 20 bytes
         int24 tick; // 3 bytes
