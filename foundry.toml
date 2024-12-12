@@ -38,6 +38,7 @@ line_length = 120
 bracket_spacing = true
 wrap_comments = true
 number_underscore = "thousands"
+sort_imports = true
 
 # ---------------------------------------------------------------------------- #
 #                                 Local profile                                #

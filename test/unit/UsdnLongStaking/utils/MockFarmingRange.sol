@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import { IFarmingRange, IERC20 } from "../../../../src/interfaces/IFarmingRange.sol";
+import { IERC20, IFarmingRange } from "../../../../src/interfaces/IFarmingRange.sol";
 
 contract MockFarmingRange {
     address internal _rewardToken;

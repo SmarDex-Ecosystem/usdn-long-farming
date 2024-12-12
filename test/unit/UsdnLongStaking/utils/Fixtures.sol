@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import { IUsdnLongStakingTypes } from "../../../../src/interfaces/IUsdnLongStakingTypes.sol";
 import { IUsdnLongStakingErrors } from "../../../../src/interfaces/IUsdnLongStakingErrors.sol";
 import { IUsdnLongStakingEvents } from "../../../../src/interfaces/IUsdnLongStakingEvents.sol";
+import { IUsdnLongStakingTypes } from "../../../../src/interfaces/IUsdnLongStakingTypes.sol";
 
 import { BaseFixture } from "../../../utils/Fixtures.sol";
 import { UsdnLongStakingHandler } from "./Handler.sol";

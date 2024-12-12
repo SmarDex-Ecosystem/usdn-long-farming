@@ -7,7 +7,7 @@ import { UsdnLongStakingBaseFixture } from "./utils/Fixtures.sol";
  * @custom:feature The base fixture of the USDN long staking
  * @custom:background Given a deployed staking contract and USDN protocol
  */
-contract TestUsdnLongStakingFixtures is UsdnLongStakingBaseFixture {
+contract TestUsdnLongStakingFixture is UsdnLongStakingBaseFixture {
     function setUp() public {
         _setUp();
     }

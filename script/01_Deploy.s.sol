@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import { Script } from "forge-std/Script.sol";
 import { UsdnLongStaking } from "../src/UsdnLongStaking.sol";
+import { Script } from "forge-std/Script.sol";
 
 contract DeployUsdnLongStaking is Script {
     address _deployerAddress;
@@ -11,6 +11,8 @@ contract DeployUsdnLongStaking is Script {
         _handleEnvVariables();
 
         vm.startBroadcast(_deployerAddress);
+
+        // TODO: create contract
 
         vm.stopBroadcast();
     }
