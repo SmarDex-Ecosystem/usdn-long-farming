@@ -29,6 +29,9 @@ contract UsdnLongStaking is IUsdnLongStaking {
     /// @dev The sum of all locked positions' initial trading exposure.
     uint256 internal _totalShares;
 
+    /// @dev Accumulated reward tokens per share, times 1e20.
+    uint256 internal _accRewardPerShare;
+
     constructor(IFarmingRange farming, uint256 campaignId) {
         FARMING = farming;
         CAMPAIGN_ID = campaignId;
