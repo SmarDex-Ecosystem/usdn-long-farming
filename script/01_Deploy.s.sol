@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import { Script } from "forge-std/Script.sol";
-import { UsdnLongStaking } from "../src/usdnLongStaking/UsdnLongStaking.sol";
+import { UsdnLongStaking } from "../src/UsdnLongStaking.sol";
 
 contract DeployUsdnLongStaking is Script {
     address _deployerAddress;
@@ -11,8 +11,6 @@ contract DeployUsdnLongStaking is Script {
         _handleEnvVariables();
 
         vm.startBroadcast(_deployerAddress);
-
-        Staking_ = new UsdnLongStaking();
 
         vm.stopBroadcast();
     }

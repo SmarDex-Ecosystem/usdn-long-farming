@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import { IUsdnLongStakingTypes } from "../../../../src/interfaces/usdnLongStaking/IUsdnLongStakingTypes.sol";
-import { IUsdnLongStakingErrors } from "../../../../src/interfaces/usdnLongStaking/IUsdnLongStakingErrors.sol";
-import { IUsdnLongStakingEvents } from "../../../../src/interfaces/usdnLongStaking/IUsdnLongStakingEvents.sol";
+import { IUsdnLongStakingTypes } from "../../../../src/interfaces/IUsdnLongStakingTypes.sol";
+import { IUsdnLongStakingErrors } from "../../../../src/interfaces/IUsdnLongStakingErrors.sol";
+import { IUsdnLongStakingEvents } from "../../../../src/interfaces/IUsdnLongStakingEvents.sol";
 
 import { BaseFixture } from "../../../utils/Fixtures.sol";
 import { UsdnLongStakingHandler } from "./Handler.sol";
+import { MockFarmingRange } from "./MockFarmingRange.sol";
+import { MockRewardToken } from "./MockRewardToken.sol";
 
 /**
  * @title UsdnLongStakingBaseFixture
@@ -18,9 +20,13 @@ contract UsdnLongStakingBaseFixture is
     IUsdnLongStakingErrors,
     IUsdnLongStakingEvents
 {
+    MockRewardToken internal rewardToken;
+    MockFarmingRange internal farming;
     UsdnLongStakingHandler internal staking;
 
     function _setUp() internal virtual {
-        staking = new UsdnLongStakingHandler();
+        rewardToken = new MockRewardToken();
+        farming = new MockFarmingRange(address(rewardToken));
+        staking = new UsdnLongStakingHandler(farming);
     }
 }
