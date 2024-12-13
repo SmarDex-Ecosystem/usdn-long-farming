@@ -21,8 +21,6 @@
     "format": "forge fmt",
     "format:js": "npx @biomejs/biome format . --write",
     "installDeps": "npm i && forge soldeer install",
-    "lint": "solhint 'src/**/*.sol'",
-    "lint:test": "solhint -c test/.solhint.json 'test/**/*.sol'",
     "natspec": "npx natspec-smells > natspec-smells.txt 2>&1",
     "prepare": "husky",
     "quicktest": "forge test -vvv --no-match-test \"(FFI|Fork|Fuzz|invariant)\" --no-match-contract Fork --offline",
