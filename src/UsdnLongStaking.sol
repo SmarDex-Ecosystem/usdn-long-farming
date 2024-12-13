@@ -2,6 +2,8 @@
 pragma solidity 0.8.28;
 
 import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
+import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
+import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
 
 import { IFarmingRange } from "./interfaces/IFarmingRange.sol";
 import { IUsdnLongStaking } from "./interfaces/IUsdnLongStaking.sol";
@@ -16,6 +18,9 @@ contract UsdnLongStaking is IUsdnLongStaking {
 
     /// @notice The address of the SmarDex `FarmingRange` contract, which is the source of the reward tokens.
     IFarmingRange public immutable FARMING;
+
+    /// @notice The USDN protocol contract used to transfer the USDN protocol position ownership.
+    IUsdnProtocol public immutable PROTOCOL;
 
     /// @notice The ID of the campaign in the `FarmingRange` contract which provides reward tokens to this contract.
     uint256 public immutable CAMPAIGN_ID;
@@ -38,9 +43,13 @@ contract UsdnLongStaking is IUsdnLongStaking {
     /// @dev Block number when the last rewards were calculated.
     uint256 internal _lastRewardBlock;
 
-    constructor(IFarmingRange farming, uint256 campaignId) {
+    /// @notice The array of the `FarmingRange` campaign ID which provides reward tokens to this contract.
+    uint256[] internal campaignsIds;
+
+    constructor(IFarmingRange farming, uint256 campaignId, IUsdnProtocol protocol) {
         FARMING = farming;
-        CAMPAIGN_ID = campaignId;
+        campaignsIds.push(CAMPAIGN_ID);
+        PROTOCOL = protocol;
         IFarmingRange.CampaignInfo memory info = farming.campaignInfo(campaignId);
         REWARD_TOKEN = IERC20(address(info.rewardToken));
         IERC20 farmingToken = IERC20(address(info.stakingToken));
@@ -52,6 +61,48 @@ contract UsdnLongStaking is IUsdnLongStaking {
     }
 
     /**
+     * @notice Deposits a usdn protocol position to receive some rewards.
+     * @dev Takes into account the current position trading expo as shares. Uses a delegation signature
+     * to transfer the position ownership. Reverts if the position is already owned by the
+     * contract, if the position is pending or if the trading expo is invalid.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @param index The index of the position inside the tick.
+     * @return success_ Whether the deposit was successful.
+     */
+    function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation)
+        external
+        returns (bool success_)
+    {
+        IUsdnProtocolTypes.Position memory pos = PROTOCOL.getCurrentLongPosition(tick, index);
+
+        _checkPosition(pos);
+        _updateRewards();
+
+        uint128 currentTradingExpo = pos.totalExpo - pos.amount;
+        PositionInfo memory posInfo = PositionInfo({
+            owner: pos.user,
+            tick: tick,
+            tickVersion: tickVersion,
+            index: index,
+            rewardDebt: currentTradingExpo * _accRewardPerShare / SCALING_FACTOR,
+            shares: currentTradingExpo
+        });
+
+        _totalShares += posInfo.shares;
+        _positionsCount++;
+        bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
+        _positions[positionIdHash] = posInfo;
+
+        PROTOCOL.transferPositionOwnership(
+            IUsdnProtocolTypes.PositionId(tick, tickVersion, index), address(this), delegation
+        );
+
+        emit UsdnLongStakingDeposit(posInfo.owner, positionIdHash);
+        return true;
+    }
+
+    /**
      * @notice Hash a USDN long position's ID to use a key in the `_positions` mapping.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
@@ -60,5 +111,52 @@ contract UsdnLongStaking is IUsdnLongStaking {
      */
     function _hashPositionId(int24 tick, uint256 tickVersion, uint256 index) internal pure returns (bytes32 hash_) {
         hash_ = keccak256(abi.encode(tick, tickVersion, index));
+    }
+
+    /**
+     * @notice Harvests pending rewards from `_lastRewards`, updates `_accRewardPerShare` and `_lastRewardBlock`.
+     * @dev If there is no shares deposited, `lastRewardBlock` will be updated but harvest will not be triggered for
+     * this blocks period.
+     */
+    function _updateRewards() internal {
+        if (_lastRewardBlock < block.number) {
+            if (_totalShares == 0) {
+                _lastRewardBlock = block.number;
+                return;
+            }
+
+            uint256 rewardsBalanceBefore = REWARD_TOKEN.balanceOf(address(this));
+
+            // farming harvest
+            FARMING.harvest(campaignsIds);
+
+            // rewardPerBlock = token amount harvested / amount of blocks from the `_lastRewardBlock`
+            uint256 rewardsPerBlock =
+                (REWARD_TOKEN.balanceOf(address(this)) - rewardsBalanceBefore) / (block.number - _lastRewardBlock);
+
+            if (rewardsPerBlock > 0) {
+                _accRewardPerShare += rewardsPerBlock * SCALING_FACTOR / _totalShares;
+            }
+
+            _lastRewardBlock = block.number;
+        }
+    }
+
+    /**
+     * @notice Checks that the position is currently valid.
+     * @param position The USDN protocol user position on which the checks must be performed.
+     */
+    function _checkPosition(IUsdnProtocolTypes.Position memory position) internal view {
+        if (position.user == address(this)) {
+            revert UsdnLongStakingContractOwned();
+        }
+
+        if (!position.validated) {
+            revert UsdnLongStakingPendingPosition();
+        }
+
+        if (position.totalExpo <= position.amount) {
+            revert UsdnLongStakingInvalidTradingExpo();
+        }
     }
 }

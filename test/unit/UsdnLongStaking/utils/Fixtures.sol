@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
 import { LibRLP } from "solady-0.0/utils/LibRLP.sol";
 
 import { DEPLOYER } from "../../../utils/Constants.sol";
@@ -41,7 +42,8 @@ contract UsdnLongStakingBaseFixture is
         farmingToken.approve(stakingAddress, 1);
         // make sure the nonce is the same as we used to pre-compute the address
         vm.setNonce(DEPLOYER, DEPLOYMENT_NONCE);
-        staking = new UsdnLongStakingHandler(farming);
+        // TODO: add a USDN protocol mock
+        staking = new UsdnLongStakingHandler(farming, IUsdnProtocol(address(0)));
         vm.stopPrank();
     }
 }
