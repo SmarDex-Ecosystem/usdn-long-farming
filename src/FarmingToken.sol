@@ -8,7 +8,7 @@ import { ERC20 } from "@openzeppelin-contracts-5/token/ERC20/ERC20.sol";
  * @notice This token is used to receive reward tokens from the SmarDex `FarmingRange` contract.
  */
 contract FarmingToken is ERC20 {
-    constructor() ERC20("USDN Long Farming", "UFARM") {
+    constructor() ERC20("USDN Long Farming", "ULFARM") {
         _mint(msg.sender, 1);
     }
 }
