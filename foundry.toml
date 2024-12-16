@@ -5,6 +5,8 @@
 [dependencies]
 forge-std = "1"
 "@openzeppelin-contracts" = "5"
+"@smardex-usdn-contracts" = { version = "0.24.1", git = "git@github.com:SmarDex-Ecosystem/usdn-contracts.git", tag = "v0.24.1" }
+solady = "^0.0.281"
 
 # ---------------------------------------------------------------------------- #
 #                                Default profile                               #
@@ -22,7 +24,9 @@ invariant = { fail_on_revert = true }
 
 remappings = [
     "@openzeppelin-contracts-5/=dependencies/@openzeppelin-contracts-5.1.0/",
+    "@smardex-usdn-contracts/=dependencies/@smardex-usdn-contracts-0.24.1/src/",
     "forge-std/=dependencies/forge-std-1.9.4/src/",
+    "solady-0.0/=dependencies/solady-0.0.281/src/",
 ]
 
 # ---------------------------------------------------------------------------- #
@@ -34,6 +38,7 @@ line_length = 120
 bracket_spacing = true
 wrap_comments = true
 number_underscore = "thousands"
+sort_imports = true
 
 # ---------------------------------------------------------------------------- #
 #                                 Local profile                                #
@@ -125,3 +130,4 @@ mainnet = { key = "${ETHERSCAN_API_KEY}" }
 
 [soldeer]
 remappings_location = "config"
+recursive_deps = true

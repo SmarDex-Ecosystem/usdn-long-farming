@@ -3,6 +3,6 @@ pragma solidity >=0.8.0;
 
 /**
  * @title IUsdnLongStakingErrors
- * @notice Interface for the USDN Long Staking errors
+ * @notice Interface for the USDN Long Staking errors.
  */
 interface IUsdnLongStakingErrors { }

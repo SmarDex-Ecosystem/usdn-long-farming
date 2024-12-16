@@ -6,8 +6,21 @@ checksum = "fd3d1ea561cb27897008aee18ada6e85f248eb161c86e4435272fc2b5777574f"
 integrity = "cb6cf6e878f2943b2291d5636a9d72ac51d43d8135896ceb6cf88d36c386f212"
 
 [[dependencies]]
+name = "@smardex-usdn-contracts"
+version = "0.24.1"
+git = "git@github.com:SmarDex-Ecosystem/usdn-contracts.git"
+rev = "4b47a5736ac8c0cb95430925e0b1ffe6da8b131e"
+
+[[dependencies]]
 name = "forge-std"
 version = "1.9.4"
 url = "https://soldeer-revisions.s3.amazonaws.com/forge-std/1_9_4_25-10-2024_14:36:59_forge-std-1.9.zip"
 checksum = "b5be24beb5e4dab5e42221b2ad1288b64c826bee5ee71b6159ba93ffe86f14d4"
 integrity = "3874463846ab995a6a9a88412913cacec6144f7605daa1af57c2d8bf3f210b13"
+
+[[dependencies]]
+name = "solady"
+version = "0.0.281"
+url = "https://soldeer-revisions.s3.amazonaws.com/solady/0_0_281_09-12-2024_08:36:50_solady.zip"
+checksum = "ea132799de232bab82c78d9eb843c1245d8f0a75c93908bf26bdec76962637e8"
+integrity = "cbc665d92b2a297f10da8b8c74fbbf377a7eee0532d3017812856f50c1a295ec"
