@@ -163,14 +163,14 @@ contract UsdnLongStaking is IUsdnLongStaking {
         bytes calldata delegation
     ) internal returns (bool success_) {
         _updateRewards();
-        uint128 currentTradingExpo = position.totalExpo - position.amount;
+        uint128 initialTradingExpo = position.totalExpo - position.amount;
         PositionInfo memory posInfo = PositionInfo({
             owner: position.user,
             tick: tick,
             tickVersion: tickVersion,
             index: index,
-            rewardDebt: FixedPointMathLib.fullMulDiv(currentTradingExpo, _accRewardPerShare, SCALING_FACTOR),
-            shares: currentTradingExpo
+            rewardDebt: FixedPointMathLib.fullMulDiv(initialTradingExpo, _accRewardPerShare, SCALING_FACTOR),
+            shares: initialTradingExpo
         });
 
         _totalShares += posInfo.shares;

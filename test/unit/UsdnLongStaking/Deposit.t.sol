@@ -38,9 +38,42 @@ contract TestUsdnLongStakingDeposit is UsdnLongStakingBaseFixture {
      * @custom:then The call must not revert.
      */
     function test_deposit() public {
+        // fill shares to the staking
+        uint256 previousTotalShares = 1;
+        staking.setTotalShares(previousTotalShares);
+
         vm.expectEmit();
         emit UsdnLongStakingDeposit(address(this), _defaultPosHash);
         bool success = staking.deposit(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX, "");
         assertTrue(success, "The deposit must be successful");
+
+        // position state
+        PositionInfo memory posInfo = staking.getPositionInfo(_defaultPosHash);
+        assertEq(posInfo.owner, address(this), "The owner must be the user");
+        assertEq(posInfo.tick, DEFAULT_TICK, "The tick must be the default tick");
+        assertEq(posInfo.tickVersion, DEFAULT_TICK_VERSION, "The tick version must be the default tick version");
+        assertEq(posInfo.index, DEFAULT_INDEX, "The index must be the default index");
+        assertEq(
+            posInfo.shares,
+            position.totalExpo - position.amount,
+            "The shares must be equal to `initial totalExpo - initial amount`"
+        );
+        assertEq(
+            posInfo.rewardDebt,
+            staking.getAccRewardPerShare() * posInfo.shares / staking.SCALING_FACTOR(),
+            "The rewardDebt must be updated"
+        );
+
+        // global contract state
+        assertEq(
+            staking.getTotalShares(), posInfo.shares + previousTotalShares, "The total shares must be equal user shares"
+        );
+        assertEq(staking.getPositionsCount(), 1, "The position count must be 1");
+        assertEq(staking.getLastRewardBlock(), block.number, "The last reward block must be updated");
+        assertEq(
+            staking.getAccRewardPerShare(),
+            rewardToken.balanceOf(address(staking)) * staking.SCALING_FACTOR() / previousTotalShares,
+            "The reward by share accumulator must be updated"
+        );
     }
 }
