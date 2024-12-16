@@ -36,9 +36,11 @@ contract TestUsdnLongStakingDeposit is UsdnLongStakingBaseFixture {
      * @custom:scenario Tests the deposit with a valid position.
      * @custom:when The function is called.
      * @custom:then The call must not revert.
+     * @custom:and The position state must be updated.
+     * @custom:and The contract global state must be updated.
      */
     function test_deposit() public {
-        // fill shares to the staking
+        // fill already shares to the staking
         uint256 previousTotalShares = 1;
         staking.setTotalShares(previousTotalShares);
 
@@ -66,14 +68,16 @@ contract TestUsdnLongStakingDeposit is UsdnLongStakingBaseFixture {
 
         // global contract state
         assertEq(
-            staking.getTotalShares(), posInfo.shares + previousTotalShares, "The total shares must be equal user shares"
+            staking.getTotalShares(),
+            posInfo.shares + previousTotalShares,
+            "The total shares must be equal to `user shares + previous shares`"
         );
         assertEq(staking.getPositionsCount(), 1, "The position count must be 1");
         assertEq(staking.getLastRewardBlock(), block.number, "The last reward block must be updated");
         assertEq(
             staking.getAccRewardPerShare(),
             rewardToken.balanceOf(address(staking)) * staking.SCALING_FACTOR() / previousTotalShares,
-            "The reward by share accumulator must be updated"
+            "The reward by shares accumulator must be updated"
         );
     }
 }
