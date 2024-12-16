@@ -46,7 +46,7 @@ contract UsdnLongStaking is IUsdnLongStaking {
      * The factor is necessary to represent rewards per shares with enough precision for very small reward quantities
      * and large total number of shares.
      * In the worst case of having a very large number of reward tokens per block (1000e18) and a very small total
-     * number of shares (1 wei), this number would not overflow for 10^18 blocks which is ~440 billion years.
+     * number of shares (1 wei), this number would not overflow for 1.158e18 blocks which is ~440 billion years.
      */
     uint256 internal _accRewardPerShare;
 
