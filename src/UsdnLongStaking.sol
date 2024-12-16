@@ -16,11 +16,11 @@ contract UsdnLongStaking is IUsdnLongStaking {
     /// @dev Scaling factor for `_accRewardPerShare`.
     uint256 public constant SCALING_FACTOR = 1e20;
 
+    /// @notice The address of the USDN protocol contract.
+    IUsdnProtocol public immutable USDN_PROTOCOL;
+
     /// @notice The address of the SmarDex `FarmingRange` contract, which is the source of the reward tokens.
     IFarmingRange public immutable FARMING;
-
-    /// @notice The USDN protocol contract used to transfer the USDN protocol position ownership.
-    IUsdnProtocol public immutable PROTOCOL;
 
     /// @notice The ID of the campaign in the `FarmingRange` contract which provides reward tokens to this contract.
     uint256 public immutable CAMPAIGN_ID;
@@ -43,13 +43,9 @@ contract UsdnLongStaking is IUsdnLongStaking {
     /// @dev Block number when the last rewards were calculated.
     uint256 internal _lastRewardBlock;
 
-    /// @notice The array of the `FarmingRange` campaign ID which provides reward tokens to this contract.
-    uint256[] internal campaignsIds;
-
-    constructor(IFarmingRange farming, uint256 campaignId, IUsdnProtocol protocol) {
+    constructor(IUsdnProtocol usdnProtocol, IFarmingRange farming, uint256 campaignId) {
+        USDN_PROTOCOL = usdnProtocol;
         FARMING = farming;
-        campaignsIds.push(CAMPAIGN_ID);
-        PROTOCOL = protocol;
         IFarmingRange.CampaignInfo memory info = farming.campaignInfo(campaignId);
         REWARD_TOKEN = IERC20(address(info.rewardToken));
         IERC20 farmingToken = IERC20(address(info.stakingToken));
@@ -74,7 +70,7 @@ contract UsdnLongStaking is IUsdnLongStaking {
         external
         returns (bool success_)
     {
-        IUsdnProtocolTypes.Position memory pos = PROTOCOL.getCurrentLongPosition(tick, index);
+        IUsdnProtocolTypes.Position memory pos = USDN_PROTOCOL.getCurrentLongPosition(tick, index);
 
         _checkPosition(pos);
         _updateRewards();
@@ -94,7 +90,7 @@ contract UsdnLongStaking is IUsdnLongStaking {
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
         _positions[positionIdHash] = posInfo;
 
-        PROTOCOL.transferPositionOwnership(
+        USDN_PROTOCOL.transferPositionOwnership(
             IUsdnProtocolTypes.PositionId(tick, tickVersion, index), address(this), delegation
         );
 
@@ -128,6 +124,8 @@ contract UsdnLongStaking is IUsdnLongStaking {
             uint256 rewardsBalanceBefore = REWARD_TOKEN.balanceOf(address(this));
 
             // farming harvest
+            uint256[] memory campaignsIds = new uint256[](1);
+            campaignsIds[0] = CAMPAIGN_ID;
             FARMING.harvest(campaignsIds);
 
             // rewardPerBlock = token amount harvested / amount of blocks from the `_lastRewardBlock`

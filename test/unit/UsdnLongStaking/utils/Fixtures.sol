@@ -9,6 +9,7 @@ import { BaseFixture } from "../../../utils/Fixtures.sol";
 import { UsdnLongStakingHandler } from "./Handler.sol";
 import { MockFarmingRange } from "./MockFarmingRange.sol";
 import { MockRewardToken } from "./MockRewardToken.sol";
+import { MockUsdnProtocol } from "./MockUsdnProtocol.sol";
 
 import { FarmingToken } from "../../../../src/FarmingToken.sol";
 import { IUsdnLongStakingErrors } from "../../../../src/interfaces/IUsdnLongStakingErrors.sol";
@@ -30,6 +31,7 @@ contract UsdnLongStakingBaseFixture is
     MockRewardToken internal rewardToken;
     FarmingToken internal farmingToken;
     MockFarmingRange internal farming;
+    MockUsdnProtocol internal usdnProtocol;
     UsdnLongStakingHandler internal staking;
 
     function _setUp() internal virtual {
@@ -37,13 +39,13 @@ contract UsdnLongStakingBaseFixture is
         rewardToken = new MockRewardToken();
         farmingToken = new FarmingToken();
         farming = new MockFarmingRange(rewardToken, farmingToken);
+        usdnProtocol = new MockUsdnProtocol();
         // approve future staking contract
         address stakingAddress = LibRLP.computeAddress(DEPLOYER, DEPLOYMENT_NONCE);
         farmingToken.approve(stakingAddress, 1);
         // make sure the nonce is the same as we used to pre-compute the address
         vm.setNonce(DEPLOYER, DEPLOYMENT_NONCE);
-        // TODO: add a USDN protocol mock
-        staking = new UsdnLongStakingHandler(farming, IUsdnProtocol(address(0)));
+        staking = new UsdnLongStakingHandler(usdnProtocol, farming);
         vm.stopPrank();
     }
 }
