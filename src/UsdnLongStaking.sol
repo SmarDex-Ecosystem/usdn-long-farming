@@ -13,8 +13,13 @@ import { IUsdnLongStaking } from "./interfaces/IUsdnLongStaking.sol";
  * @notice A contract for staking USDN long positions to earn rewards.
  */
 contract UsdnLongStaking is IUsdnLongStaking {
-    /// @dev Scaling factor for `_accRewardPerShare`.
-    uint256 public constant SCALING_FACTOR = 1e20;
+    /**
+     * @dev Scaling factor for `_accRewardPerShare`.
+     * In the worst case of having 1 wei of reward tokens per block for a duration of 1 block, and with a total number
+     * of shares equivalent to 500 million wstETH, the accumulator value increment would still be 2e11 which is
+     * precise enough.
+     */
+    uint256 public constant SCALING_FACTOR = 1e38;
 
     /// @notice The address of the USDN protocol contract.
     IUsdnProtocol public immutable USDN_PROTOCOL;
@@ -37,20 +42,27 @@ contract UsdnLongStaking is IUsdnLongStaking {
     /// @dev The sum of all locked positions' initial trading exposure.
     uint256 internal _totalShares;
 
-    /// @dev Accumulated reward tokens per share multiplied by `SCALING_FACTOR`.
+    /**
+     * @dev Accumulated reward tokens per share multiplied by `SCALING_FACTOR`.
+     * The factor is necessary to represent rewards per shares with enough precision for very small reward quantities
+     * and large total number of shares.
+     * In the worst case of having a very large number of reward tokens per block (1000e18) and a very small total
+     * number of shares (1 wei), this number would not overflow for 1.158e18 blocks which is ~440 billion years.
+     */
     uint256 internal _accRewardPerShare;
 
     /// @dev Block number when the last rewards were calculated.
     uint256 internal _lastRewardBlock;
 
     /**
-     * @param usdnProtocol The USDN protocol contract used to transfer the user long position ownership.
-     * @param farming The Smardex farming contract.
-     * @param campaignId The campaign id of the Smardex farming that will give rewards.
+     * @param usdnProtocol The address of the USDN protocol contract.
+     * @param farming The address of the `FarmingRange` contract.
+     * @param campaignId The campaign ID in the `FarmingRange` contract which provides reward tokens to this contract.
      */
     constructor(IUsdnProtocol usdnProtocol, IFarmingRange farming, uint256 campaignId) {
         USDN_PROTOCOL = usdnProtocol;
         FARMING = farming;
+        CAMPAIGN_ID = campaignId;
         IFarmingRange.CampaignInfo memory info = farming.campaignInfo(campaignId);
         REWARD_TOKEN = IERC20(address(info.rewardToken));
         IERC20 farmingToken = IERC20(address(info.stakingToken));

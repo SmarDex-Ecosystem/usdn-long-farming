@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
 import { LibRLP } from "solady-0.0/utils/LibRLP.sol";
 
 import { DEPLOYER } from "../../../utils/Constants.sol";
