@@ -5,6 +5,7 @@ import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
 import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
 import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
+import { SafeTransferLib } from "solady/src/utils/SafeTransferLib.sol";
 
 import { IFarmingRange } from "./interfaces/IFarmingRange.sol";
 import { IUsdnLongStaking } from "./interfaces/IUsdnLongStaking.sol";
@@ -14,6 +15,8 @@ import { IUsdnLongStaking } from "./interfaces/IUsdnLongStaking.sol";
  * @notice A contract for staking USDN long positions to earn rewards.
  */
 contract UsdnLongStaking is IUsdnLongStaking {
+    using SafeTransferLib for address;
+
     /**
      * @dev Scaling factor for `_accRewardPerShare`.
      * In the worst case of having 1 wei of reward tokens per block for a duration of 1 block, and with a total number
@@ -234,6 +237,6 @@ contract UsdnLongStaking is IUsdnLongStaking {
         PositionInfo memory posInfo = _positions[positionIdHash];
         newRewardDebt_ = FixedPointMathLib.fullMulDiv(posInfo.shares, _accRewardPerShare, SCALING_FACTOR);
         uint256 reward = newRewardDebt_ - posInfo.rewardDebt;
-        REWARD_TOKEN.transfer(posInfo.owner, reward);
+        address(REWARD_TOKEN).safeTransfer(posInfo.owner, reward);
     }
 }
