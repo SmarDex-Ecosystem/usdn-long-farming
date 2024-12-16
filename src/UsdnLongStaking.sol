@@ -43,6 +43,11 @@ contract UsdnLongStaking is IUsdnLongStaking {
     /// @dev Block number when the last rewards were calculated.
     uint256 internal _lastRewardBlock;
 
+    /**
+     * @param usdnProtocol The USDN protocol contract used to transfer the user long position ownership.
+     * @param farming The Smardex farming contract.
+     * @param campaignId The campaign id of the Smardex farming that will give rewards.
+     */
     constructor(IUsdnProtocol usdnProtocol, IFarmingRange farming, uint256 campaignId) {
         USDN_PROTOCOL = usdnProtocol;
         FARMING = farming;
@@ -56,16 +61,37 @@ contract UsdnLongStaking is IUsdnLongStaking {
         farming.deposit(campaignId, 1);
     }
 
-    /**
-     * @notice Deposits a usdn protocol position to receive some rewards.
-     * @dev Takes into account the current position trading expo as shares. Uses a delegation signature
-     * to transfer the position ownership. Reverts if the position is already owned by the
-     * contract, if the position is pending or if the trading expo is invalid.
-     * @param tick The tick of the position.
-     * @param tickVersion The version of the tick.
-     * @param index The index of the position inside the tick.
-     * @return success_ Whether the deposit was successful.
-     */
+    /// @inheritdoc IUsdnLongStaking
+    function getPositionInfo(bytes32 posHash) external view returns (PositionInfo memory posInfo_) {
+        return _positions[posHash];
+    }
+
+    /// @inheritdoc IUsdnLongStaking
+    function getPositionsCount() external view returns (uint256 positionsCount_) {
+        return _positionsCount;
+    }
+
+    /// @inheritdoc IUsdnLongStaking
+    function getTotalShares() external view returns (uint256 totalShares_) {
+        return _totalShares;
+    }
+
+    /// @inheritdoc IUsdnLongStaking
+    function getAccRewardPerShare() external view returns (uint256 accRewardPerShare_) {
+        return _accRewardPerShare;
+    }
+
+    /// @inheritdoc IUsdnLongStaking
+    function getLastRewardBlock() external view returns (uint256 lastRewardBlock_) {
+        return _lastRewardBlock;
+    }
+
+    /// @inheritdoc IUsdnLongStaking
+    function getPosIdHash(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_) {
+        return _hashPositionId(tick, tickVersion, index);
+    }
+
+    /// @inheritdoc IUsdnLongStaking
     function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation)
         external
         returns (bool success_)
@@ -112,7 +138,7 @@ contract UsdnLongStaking is IUsdnLongStaking {
     /**
      * @notice Harvests pending rewards from `_lastRewards`, updates `_accRewardPerShare` and `_lastRewardBlock`.
      * @dev If there is no shares deposited, `lastRewardBlock` will be updated but harvest will not be triggered for
-     * this blocks period.
+     * this period of blocks.
      */
     function _updateRewards() internal {
         if (_lastRewardBlock < block.number) {
@@ -141,8 +167,8 @@ contract UsdnLongStaking is IUsdnLongStaking {
     }
 
     /**
-     * @notice Checks that the position is currently valid.
-     * @param position The USDN protocol user position on which the checks must be performed.
+     * @notice Checks that the user USDN protocol position is currently valid.
+     * @param position The user USDN protocol position on which the checks must be performed.
      */
     function _checkPosition(IUsdnProtocolTypes.Position memory position) internal view {
         if (position.user == address(this)) {

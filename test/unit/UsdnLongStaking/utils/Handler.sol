@@ -17,4 +17,12 @@ contract UsdnLongStakingHandler is UsdnLongStaking {
     constructor(MockUsdnProtocol usdnProtocol, MockFarmingRange farming)
         UsdnLongStaking(IUsdnProtocol(address(usdnProtocol)), IFarmingRange(address(farming)), 0)
     { }
+
+    function i_updateRewards() external {
+        _updateRewards();
+    }
+
+    function setTotalShares(uint256 totalShares) external {
+        _totalShares = totalShares;
+    }
 }
