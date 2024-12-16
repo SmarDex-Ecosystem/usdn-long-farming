@@ -12,8 +12,13 @@ import { IUsdnLongStaking } from "./interfaces/IUsdnLongStaking.sol";
  * @notice A contract for staking USDN long positions to earn rewards.
  */
 contract UsdnLongStaking is IUsdnLongStaking {
-    /// @dev Scaling factor for `_accRewardPerShare`.
-    uint256 public constant SCALING_FACTOR = 1e20;
+    /**
+     * @dev Scaling factor for `_accRewardPerShare`.
+     * In the worst case of having 1 wei of reward tokens per block for a duration of 1 block, and with a total number
+     * of shares equivalent to 500 million wstETH, the accumulator value increment would still be 2e11 which is
+     * precise enough.
+     */
+    uint256 public constant SCALING_FACTOR = 1e38;
 
     /// @notice The address of the USDN protocol contract.
     IUsdnProtocol public immutable USDN_PROTOCOL;
@@ -36,12 +41,23 @@ contract UsdnLongStaking is IUsdnLongStaking {
     /// @dev The sum of all locked positions' initial trading exposure.
     uint256 internal _totalShares;
 
-    /// @dev Accumulated reward tokens per share multiplied by `SCALING_FACTOR`.
+    /**
+     * @dev Accumulated reward tokens per share multiplied by `SCALING_FACTOR`.
+     * The factor is necessary to represent rewards per shares with enouhg precision for very small reward quantities
+     * and large total number of shares.
+     * In the worst case of having a very large number of reward tokens per block (1000e38) and a very small total
+     * number of shares (1 wei), this number would not overflow for 10^18 blocks which is ~380 billion years.
+     */
     uint256 internal _accRewardPerShare;
 
     /// @dev Block number when the last rewards were calculated.
     uint256 internal _lastRewardBlock;
 
+    /**
+     * @param usdnProtocol The address of the USDN protocol contract.
+     * @param farming The address of the `FarmingRange` contract.
+     * @param campaignId The campaign ID in the `FarmingRange` contract which provides reward tokens to this contract.
+     */
     constructor(IUsdnProtocol usdnProtocol, IFarmingRange farming, uint256 campaignId) {
         USDN_PROTOCOL = usdnProtocol;
         FARMING = farming;
