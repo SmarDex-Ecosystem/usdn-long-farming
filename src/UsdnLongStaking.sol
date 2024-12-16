@@ -73,7 +73,7 @@ contract UsdnLongStaking is IUsdnLongStaking {
     }
 
     /**
-     * @notice Hash a USDN long position's ID to use a key in the `_positions` mapping.
+     * @notice Hash a USDN long position's ID to use as key in the `_positions` mapping.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
