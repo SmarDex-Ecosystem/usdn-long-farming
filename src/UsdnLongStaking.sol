@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
+import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
 
 import { IFarmingRange } from "./interfaces/IFarmingRange.sol";
 import { IUsdnLongStaking } from "./interfaces/IUsdnLongStaking.sol";
@@ -13,6 +14,9 @@ import { IUsdnLongStaking } from "./interfaces/IUsdnLongStaking.sol";
 contract UsdnLongStaking is IUsdnLongStaking {
     /// @dev Scaling factor for `_accRewardPerShare`.
     uint256 public constant SCALING_FACTOR = 1e20;
+
+    /// @notice The address of the USDN protocol contract.
+    IUsdnProtocol public immutable USDN_PROTOCOL;
 
     /// @notice The address of the SmarDex `FarmingRange` contract, which is the source of the reward tokens.
     IFarmingRange public immutable FARMING;
@@ -38,7 +42,8 @@ contract UsdnLongStaking is IUsdnLongStaking {
     /// @dev Block number when the last rewards were calculated.
     uint256 internal _lastRewardBlock;
 
-    constructor(IFarmingRange farming, uint256 campaignId) {
+    constructor(IUsdnProtocol usdnProtocol, IFarmingRange farming, uint256 campaignId) {
+        USDN_PROTOCOL = usdnProtocol;
         FARMING = farming;
         CAMPAIGN_ID = campaignId;
         IFarmingRange.CampaignInfo memory info = farming.campaignInfo(campaignId);
