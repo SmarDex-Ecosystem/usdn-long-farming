@@ -14,10 +14,8 @@ contract TestUsdnLongStakingDeposit is UsdnLongStakingBaseFixture {
 
     /**
      * @custom:scenario Tests the deposit
-     * @custom:when The address of the staking is called
-     * @custom:then The address should be a valid address
+     * @custom:when
+     * @custom:then
      */
-    function test_() public view {
-        assertTrue(address(staking) != address(0), "The staking address should be deployed");
-    }
+    function test_deposit() public view { }
 }

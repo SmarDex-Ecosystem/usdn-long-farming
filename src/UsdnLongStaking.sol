@@ -109,13 +109,60 @@ contract UsdnLongStaking is IUsdnLongStaking {
         returns (bool success_)
     {
         IUsdnProtocolTypes.Position memory pos = USDN_PROTOCOL.getCurrentLongPosition(tick, index);
-
         _checkPosition(pos);
-        _updateRewards();
 
-        uint128 currentTradingExpo = pos.totalExpo - pos.amount;
+        return _deposit(pos, tick, tickVersion, index, delegation);
+    }
+
+    /**
+     * @notice Hash a USDN long position's ID to use a key in the `_positions` mapping.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @param index The index of the position inside the tick.
+     * @return hash_ The hash of the position ID.
+     */
+    function _hashPositionId(int24 tick, uint256 tickVersion, uint256 index) internal pure returns (bytes32 hash_) {
+        hash_ = keccak256(abi.encode(tick, tickVersion, index));
+    }
+
+    /**
+     * @notice Checks that the user USDN protocol position is currently valid.
+     * @param position The user USDN protocol position on which the checks must be performed.
+     */
+    function _checkPosition(IUsdnProtocolTypes.Position memory position) internal view {
+        if (position.user == address(this)) {
+            revert UsdnLongStakingContractOwned();
+        }
+
+        if (!position.validated) {
+            revert UsdnLongStakingPendingPosition();
+        }
+
+        if (position.totalExpo <= position.amount) {
+            revert UsdnLongStakingInvalidTradingExpo();
+        }
+    }
+
+    /**
+     * @notice Deposits a usdn protocol position to receive some rewards.
+     * @dev Sets the current position trading expo as shares.
+     * @param position The user USDN protocol position to deposit.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @param index The index of the position inside the tick.
+     * @return success_ Whether the deposit was successful.
+     */
+    function _deposit(
+        IUsdnProtocolTypes.Position memory position,
+        int24 tick,
+        uint256 tickVersion,
+        uint256 index,
+        bytes calldata delegation
+    ) internal returns (bool success_) {
+        _updateRewards();
+        uint128 currentTradingExpo = position.totalExpo - position.amount;
         PositionInfo memory posInfo = PositionInfo({
-            owner: pos.user,
+            owner: position.user,
             tick: tick,
             tickVersion: tickVersion,
             index: index,
@@ -134,17 +181,6 @@ contract UsdnLongStaking is IUsdnLongStaking {
 
         emit UsdnLongStakingDeposit(posInfo.owner, positionIdHash);
         return true;
-    }
-
-    /**
-     * @notice Hash a USDN long position's ID to use a key in the `_positions` mapping.
-     * @param tick The tick of the position.
-     * @param tickVersion The version of the tick.
-     * @param index The index of the position inside the tick.
-     * @return hash_ The hash of the position ID.
-     */
-    function _hashPositionId(int24 tick, uint256 tickVersion, uint256 index) internal pure returns (bytes32 hash_) {
-        hash_ = keccak256(abi.encode(tick, tickVersion, index));
     }
 
     /**
@@ -175,24 +211,6 @@ contract UsdnLongStaking is IUsdnLongStaking {
             }
 
             _lastRewardBlock = block.number;
-        }
-    }
-
-    /**
-     * @notice Checks that the user USDN protocol position is currently valid.
-     * @param position The user USDN protocol position on which the checks must be performed.
-     */
-    function _checkPosition(IUsdnProtocolTypes.Position memory position) internal view {
-        if (position.user == address(this)) {
-            revert UsdnLongStakingContractOwned();
-        }
-
-        if (!position.validated) {
-            revert UsdnLongStakingPendingPosition();
-        }
-
-        if (position.totalExpo <= position.amount) {
-            revert UsdnLongStakingInvalidTradingExpo();
         }
     }
 }

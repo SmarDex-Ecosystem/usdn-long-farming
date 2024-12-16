@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
+import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
 
 import { MockFarmingRange } from "./MockFarmingRange.sol";
 import { MockUsdnProtocol } from "./MockUsdnProtocol.sol";
@@ -20,6 +21,10 @@ contract UsdnLongStakingHandler is UsdnLongStaking {
 
     function i_updateRewards() external {
         _updateRewards();
+    }
+
+    function i_checkPosition(IUsdnProtocolTypes.Position calldata position) external view {
+        _checkPosition(position);
     }
 
     function setTotalShares(uint256 totalShares) external {
