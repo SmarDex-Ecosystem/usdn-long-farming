@@ -6,12 +6,12 @@ import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProto
 contract MockUsdnProtocol {
     IUsdnProtocolTypes.Position internal _position;
 
-    function getCurrentLongPosition(int24, uint256)
+    function getLongPosition(IUsdnProtocolTypes.PositionId calldata)
         external
         view
-        returns (IUsdnProtocolTypes.Position memory position_)
+        returns (IUsdnProtocolTypes.Position memory position_, uint256 liquidationPenalty_)
     {
-        return _position;
+        return (_position, 0);
     }
 
     function setPosition(IUsdnProtocolTypes.Position calldata position) external {

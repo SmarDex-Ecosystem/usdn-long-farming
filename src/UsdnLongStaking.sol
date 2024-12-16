@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
 import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
+import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
 
 import { IFarmingRange } from "./interfaces/IFarmingRange.sol";
 import { IUsdnLongStaking } from "./interfaces/IUsdnLongStaking.sol";
@@ -108,7 +109,9 @@ contract UsdnLongStaking is IUsdnLongStaking {
         external
         returns (bool success_)
     {
-        IUsdnProtocolTypes.Position memory pos = USDN_PROTOCOL.getCurrentLongPosition(tick, index);
+        (IUsdnProtocolTypes.Position memory pos,) =
+            USDN_PROTOCOL.getLongPosition(IUsdnProtocolTypes.PositionId(tick, tickVersion, index));
+
         _checkPosition(pos);
 
         return _deposit(pos, tick, tickVersion, index, delegation);
@@ -166,7 +169,7 @@ contract UsdnLongStaking is IUsdnLongStaking {
             tick: tick,
             tickVersion: tickVersion,
             index: index,
-            rewardDebt: currentTradingExpo * _accRewardPerShare / SCALING_FACTOR,
+            rewardDebt: FixedPointMathLib.fullMulDiv(currentTradingExpo, _accRewardPerShare, SCALING_FACTOR),
             shares: currentTradingExpo
         });
 
@@ -189,28 +192,27 @@ contract UsdnLongStaking is IUsdnLongStaking {
      * this period of blocks.
      */
     function _updateRewards() internal {
-        if (_lastRewardBlock < block.number) {
-            if (_totalShares == 0) {
-                _lastRewardBlock = block.number;
-                return;
-            }
+        if (_lastRewardBlock == block.number) {
+            return;
+        }
 
-            uint256 rewardsBalanceBefore = REWARD_TOKEN.balanceOf(address(this));
+        _lastRewardBlock = block.number;
 
-            // farming harvest
-            uint256[] memory campaignsIds = new uint256[](1);
-            campaignsIds[0] = CAMPAIGN_ID;
-            FARMING.harvest(campaignsIds);
+        if (_totalShares == 0) {
+            return;
+        }
 
-            // rewardPerBlock = token amount harvested / amount of blocks from the `_lastRewardBlock`
-            uint256 rewardsPerBlock =
-                (REWARD_TOKEN.balanceOf(address(this)) - rewardsBalanceBefore) / (block.number - _lastRewardBlock);
+        uint256 rewardsBalanceBefore = REWARD_TOKEN.balanceOf(address(this));
 
-            if (rewardsPerBlock > 0) {
-                _accRewardPerShare += rewardsPerBlock * SCALING_FACTOR / _totalShares;
-            }
+        // farming harvest
+        uint256[] memory campaignsIds = new uint256[](1);
+        campaignsIds[0] = CAMPAIGN_ID;
+        FARMING.harvest(campaignsIds);
 
-            _lastRewardBlock = block.number;
+        uint256 periodRewards = REWARD_TOKEN.balanceOf(address(this)) - rewardsBalanceBefore;
+
+        if (periodRewards > 0) {
+            _accRewardPerShare += FixedPointMathLib.fullMulDiv(periodRewards, SCALING_FACTOR, _totalShares);
         }
     }
 }

@@ -39,7 +39,7 @@ contract TestUsdnLongStakingUpdateRewards is UsdnLongStakingBaseFixture {
     function test_updateRewardsWithShares() public {
         uint256 previousLastRewardBlock = staking.getLastRewardBlock();
 
-        staking.setTotalShares(farming.getRewardsPerBlock());
+        staking.setTotalShares(farming.getRewardsPerBlock() * INITIAL_BLOCK);
         staking.i_updateRewards();
 
         assertEq(

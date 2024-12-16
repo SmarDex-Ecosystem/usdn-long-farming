@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import { UsdnLongStakingHandler } from "./Handler.sol";
 import { MockRewardToken } from "./MockRewardToken.sol";
 
 import { FarmingToken } from "../../../../src/FarmingToken.sol";
@@ -11,6 +10,7 @@ contract MockFarmingRange {
     MockRewardToken internal _rewardToken;
     FarmingToken internal _farmingToken;
     uint256 internal _rewardsPerBlock = 5;
+    uint256 internal _lastRewardsBlock;
 
     constructor(MockRewardToken rewardToken, FarmingToken farmingToken) {
         _rewardToken = rewardToken;
@@ -25,10 +25,12 @@ contract MockFarmingRange {
     function deposit(uint256, uint256) external { }
 
     function harvest(uint256[] calldata) external {
-        uint256 rewards = (block.number - UsdnLongStakingHandler(msg.sender).getLastRewardBlock()) * _rewardsPerBlock;
+        uint256 rewards = (block.number - _lastRewardsBlock) * _rewardsPerBlock;
         // to simulate a rewards token transfer to the staking
         _rewardToken.mint(address(this), rewards);
         _rewardToken.transfer(msg.sender, rewards);
+
+        _lastRewardsBlock = block.number;
     }
 
     function getRewardsPerBlock() external view returns (uint256) {
