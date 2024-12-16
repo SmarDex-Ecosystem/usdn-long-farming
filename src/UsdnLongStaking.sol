@@ -117,6 +117,14 @@ contract UsdnLongStaking is IUsdnLongStaking {
         return _deposit(pos, tick, tickVersion, index, delegation);
     }
 
+    /// @inheritdoc IUsdnLongStaking
+    function harvest(int24 tick, uint256 tickVersion, uint256 index) external {
+        bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
+        uint256 newRewardDebt_ = _harvest(positionIdHash);
+        PositionInfo storage posInfo = _positions[positionIdHash];
+        posInfo.rewardDebt = newRewardDebt_;
+    }
+
     /**
      * @notice Hash a USDN long position's ID to use a key in the `_positions` mapping.
      * @param tick The tick of the position.
@@ -214,5 +222,18 @@ contract UsdnLongStaking is IUsdnLongStaking {
         if (periodRewards > 0) {
             _accRewardPerShare += FixedPointMathLib.fullMulDiv(periodRewards, SCALING_FACTOR, _totalShares);
         }
+    }
+
+    /**
+     * @notice Sends rewards to the position's owner.
+     * @param positionIdHash The hash of the position ID.
+     * @return newRewardDebt_ The new value of the `rewardDebt`.
+     */
+    function _harvest(bytes32 positionIdHash) internal returns (uint256 newRewardDebt_) {
+        _updateRewards();
+        PositionInfo memory posInfo = _positions[positionIdHash];
+        newRewardDebt_ = FixedPointMathLib.fullMulDiv(posInfo.shares, _accRewardPerShare, SCALING_FACTOR);
+        uint256 reward = newRewardDebt_ - posInfo.rewardDebt;
+        REWARD_TOKEN.transfer(posInfo.owner, reward);
     }
 }

@@ -68,4 +68,13 @@ interface IUsdnLongStaking is IUsdnLongStakingTypes, IUsdnLongStakingErrors, IUs
     function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation)
         external
         returns (bool success_);
+
+    /**
+     * @notice Sends rewards to the position's owner.
+     * @dev position's rewardDebt is updated.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @param index The index of the position inside the tick.
+     */
+    function harvest(int24 tick, uint256 tickVersion, uint256 index) external;
 }
