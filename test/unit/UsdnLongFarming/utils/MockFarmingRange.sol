@@ -26,7 +26,7 @@ contract MockFarmingRange {
 
     function harvest(uint256[] calldata) external {
         uint256 rewards = (block.number - _lastRewardsBlock) * _rewardsPerBlock;
-        // to simulate a rewards token transfer to the staking
+        // to simulate a rewards token transfer to the farming
         _rewardToken.mint(address(this), rewards);
         _rewardToken.transfer(msg.sender, rewards);
 
