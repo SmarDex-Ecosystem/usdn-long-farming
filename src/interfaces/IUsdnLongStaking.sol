@@ -11,6 +11,12 @@ import { IUsdnLongStakingTypes } from "./IUsdnLongStakingTypes.sol";
  */
 interface IUsdnLongStaking is IUsdnLongStakingTypes, IUsdnLongStakingErrors, IUsdnLongStakingEvents {
     /**
+     * @notice Sets the liquidator reward factor.
+     * @param liquidatorRewardBps The liquidator reward factor value, in basis points.
+     */
+    function setLiquidatorRewardBps(uint16 liquidatorRewardBps) external;
+
+    /**
      * @notice Gets the deposited position info of the USDN protocol position.
      * @param posHash The position obtained using {hashPositionId}.
      * @return posInfo_ The position info.
@@ -54,6 +60,12 @@ interface IUsdnLongStaking is IUsdnLongStakingTypes, IUsdnLongStakingErrors, IUs
      * @return hash_ The position hash value.
      */
     function getPosIdHash(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_);
+
+    /**
+     * @notice Gets the current liquidator reward factor, in basis points.
+     * @return liquidatorRewardBps_ The liquidator reward factor value.
+     */
+    function getLiquidatorRewardBps() external view returns (uint16 liquidatorRewardBps_);
 
     /**
      * @notice Deposits a usdn protocol position to receive some rewards.

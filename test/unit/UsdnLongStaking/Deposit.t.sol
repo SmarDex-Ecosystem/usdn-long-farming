@@ -28,7 +28,7 @@ contract TestUsdnLongStakingDeposit is UsdnLongStakingBaseFixture {
             amount: 0
         });
 
-        usdnProtocol.setPosition(position);
+        usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, false);
         _defaultPosHash = staking.getPosIdHash(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
     }
 

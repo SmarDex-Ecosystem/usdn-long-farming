@@ -20,4 +20,15 @@ interface IUsdnLongStakingEvents {
      * @param reward The reward amount transferred.
      */
     event UsdnLongStakingHarvest(address indexed user, bytes32 positionIdHash, uint256 reward);
+
+    /**
+     * @notice The position has been deleted and the liquidator received part of rewards.
+     * @param liquidator The address of the liquidator.
+     * @param positionIdHash The hash of the USDN protocol position.
+     * @param liquidatorReward Amount received by the liquidator.
+     * @param burned Amount sent to the dead address.
+     */
+    event UsdnLongStakingLiquidate(
+        address indexed liquidator, bytes32 positionIdHash, uint256 liquidatorReward, uint256 burned
+    );
 }

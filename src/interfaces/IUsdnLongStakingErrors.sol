@@ -14,4 +14,7 @@ interface IUsdnLongStakingErrors {
 
     /// @dev The USDN protocol position validation is pending.
     error UsdnLongStakingPendingPosition();
+
+    /// @dev The USDN protocol position is invalid.
+    error UsdnLongStakingInvalidPosition();
 }

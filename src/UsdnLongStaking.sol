@@ -2,6 +2,8 @@
 pragma solidity 0.8.28;
 
 import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
 import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
@@ -14,7 +16,7 @@ import { IUsdnLongStaking } from "./interfaces/IUsdnLongStaking.sol";
  * @title USDN Long Positions Staking
  * @notice A contract for staking USDN long positions to earn rewards.
  */
-contract UsdnLongStaking is IUsdnLongStaking {
+contract UsdnLongStaking is IUsdnLongStaking, Ownable2Step {
     using SafeTransferLib for address;
 
     /**
@@ -24,6 +26,12 @@ contract UsdnLongStaking is IUsdnLongStaking {
      * precise enough.
      */
     uint256 public constant SCALING_FACTOR = 1e38;
+
+    /// @notice Denominator for the reward multiplier, will give us a 0.01% basis point.
+    uint32 public constant BPS_DIVISOR = 10_000;
+
+    /// @notice Address holding rewards burned during liquidation.
+    address public constant DEAD_ADDRESS = address(0xdead);
 
     /// @notice The address of the USDN protocol contract.
     IUsdnProtocol public immutable USDN_PROTOCOL;
@@ -58,12 +66,15 @@ contract UsdnLongStaking is IUsdnLongStaking {
     /// @dev Block number when the last rewards were calculated.
     uint256 internal _lastRewardBlock;
 
+    /// @dev Ratio of the reward to be distributed to the liquidator in basis points: default is 30%.
+    uint16 internal _liquidatorRewardBps = 3000;
+
     /**
      * @param usdnProtocol The address of the USDN protocol contract.
      * @param farming The address of the `FarmingRange` contract.
      * @param campaignId The campaign ID in the `FarmingRange` contract which provides reward tokens to this contract.
      */
-    constructor(IUsdnProtocol usdnProtocol, IFarmingRange farming, uint256 campaignId) {
+    constructor(IUsdnProtocol usdnProtocol, IFarmingRange farming, uint256 campaignId) Ownable(msg.sender) {
         USDN_PROTOCOL = usdnProtocol;
         FARMING = farming;
         CAMPAIGN_ID = campaignId;
@@ -75,6 +86,11 @@ contract UsdnLongStaking is IUsdnLongStaking {
         farmingToken.transferFrom(msg.sender, address(this), 1);
         farmingToken.approve(address(farming), 1);
         farming.deposit(campaignId, 1);
+    }
+
+    /// @inheritdoc IUsdnLongStaking
+    function setLiquidatorRewardBps(uint16 liquidatorRewardBps) external onlyOwner {
+        _liquidatorRewardBps = liquidatorRewardBps;
     }
 
     /// @inheritdoc IUsdnLongStaking
@@ -108,6 +124,11 @@ contract UsdnLongStaking is IUsdnLongStaking {
     }
 
     /// @inheritdoc IUsdnLongStaking
+    function getLiquidatorRewardBps() external view returns (uint16 liquidatorRewardBps_) {
+        return _liquidatorRewardBps;
+    }
+
+    /// @inheritdoc IUsdnLongStaking
     function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation)
         external
         returns (bool success_)
@@ -123,9 +144,10 @@ contract UsdnLongStaking is IUsdnLongStaking {
     /// @inheritdoc IUsdnLongStaking
     function harvest(int24 tick, uint256 tickVersion, uint256 index) external {
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
-        uint256 newRewardDebt_ = _harvest(positionIdHash);
-        PositionInfo storage posInfo = _positions[positionIdHash];
-        posInfo.rewardDebt = newRewardDebt_;
+        (bool isLiquidated, uint256 newRewardDebt) = _harvest(positionIdHash);
+        if (!isLiquidated) {
+            _positions[positionIdHash].rewardDebt = newRewardDebt;
+        }
     }
 
     /**
@@ -228,16 +250,56 @@ contract UsdnLongStaking is IUsdnLongStaking {
     }
 
     /**
-     * @notice Sends rewards to the position's owner.
+     * @notice Sends rewards to the position's owner or liquidates the position if it has been liquidated in the USDN
+     * protocol.
      * @param positionIdHash The hash of the position ID.
+     * @return isLiquidated_ Whether the position has been liquidated.
      * @return newRewardDebt_ The new value of the `rewardDebt`.
      */
-    function _harvest(bytes32 positionIdHash) internal returns (uint256 newRewardDebt_) {
+    function _harvest(bytes32 positionIdHash) internal returns (bool isLiquidated_, uint256 newRewardDebt_) {
         _updateRewards();
         PositionInfo memory posInfo = _positions[positionIdHash];
+        if (posInfo.owner == address(0)) {
+            revert UsdnLongStakingInvalidPosition();
+        }
+        isLiquidated_ = _isLiquidated(posInfo.tick, posInfo.tickVersion);
         newRewardDebt_ = FixedPointMathLib.fullMulDiv(posInfo.shares, _accRewardPerShare, SCALING_FACTOR);
         uint256 reward = newRewardDebt_ - posInfo.rewardDebt;
-        address(REWARD_TOKEN).safeTransfer(posInfo.owner, reward);
-        emit UsdnLongStakingHarvest(posInfo.owner, positionIdHash, reward);
+
+        if (isLiquidated_) {
+            _liquidate(positionIdHash, reward, msg.sender);
+            newRewardDebt_ = 0;
+        } else {
+            if (reward > 0) {
+                address(REWARD_TOKEN).safeTransfer(posInfo.owner, reward);
+                emit UsdnLongStakingHarvest(posInfo.owner, positionIdHash, reward);
+            }
+        }
+    }
+
+    /**
+     * @notice Checks if a position has been liquidated in the USDN protocol.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @return isLiquidated_ Whether the position has been liquidated.
+     */
+    function _isLiquidated(int24 tick, uint256 tickVersion) internal view returns (bool isLiquidated_) {
+        uint256 protocolTickVersion = USDN_PROTOCOL.getTickVersion(tick);
+        return protocolTickVersion != tickVersion;
+    }
+
+    /**
+     * @notice Liquidates a position and sends the rewards to the liquidator and dead address.
+     * @param positionIdHash The hash of the position ID.
+     * @param reward The reward amount to be distributed.
+     * @param liquidator The address of the liquidator.
+     */
+    function _liquidate(bytes32 positionIdHash, uint256 reward, address liquidator) internal {
+        delete _positions[positionIdHash];
+        uint256 liquidatorReward = reward * _liquidatorRewardBps / BPS_DIVISOR;
+        uint256 burned = reward - liquidatorReward;
+        address(REWARD_TOKEN).safeTransfer(DEAD_ADDRESS, burned);
+        address(REWARD_TOKEN).safeTransfer(liquidator, liquidatorReward);
+        emit UsdnLongStakingLiquidate(liquidator, positionIdHash, liquidatorReward, burned);
     }
 }
