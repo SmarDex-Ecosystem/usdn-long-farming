@@ -36,11 +36,11 @@ contract TestUsdnLongStakingCheckPosition is UsdnLongStakingBaseFixture {
     /**
      * @custom:scenario Tests the {_checkPosition} function with a position already owned by the staking.
      * @custom:when The function is called.
-     * @custom:then The call should revert with {UsdnLongStakingContractOwned}.
+     * @custom:then The call should revert with {UsdnLongStakingAlreadyDeposited}.
      */
     function test_RevertWhen_checkPositionOwned() public {
         position.user = address(staking);
-        vm.expectRevert(UsdnLongStakingContractOwned.selector);
+        vm.expectRevert(UsdnLongStakingAlreadyDeposited.selector);
         staking.i_checkPosition(position);
     }
 

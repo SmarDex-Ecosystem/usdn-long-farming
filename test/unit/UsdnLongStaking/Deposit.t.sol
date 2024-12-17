@@ -6,7 +6,7 @@ import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProto
 import { UsdnLongStakingBaseFixture } from "./utils/Fixtures.sol";
 
 /**
- * @custom:feature Tests the {deposit} of the USDN long staking
+ * @custom:feature Tests the {IUsdnLongStaking.deposit} of the USDN long staking
  * @custom:background Given a deployed staking contract and USDN protocol
  */
 contract TestUsdnLongStakingDeposit is UsdnLongStakingBaseFixture {
@@ -29,7 +29,7 @@ contract TestUsdnLongStakingDeposit is UsdnLongStakingBaseFixture {
         });
 
         usdnProtocol.setPosition(position);
-        _defaultPosHash = staking.getPosIdHash(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        _defaultPosHash = staking.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
     }
 
     /**
@@ -40,16 +40,15 @@ contract TestUsdnLongStakingDeposit is UsdnLongStakingBaseFixture {
      * @custom:and The contract global state must be updated.
      */
     function test_deposit() public {
-        // fill already shares to the staking
+        // fill a previous share to the staking
         uint256 previousTotalShares = 1;
         staking.setTotalShares(previousTotalShares);
 
         vm.expectEmit();
-        emit UsdnLongStakingDeposit(address(this), _defaultPosHash);
-        bool success = staking.deposit(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX, "");
-        assertTrue(success, "The deposit must be successful");
+        emit Deposit(address(this), DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        staking.deposit(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX, "");
 
-        // position state
+        // user position state
         PositionInfo memory posInfo = staking.getPositionInfo(_defaultPosHash);
         assertEq(posInfo.owner, address(this), "The owner must be the user");
         assertEq(posInfo.tick, DEFAULT_TICK, "The tick must be the default tick");
@@ -74,10 +73,15 @@ contract TestUsdnLongStakingDeposit is UsdnLongStakingBaseFixture {
         );
         assertEq(staking.getPositionsCount(), 1, "The position count must be 1");
         assertEq(staking.getLastRewardBlock(), block.number, "The last reward block must be updated");
+        assertGt(
+            rewardToken.balanceOf(address(staking)),
+            0,
+            "The rewards token balance of the staking contract must be positive"
+        );
         assertEq(
             staking.getAccRewardPerShare(),
             rewardToken.balanceOf(address(staking)) * staking.SCALING_FACTOR() / previousTotalShares,
-            "The reward by shares accumulator must be updated"
+            "The rewards by share accumulator must be updated"
         );
     }
 }

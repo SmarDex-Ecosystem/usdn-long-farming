@@ -12,60 +12,58 @@ import { IUsdnLongStakingTypes } from "./IUsdnLongStakingTypes.sol";
 interface IUsdnLongStaking is IUsdnLongStakingTypes, IUsdnLongStakingErrors, IUsdnLongStakingEvents {
     /**
      * @notice Gets the deposited position info of the USDN protocol position.
-     * @param posHash The position obtained using {hashPositionId}.
-     * @return posInfo_ The position info.
+     * @param posHash The position obtained using {hashPosId}.
+     * @return info_ The position info.
      */
-    function getPositionInfo(bytes32 posHash) external view returns (PositionInfo memory posInfo_);
+    function getPositionInfo(bytes32 posHash) external view returns (PositionInfo memory info_);
 
     /**
-     * @notice Gets the current deposited position count.
-     * @return positionsCount_ The position count value.
+     * @notice Gets the number of deposited positions.
+     * @return count_ The count of deposited positions.
      */
-    function getPositionsCount() external view returns (uint256 positionsCount_);
+    function getPositionsCount() external view returns (uint256 count_);
 
     /**
-     * @notice Gets the current deposited total shares.
-     * @dev Shares represents the deposited amount of the USDN protocol position trading expo.
-     * @return totalShares_ The total shares value.
+     * @notice Gets the total shares of deposited positions.
+     * @dev Shares represents the trading exposure of deposited USDN positions.
+     * @return shares_ The sum of all positions' shares.
      */
-    function getTotalShares() external view returns (uint256 totalShares_);
+    function getTotalShares() external view returns (uint256 shares_);
 
     /**
-     * @notice Gets the rewards per share accumulator.
-     * @dev Represents the sum of the rewards by periods of blocks divided by this corresponding period total shares.
-     * This is updated each user action.
+     * @notice Gets the value of the rewards per share accumulator.
+     * @dev Represents the accumulated value of the rewards per share for each update interval, multiplied by a constant
+     * for precision.
+     * This value is updated before each user action.
      * @return accRewardPerShare_ The accumulator value.
      */
     function getAccRewardPerShare() external view returns (uint256 accRewardPerShare_);
 
     /**
-     * @notice Gets the last reward block took into account by the current reward per share accumulator.
-     * This is updated each user action.
-     * @return lastRewardBlock_ The last reward block value.
+     * @notice Gets the block number when the accumulator was last updated.
+     * This value is updated before each user action.
+     * @return block_ The block number of the update.
      */
-    function getLastRewardBlock() external view returns (uint256 lastRewardBlock_);
+    function getLastRewardBlock() external view returns (uint256 block_);
 
     /**
-     * @notice Gets a USDN protocol position hash.
-     * @dev The hash is built using `keccak256(abi.encode(tick, tickVersion, index))`.
+     * @notice Hashes the unique ID of a USDN position.
+     * @dev The hash is computed using `keccak256(abi.encode(tick, tickVersion, index))`.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
-     * @return hash_ The position hash value.
+     * @return hash_ The hash of the ID.
      */
-    function getPosIdHash(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_);
+    function hashPosId(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_);
 
     /**
-     * @notice Deposits a usdn protocol position to receive some rewards.
-     * @dev Takes into account the current position trading expo as shares. Uses a delegation signature
-     * to transfer the position ownership. Reverts if the position is already owned by the
-     * contract or if the position is pending.
+     * @notice Deposits a USDN protocol position to receive rewards.
+     * @dev Takes into account the initial position trading expo as shares. Uses a delegation signature
+     * to transfer the position ownership to this contract. Reverts if the position is already owned by the
+     * contract or if the position is pending validation.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
-     * @return success_ Whether the deposit was successful.
      */
-    function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation)
-        external
-        returns (bool success_);
+    function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation) external;
 }

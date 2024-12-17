@@ -75,17 +75,17 @@ contract UsdnLongStaking is IUsdnLongStaking {
     }
 
     /// @inheritdoc IUsdnLongStaking
-    function getPositionInfo(bytes32 posHash) external view returns (PositionInfo memory posInfo_) {
+    function getPositionInfo(bytes32 posHash) external view returns (PositionInfo memory info_) {
         return _positions[posHash];
     }
 
     /// @inheritdoc IUsdnLongStaking
-    function getPositionsCount() external view returns (uint256 positionsCount_) {
+    function getPositionsCount() external view returns (uint256 count_) {
         return _positionsCount;
     }
 
     /// @inheritdoc IUsdnLongStaking
-    function getTotalShares() external view returns (uint256 totalShares_) {
+    function getTotalShares() external view returns (uint256 shares_) {
         return _totalShares;
     }
 
@@ -95,20 +95,17 @@ contract UsdnLongStaking is IUsdnLongStaking {
     }
 
     /// @inheritdoc IUsdnLongStaking
-    function getLastRewardBlock() external view returns (uint256 lastRewardBlock_) {
+    function getLastRewardBlock() external view returns (uint256 block_) {
         return _lastRewardBlock;
     }
 
     /// @inheritdoc IUsdnLongStaking
-    function getPosIdHash(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_) {
+    function hashPosId(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_) {
         return _hashPositionId(tick, tickVersion, index);
     }
 
     /// @inheritdoc IUsdnLongStaking
-    function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation)
-        external
-        returns (bool success_)
-    {
+    function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation) external {
         (IUsdnProtocolTypes.Position memory pos,) =
             USDN_PROTOCOL.getLongPosition(IUsdnProtocolTypes.PositionId(tick, tickVersion, index));
 
@@ -118,12 +115,10 @@ contract UsdnLongStaking is IUsdnLongStaking {
         USDN_PROTOCOL.transferPositionOwnership(
             IUsdnProtocolTypes.PositionId(tick, tickVersion, index), address(this), delegation
         );
-
-        return true;
     }
 
     /**
-     * @notice Hash a USDN long position's ID to use a key in the `_positions` mapping.
+     * @notice Hashes a USDN long position's ID to use as key in the `_positions` mapping.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
@@ -135,11 +130,11 @@ contract UsdnLongStaking is IUsdnLongStaking {
 
     /**
      * @notice Checks that the user USDN protocol position is currently valid.
-     * @param position The user USDN protocol position on which the checks must be performed.
+     * @param position The USDN protocol position that must be checked.
      */
     function _checkPosition(IUsdnProtocolTypes.Position memory position) internal view {
         if (position.user == address(this)) {
-            revert UsdnLongStakingContractOwned();
+            revert UsdnLongStakingAlreadyDeposited();
         }
 
         if (!position.validated) {
@@ -148,17 +143,15 @@ contract UsdnLongStaking is IUsdnLongStaking {
     }
 
     /**
-     * @notice Saves a usdn protocol position deposit.
-     * @dev Sets the current position trading expo as shares.
-     * @param position The user USDN protocol position to deposit.
+     * @notice Records the information for a new position deposit.
+     * @dev Uses the initial position trading expo as shares.
+     * @param position The USDN protocol position to deposit.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
-     * @return success_ Whether the deposit was successful.
      */
     function _saveDeposit(IUsdnProtocolTypes.Position memory position, int24 tick, uint256 tickVersion, uint256 index)
         internal
-        returns (bool success_)
     {
         _updateRewards();
         uint128 initialTradingExpo = position.totalExpo - position.amount;
@@ -176,14 +169,13 @@ contract UsdnLongStaking is IUsdnLongStaking {
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
         _positions[positionIdHash] = posInfo;
 
-        emit UsdnLongStakingDeposit(posInfo.owner, positionIdHash);
-        return true;
+        emit Deposit(posInfo.owner, tick, tickVersion, index);
     }
 
     /**
-     * @notice Harvests pending rewards from `_lastRewards`, updates `_accRewardPerShare` and `_lastRewardBlock`.
-     * @dev If there is no shares deposited, `lastRewardBlock` will be updated but harvest will not be triggered for
-     * this period of blocks.
+     * @notice Harvests pending rewards from the `FarmingRange` contract, and updates `_accRewardPerShare` and
+     * `_lastRewardBlock`.
+     * @dev If no deposited position exists, `_lastRewardBlock` will be updated but rewards will not be harvested.
      */
     function _updateRewards() internal {
         if (_lastRewardBlock == block.number) {
