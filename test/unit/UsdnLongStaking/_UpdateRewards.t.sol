@@ -17,7 +17,7 @@ contract TestUsdnLongStakingUpdateRewards is UsdnLongStakingBaseFixture {
 
     /**
      * @custom:scenario Tests the {UsdnLongStaking._updateRewards} function without deposited shares.
-     * @custom:when The function {UsdnLongStaking._updateRewards} is called.
+     * @custom:when The function is called.
      * @custom:then The {UsdnLongStaking._accRewardPerShare} must be 0.
      * @custom:and The {UsdnLongStaking._lastRewardBlock} must be updated.
      * @custom:and The contract balance of rewards token must be 0.
@@ -31,7 +31,7 @@ contract TestUsdnLongStakingUpdateRewards is UsdnLongStakingBaseFixture {
 
     /**
      * @custom:scenario Tests the {UsdnLongStaking._updateRewards} function with deposited shares.
-     * @custom:when The function {UsdnLongStaking._updateRewards} is called.
+     * @custom:when The function is called.
      * @custom:then The {UsdnLongStaking._accRewardPerShare} must be updated.
      * @custom:and The {UsdnLongStaking._lastRewardBlock} must be updated.
      * @custom:and The contract balance of rewards token must be updated.
