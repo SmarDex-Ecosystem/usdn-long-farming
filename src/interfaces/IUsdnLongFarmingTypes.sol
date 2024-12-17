@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0;
 
 /**
- * @title IUsdnLonFarmingTypes
+ * @title IUsdnLongFarmingTypes
  * @notice Interface for the USDN Long Farming types.
  */
 interface IUsdnLongFarmingTypes {
