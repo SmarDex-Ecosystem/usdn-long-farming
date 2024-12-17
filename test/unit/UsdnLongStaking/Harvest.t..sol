@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import { Vm } from "forge-std/Vm.sol";
 
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
 import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
 
@@ -135,5 +136,16 @@ contract TestUsdnLongStakingHarvest is UsdnLongStakingBaseFixture {
 
         PositionInfo memory posInfo = staking.getPositionInfo(posHash);
         assertEq(posInfo.owner, address(0), "The reward debt must be updated");
+    }
+
+    /**
+     * @custom:scenario Reverts when caller is not the owner
+     * @custom:when Call the function {IUsdnLongStaking.setLiquidatorRewardBps} with a non-owner account
+     * @custom:then It reverts with a OwnableUnauthorizedAccount error
+     */
+    function test_RevertWhen_setLiquidatorRewardBpsCallerIsNotTheOwner() public {
+        vm.prank(USER_1);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, USER_1));
+        staking.setLiquidatorRewardBps(100);
     }
 }
