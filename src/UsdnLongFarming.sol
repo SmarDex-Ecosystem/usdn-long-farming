@@ -5,13 +5,13 @@ import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
 import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
 
 import { IFarmingRange } from "./interfaces/IFarmingRange.sol";
-import { IUsdnLongStaking } from "./interfaces/IUsdnLongStaking.sol";
+import { IUsdnLongFarming } from "./interfaces/IUsdnLongFarming.sol";
 
 /**
- * @title USDN Long Positions Staking
- * @notice A contract for staking USDN long positions to earn rewards.
+ * @title USDN Long Positions farming
+ * @notice A contract for farming USDN long positions to earn rewards.
  */
-contract UsdnLongStaking is IUsdnLongStaking {
+contract UsdnLongFarming is IUsdnLongFarming {
     /**
      * @dev Scaling factor for `_accRewardPerShare`.
      * In the worst case of having 1 wei of reward tokens per block for a duration of 1 block, and with a total number

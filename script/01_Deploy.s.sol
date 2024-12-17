@@ -5,7 +5,7 @@ import { LibRLP } from "solady-0.0/utils/LibRLP.sol";
 
 import { Script } from "forge-std/Script.sol";
 
-contract DeployUsdnLongStaking is Script {
+contract DeployUsdnLongFarming is Script {
     address _deployerAddress;
 
     function run() external {
@@ -15,10 +15,10 @@ contract DeployUsdnLongStaking is Script {
 
         // TODO:
         // - deploy farming token (mints 1 wei to deployer)
-        // - create farming campaign with the farming token as staking token
-        // - pre-compute address of the long staking contract (with LibRLP.computeAddress and vm.getNonce)
-        // - approve the long staking contract to spend the farming token (1 wei)
-        // - deploy the long staking contract by passing the farming contract address and campaign id
+        // - create farming campaign with the farming token as farming token
+        // - pre-compute address of the long farming contract (with LibRLP.computeAddress and vm.getNonce)
+        // - approve the long farming contract to spend the farming token (1 wei)
+        // - deploy the long farming contract by passing the farming contract address and campaign id
 
         // TODO: add return values for all deployed contracts
 

@@ -6,15 +6,15 @@ import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/I
 import { MockFarmingRange } from "./MockFarmingRange.sol";
 import { MockUsdnProtocol } from "./MockUsdnProtocol.sol";
 
-import { UsdnLongStaking } from "../../../../src/UsdnLongStaking.sol";
+import { UsdnLongFarming } from "../../../../src/UsdnLongFarming.sol";
 import { IFarmingRange } from "../../../../src/interfaces/IFarmingRange.sol";
 
 /**
- * @title UsdnLongStakingHandler
- * @dev Utils for testing the USDN Long Staking
+ * @title UsdnLongFarmingHandler
+ * @dev Utils for testing the USDN Long Farming
  */
-contract UsdnLongStakingHandler is UsdnLongStaking {
+contract UsdnLongFarmingHandler is UsdnLongFarming {
     constructor(MockUsdnProtocol usdnProtocol, MockFarmingRange farming)
-        UsdnLongStaking(IUsdnProtocol(address(usdnProtocol)), IFarmingRange(address(farming)), 0)
+        UsdnLongFarming(IUsdnProtocol(address(usdnProtocol)), IFarmingRange(address(farming)), 0)
     { }
 }
