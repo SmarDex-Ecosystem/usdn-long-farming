@@ -6,7 +6,7 @@ import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProto
 import { UsdnLongStakingBaseFixture } from "./utils/Fixtures.sol";
 
 /**
- * @custom:feature Tests the {IUsdnLongStaking.deposit} of the USDN long staking
+ * @custom:feature Tests the {IUsdnLongStaking.deposit} function of the USDN long staking
  * @custom:background Given a deployed staking contract and USDN protocol
  */
 contract TestUsdnLongStakingDeposit is UsdnLongStakingBaseFixture {
@@ -33,7 +33,7 @@ contract TestUsdnLongStakingDeposit is UsdnLongStakingBaseFixture {
     }
 
     /**
-     * @custom:scenario Tests the deposit with a valid position.
+     * @custom:scenario Tests the {IUsdnLongStaking.deposit} function with a valid position.
      * @custom:when The function is called.
      * @custom:then The call must not revert.
      * @custom:and The user position state must be updated.
