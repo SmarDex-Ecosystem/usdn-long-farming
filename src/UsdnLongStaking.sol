@@ -140,10 +140,6 @@ contract UsdnLongStaking is IUsdnLongStaking {
         if (!position.validated) {
             revert UsdnLongStakingPendingPosition();
         }
-
-        if (position.totalExpo <= position.amount) {
-            revert UsdnLongStakingInvalidTradingExpo();
-        }
     }
 
     /**

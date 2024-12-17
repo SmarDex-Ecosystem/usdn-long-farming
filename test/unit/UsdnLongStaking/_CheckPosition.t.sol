@@ -54,15 +54,4 @@ contract TestUsdnLongStakingCheckPosition is UsdnLongStakingBaseFixture {
         vm.expectRevert(UsdnLongStakingPendingPosition.selector);
         staking.i_checkPosition(position);
     }
-
-    /**
-     * @custom:scenario Tests the {_checkPosition} function with an invalid trading expo.
-     * @custom:when The function is called.
-     * @custom:then The call should revert with {UsdnLongStakingInvalidTradingExpo}.
-     */
-    function test_RevertWhen_checkPositionInvalidTradingExpo() public {
-        position.amount = position.totalExpo;
-        vm.expectRevert(UsdnLongStakingInvalidTradingExpo.selector);
-        staking.i_checkPosition(position);
-    }
 }
