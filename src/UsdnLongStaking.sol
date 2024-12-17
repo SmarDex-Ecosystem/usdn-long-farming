@@ -25,8 +25,8 @@ contract UsdnLongStaking is IUsdnLongStaking {
     /// @notice The address of the USDN protocol contract.
     IUsdnProtocol public immutable USDN_PROTOCOL;
 
-    /// @notice The address of the SmarDex `FarmingRange` contract, which is the source of the reward tokens.
-    IFarmingRange public immutable FARMING;
+    /// @notice The address of the SmarDex farmingRange contract, which is the source of the reward tokens.
+    IFarmingRange public immutable FARMING_RANGE;
 
     /// @notice The ID of the campaign in the `FarmingRange` contract which provides reward tokens to this contract.
     uint256 public immutable CAMPAIGN_ID;
@@ -44,7 +44,7 @@ contract UsdnLongStaking is IUsdnLongStaking {
     uint256 internal _totalShares;
 
     /**
-     * @dev Accumulated reward tokens per share multiplied by `SCALING_FACTOR`.
+     * @dev Accumulated reward tokens per share multiplied by {SCALING_FACTOR}.
      * The factor is necessary to represent rewards per shares with enough precision for very small reward quantities
      * and large total number of shares.
      * In the worst case of having a very large number of reward tokens per block (1000e18) and a very small total
@@ -57,21 +57,21 @@ contract UsdnLongStaking is IUsdnLongStaking {
 
     /**
      * @param usdnProtocol The address of the USDN protocol contract.
-     * @param farming The address of the `FarmingRange` contract.
-     * @param campaignId The campaign ID in the `FarmingRange` contract which provides reward tokens to this contract.
+     * @param farmingRange The address of the farmingRange contract.
+     * @param campaignId The campaign ID in the farmingRange contract which provides reward tokens to this contract.
      */
-    constructor(IUsdnProtocol usdnProtocol, IFarmingRange farming, uint256 campaignId) {
+    constructor(IUsdnProtocol usdnProtocol, IFarmingRange farmingRange, uint256 campaignId) {
         USDN_PROTOCOL = usdnProtocol;
-        FARMING = farming;
+        FARMING_RANGE = farmingRange;
         CAMPAIGN_ID = campaignId;
-        IFarmingRange.CampaignInfo memory info = farming.campaignInfo(campaignId);
+        IFarmingRange.CampaignInfo memory info = farmingRange.campaignInfo(campaignId);
         REWARD_TOKEN = IERC20(address(info.rewardToken));
         IERC20 farmingToken = IERC20(address(info.stakingToken));
         // this contract is the sole depositor of the farming token in the farming contract, and will receive all of the
         // rewards
         farmingToken.transferFrom(msg.sender, address(this), 1);
-        farmingToken.approve(address(farming), 1);
-        farming.deposit(campaignId, 1);
+        farmingToken.approve(address(farmingRange), 1);
+        farmingRange.deposit(campaignId, 1);
     }
 
     /// @inheritdoc IUsdnLongStaking
@@ -118,7 +118,7 @@ contract UsdnLongStaking is IUsdnLongStaking {
     }
 
     /**
-     * @notice Hashes a USDN long position's ID to use as key in the `_positions` mapping.
+     * @notice Hashes a USDN long position's ID to use as key in the {_positions} mapping.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
@@ -173,9 +173,9 @@ contract UsdnLongStaking is IUsdnLongStaking {
     }
 
     /**
-     * @notice Harvests pending rewards from the `FarmingRange` contract, and updates `_accRewardPerShare` and
-     * `_lastRewardBlock`.
-     * @dev If no deposited position exists, `_lastRewardBlock` will be updated but rewards will not be harvested.
+     * @notice Harvests pending rewards from the farmingRange contract, and updates {_accRewardPerShare} and
+     * {_lastRewardBlock}.
+     * @dev If no deposited position exists, {_lastRewardBlock} will be updated but rewards will not be harvested.
      */
     function _updateRewards() internal {
         if (_lastRewardBlock == block.number) {
@@ -193,7 +193,7 @@ contract UsdnLongStaking is IUsdnLongStaking {
         // farming harvest
         uint256[] memory campaignsIds = new uint256[](1);
         campaignsIds[0] = CAMPAIGN_ID;
-        FARMING.harvest(campaignsIds);
+        FARMING_RANGE.harvest(campaignsIds);
 
         uint256 periodRewards = REWARD_TOKEN.balanceOf(address(this)) - rewardsBalanceBefore;
 

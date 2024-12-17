@@ -36,7 +36,7 @@ contract TestUsdnLongStakingDeposit is UsdnLongStakingBaseFixture {
      * @custom:scenario Tests the deposit with a valid position.
      * @custom:when The function is called.
      * @custom:then The call must not revert.
-     * @custom:and The position state must be updated.
+     * @custom:and The user position state must be updated.
      * @custom:and The contract global state must be updated.
      */
     function test_deposit() public {

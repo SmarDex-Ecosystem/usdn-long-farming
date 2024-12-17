@@ -33,8 +33,7 @@ interface IUsdnLongStaking is IUsdnLongStakingTypes, IUsdnLongStakingErrors, IUs
     /**
      * @notice Gets the value of the rewards per share accumulator.
      * @dev Represents the accumulated value of the rewards per share for each update interval, multiplied by a constant
-     * for precision.
-     * This value is updated before each user action.
+     * for precision. This value is updated before each user action.
      * @return accRewardPerShare_ The accumulator value.
      */
     function getAccRewardPerShare() external view returns (uint256 accRewardPerShare_);

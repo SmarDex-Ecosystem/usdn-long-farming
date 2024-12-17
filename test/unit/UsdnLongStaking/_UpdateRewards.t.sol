@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 import { UsdnLongStakingBaseFixture } from "./utils/Fixtures.sol";
 
 /**
- * @custom:feature Tests the internal {_updateRewards} of the USDN long staking.
+ * @custom:feature Tests the internal {UsdnLongStaking._updateRewards} function of the USDN long staking.
  * @custom:background Given a deployed staking contract and USDN protocol.
  */
 contract TestUsdnLongStakingUpdateRewards is UsdnLongStakingBaseFixture {
@@ -16,11 +16,11 @@ contract TestUsdnLongStakingUpdateRewards is UsdnLongStakingBaseFixture {
     }
 
     /**
-     * @custom:scenario Tests the {_updateRewards} function without deposited shares.
-     * @custom:when The function {i_updateRewards} is called.
-     * @custom:then The {_accRewardPerShare} must be 0.
-     * @custom:and The {_lastRewardBlock} must be updated.
-     * @custom:and The contract balance of reward token must be 0.
+     * @custom:scenario Tests the {UsdnLongStaking._updateRewards} function without deposited shares.
+     * @custom:when The function {UsdnLongStaking._updateRewards} is called.
+     * @custom:then The {UsdnLongStaking._accRewardPerShare} must be 0.
+     * @custom:and The {UsdnLongStaking._lastRewardBlock} must be updated.
+     * @custom:and The contract balance of rewards token must be 0.
      */
     function test_updateRewardsWithoutShares() public {
         staking.i_updateRewards();
@@ -30,11 +30,11 @@ contract TestUsdnLongStakingUpdateRewards is UsdnLongStakingBaseFixture {
     }
 
     /**
-     * @custom:scenario Tests the {_updateRewards} function with deposited shares.
-     * @custom:when The function {i_updateRewards} is called.
-     * @custom:then The {_accRewardPerShare} must be updated.
-     * @custom:and The {_lastRewardBlock} must be updated.
-     * @custom:and The contract balance of reward token must be updated.
+     * @custom:scenario Tests the {UsdnLongStaking._updateRewards} function with deposited shares.
+     * @custom:when The function {UsdnLongStaking._updateRewards} is called.
+     * @custom:then The {UsdnLongStaking._accRewardPerShare} must be updated.
+     * @custom:and The {UsdnLongStaking._lastRewardBlock} must be updated.
+     * @custom:and The contract balance of rewards token must be updated.
      */
     function test_updateRewardsWithShares() public {
         uint256 previousLastRewardBlock = staking.getLastRewardBlock();
