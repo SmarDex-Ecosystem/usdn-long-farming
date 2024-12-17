@@ -12,7 +12,7 @@ import { IUsdnLongStakingTypes } from "./IUsdnLongStakingTypes.sol";
 interface IUsdnLongStaking is IUsdnLongStakingTypes, IUsdnLongStakingErrors, IUsdnLongStakingEvents {
     /**
      * @notice Gets the deposited position info of the USDN protocol position.
-     * @param posHash The hash of the position ID obtained using {hashPosId.
+     * @param posHash The hash of the position ID obtained using {hashPosId}.
      * @return info_ The position info.
      */
     function getPositionInfo(bytes32 posHash) external view returns (PositionInfo memory info_);
