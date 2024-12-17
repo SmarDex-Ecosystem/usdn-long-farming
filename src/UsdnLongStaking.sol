@@ -113,8 +113,13 @@ contract UsdnLongStaking is IUsdnLongStaking {
             USDN_PROTOCOL.getLongPosition(IUsdnProtocolTypes.PositionId(tick, tickVersion, index));
 
         _checkPosition(pos);
+        _saveDeposit(pos, tick, tickVersion, index);
 
-        return _deposit(pos, tick, tickVersion, index, delegation);
+        USDN_PROTOCOL.transferPositionOwnership(
+            IUsdnProtocolTypes.PositionId(tick, tickVersion, index), address(this), delegation
+        );
+
+        return true;
     }
 
     /**
@@ -143,7 +148,7 @@ contract UsdnLongStaking is IUsdnLongStaking {
     }
 
     /**
-     * @notice Deposits a usdn protocol position to receive some rewards.
+     * @notice Saves a usdn protocol position deposit.
      * @dev Sets the current position trading expo as shares.
      * @param position The user USDN protocol position to deposit.
      * @param tick The tick of the position.
@@ -151,13 +156,10 @@ contract UsdnLongStaking is IUsdnLongStaking {
      * @param index The index of the position inside the tick.
      * @return success_ Whether the deposit was successful.
      */
-    function _deposit(
-        IUsdnProtocolTypes.Position memory position,
-        int24 tick,
-        uint256 tickVersion,
-        uint256 index,
-        bytes calldata delegation
-    ) internal returns (bool success_) {
+    function _saveDeposit(IUsdnProtocolTypes.Position memory position, int24 tick, uint256 tickVersion, uint256 index)
+        internal
+        returns (bool success_)
+    {
         _updateRewards();
         uint128 initialTradingExpo = position.totalExpo - position.amount;
         PositionInfo memory posInfo = PositionInfo({
@@ -173,10 +175,6 @@ contract UsdnLongStaking is IUsdnLongStaking {
         _positionsCount++;
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
         _positions[positionIdHash] = posInfo;
-
-        USDN_PROTOCOL.transferPositionOwnership(
-            IUsdnProtocolTypes.PositionId(tick, tickVersion, index), address(this), delegation
-        );
 
         emit UsdnLongStakingDeposit(posInfo.owner, positionIdHash);
         return true;

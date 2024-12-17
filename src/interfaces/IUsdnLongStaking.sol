@@ -59,7 +59,7 @@ interface IUsdnLongStaking is IUsdnLongStakingTypes, IUsdnLongStakingErrors, IUs
      * @notice Deposits a usdn protocol position to receive some rewards.
      * @dev Takes into account the current position trading expo as shares. Uses a delegation signature
      * to transfer the position ownership. Reverts if the position is already owned by the
-     * contract, if the position is pending or if the trading expo is invalid.
+     * contract or if the position is pending.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
