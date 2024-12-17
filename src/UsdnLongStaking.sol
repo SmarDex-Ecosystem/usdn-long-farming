@@ -238,5 +238,6 @@ contract UsdnLongStaking is IUsdnLongStaking {
         newRewardDebt_ = FixedPointMathLib.fullMulDiv(posInfo.shares, _accRewardPerShare, SCALING_FACTOR);
         uint256 reward = newRewardDebt_ - posInfo.rewardDebt;
         address(REWARD_TOKEN).safeTransfer(posInfo.owner, reward);
+        emit UsdnLongStakingHarvest(posInfo.owner, positionIdHash, reward);
     }
 }

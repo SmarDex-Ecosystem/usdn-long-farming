@@ -12,4 +12,12 @@ interface IUsdnLongStakingEvents {
      * @param positionIdHash The hash of the USDN protocol deposited position.
      */
     event UsdnLongStakingDeposit(address indexed user, bytes32 positionIdHash);
+
+    /**
+     * @notice The Ownership of a USDN protocol position has received accumulated rewards.
+     * @param user The USDN protocol position owner.
+     * @param positionIdHash The hash of the USDN protocol position.
+     * @param reward The reward amount transferred.
+     */
+    event UsdnLongStakingHarvest(address indexed user, bytes32 positionIdHash, uint256 reward);
 }
