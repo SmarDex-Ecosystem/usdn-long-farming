@@ -15,7 +15,7 @@ import { IUsdnLongStaking } from "./interfaces/IUsdnLongStaking.sol";
  */
 contract UsdnLongStaking is IUsdnLongStaking {
     /**
-     * @dev Scaling factor for `_accRewardPerShare`.
+     * @dev Scaling factor for {_accRewardPerShare}.
      * In the worst case of having 1 wei of reward tokens per block for a duration of 1 block, and with a total number
      * of shares equivalent to 500 million wstETH, the accumulator value increment would still be 2e11 which is
      * precise enough.
@@ -28,7 +28,7 @@ contract UsdnLongStaking is IUsdnLongStaking {
     /// @notice The address of the SmarDex farmingRange contract, which is the source of the reward tokens.
     IFarmingRange public immutable FARMING_RANGE;
 
-    /// @notice The ID of the campaign in the `FarmingRange` contract which provides reward tokens to this contract.
+    /// @notice The ID of the campaign in the farmingRange contract which provides reward tokens to this contract.
     uint256 public immutable CAMPAIGN_ID;
 
     /// @notice The address of the reward token.
