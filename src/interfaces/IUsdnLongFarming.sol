@@ -76,8 +76,12 @@ interface IUsdnLongFarming is IUsdnLongFarmingTypes, IUsdnLongFarmingErrors, IUs
 
     /**
      * @notice Sends rewards to the position's owner.
-     * @dev position's rewardDebt is updated. If no reward is pending then nothing will happen and you will pay a
-     * transaction fee.
+     * @dev If the position is active (not liquidated), the rewards are sent to the position's owner and the position's
+     * rewardDebt is updated to reflect the claimed rewards.If no reward is pending, this function will not execute any
+     * action, but a transaction fee may still be incurred for calling the function If the position has been liquidated
+     * on USDN protocol, the rewards are distributed to `msg.sender` and `DEAD_ADDRESS` and position is deleted.
+     * Note An user can therefore use this function to notify the farming protocol that a position has been liquidated
+     * and be rewarded for this action.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
