@@ -6,8 +6,9 @@ import { LibRLP } from "solady-0.0/utils/LibRLP.sol";
 import { DEPLOYER } from "../../../utils/Constants.sol";
 import { BaseFixture } from "../../../utils/Fixtures.sol";
 import { UsdnLongFarmingHandler } from "./Handler.sol";
-import { MockFarmingRange } from "./MockFarmingRange.sol";
+
 import { MockRewardToken } from "./MockRewardToken.sol";
+import { MockRewardsProvider } from "./MockRewardsProvider.sol";
 import { MockUsdnProtocol } from "./MockUsdnProtocol.sol";
 
 import { FarmingToken } from "../../../../src/FarmingToken.sol";
@@ -29,7 +30,7 @@ contract UsdnLongFarmingBaseFixture is
 
     MockRewardToken internal rewardToken;
     FarmingToken internal farmingToken;
-    MockFarmingRange internal farmingRange;
+    MockRewardsProvider internal rewardsProvider;
     MockUsdnProtocol internal usdnProtocol;
     UsdnLongFarmingHandler internal farming;
 
@@ -37,14 +38,14 @@ contract UsdnLongFarmingBaseFixture is
         vm.startPrank(DEPLOYER);
         rewardToken = new MockRewardToken();
         farmingToken = new FarmingToken();
-        farmingRange = new MockFarmingRange(rewardToken, farmingToken);
+        rewardsProvider = new MockRewardsProvider(rewardToken, farmingToken);
         usdnProtocol = new MockUsdnProtocol();
         // approve future farming contract
         address farmingAddress = LibRLP.computeAddress(DEPLOYER, DEPLOYMENT_NONCE);
         farmingToken.approve(farmingAddress, 1);
         // make sure the nonce is the same as we used to pre-compute the address
         vm.setNonce(DEPLOYER, DEPLOYMENT_NONCE);
-        farming = new UsdnLongFarmingHandler(usdnProtocol, farmingRange);
+        farming = new UsdnLongFarmingHandler(usdnProtocol, rewardsProvider);
         vm.stopPrank();
     }
 }

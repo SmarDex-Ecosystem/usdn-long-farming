@@ -39,7 +39,7 @@ contract TestUsdnLongFarmingUpdateRewards is UsdnLongFarmingBaseFixture {
     function test_updateRewardsWithShares() public {
         uint256 previousLastRewardBlock = farming.getLastRewardBlock();
 
-        farming.setTotalShares(farmingRange.getRewardsPerBlock() * INITIAL_BLOCK);
+        farming.setTotalShares(rewardsProvider.getRewardsPerBlock() * INITIAL_BLOCK);
         farming.i_updateRewards();
 
         assertEq(
@@ -52,7 +52,7 @@ contract TestUsdnLongFarmingUpdateRewards is UsdnLongFarmingBaseFixture {
 
         assertEq(
             rewardToken.balanceOf(address(farming)),
-            (INITIAL_BLOCK - previousLastRewardBlock) * farmingRange.getRewardsPerBlock(),
+            (INITIAL_BLOCK - previousLastRewardBlock) * rewardsProvider.getRewardsPerBlock(),
             "The farming reward token balance must be different"
         );
     }

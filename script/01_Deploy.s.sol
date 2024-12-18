@@ -14,11 +14,11 @@ contract DeployUsdnLongFarming is Script {
         vm.startBroadcast(_deployerAddress);
 
         // TODO:
-        // - deploy farming token (mints 1 wei to deployer)
-        // - create farming campaign with the farming token as farming token
+        // - deploy staking token (mints 1 wei to deployer)
+        // - create farming campaign with the farming token as staking token
         // - pre-compute address of the long farming contract (with LibRLP.computeAddress and vm.getNonce)
         // - approve the long farming contract to spend the farming token (1 wei)
-        // - deploy the long farming contract by passing the farming contract address and campaign id
+        // - deploy the long farming contract by passing the SmarDex rewards provider contract address and campaign id
 
         // TODO: add return values for all deployed contracts
 

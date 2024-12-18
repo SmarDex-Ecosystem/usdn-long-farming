@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
-/**
- * @title IUsdnLongFarmingEvents
- * @notice Interface for the USDN Long Farming events.
- */
+/// @title Events for the UsdnLongFarming Contract
 interface IUsdnLongFarmingEvents {
     /**
      * @notice A USDN protocol user position has been deposited into the contract.

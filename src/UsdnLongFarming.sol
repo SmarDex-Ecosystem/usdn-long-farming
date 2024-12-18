@@ -25,10 +25,11 @@ contract UsdnLongFarming is IUsdnLongFarming {
     /// @notice The address of the USDN protocol contract.
     IUsdnProtocol public immutable USDN_PROTOCOL;
 
-    /// @notice The address of the SmarDex farmingRange contract, which is the source of the reward tokens.
-    IFarmingRange public immutable FARMING_RANGE;
+    /// @notice The address of the SmarDex rewards provider contract, which is the source of the reward tokens.
+    IFarmingRange public immutable REWARDS_PROVIDER;
 
-    /// @notice The ID of the campaign in the farmingRange contract which provides reward tokens to this contract.
+    /// @notice The ID of the campaign in the SmarDex rewards provider contract which provides reward tokens to this
+    /// contract.
     uint256 public immutable CAMPAIGN_ID;
 
     /// @notice The address of the reward token.
@@ -57,21 +58,22 @@ contract UsdnLongFarming is IUsdnLongFarming {
 
     /**
      * @param usdnProtocol The address of the USDN protocol contract.
-     * @param farmingRange The address of the farmingRange contract.
-     * @param campaignId The campaign ID in the farmingRange contract which provides reward tokens to this contract.
+     * @param rewardsProvider The address of the SmarDex rewards provider contract.
+     * @param campaignId The campaign ID in the SmarDex rewards provider contract which provides reward tokens to this
+     * contract.
      */
-    constructor(IUsdnProtocol usdnProtocol, IFarmingRange farmingRange, uint256 campaignId) {
+    constructor(IUsdnProtocol usdnProtocol, IFarmingRange rewardsProvider, uint256 campaignId) {
         USDN_PROTOCOL = usdnProtocol;
-        FARMING_RANGE = farmingRange;
+        REWARDS_PROVIDER = rewardsProvider;
         CAMPAIGN_ID = campaignId;
-        IFarmingRange.CampaignInfo memory info = farmingRange.campaignInfo(campaignId);
+        IFarmingRange.CampaignInfo memory info = rewardsProvider.campaignInfo(campaignId);
         REWARD_TOKEN = IERC20(address(info.rewardToken));
         IERC20 farmingToken = IERC20(address(info.stakingToken));
-        // this contract is the sole depositor of the farming token in the farming contract, and will receive all of the
-        // rewards
+        // this contract is the sole depositor of the farming token in the SmarDex rewards provider contract,
+        // and will receive all of the rewards
         farmingToken.transferFrom(msg.sender, address(this), 1);
-        farmingToken.approve(address(farmingRange), 1);
-        farmingRange.deposit(campaignId, 1);
+        farmingToken.approve(address(rewardsProvider), 1);
+        rewardsProvider.deposit(campaignId, 1);
     }
 
     /// @inheritdoc IUsdnLongFarming
@@ -173,7 +175,7 @@ contract UsdnLongFarming is IUsdnLongFarming {
     }
 
     /**
-     * @notice Harvests pending rewards from the farmingRange contract, and updates {_accRewardPerShare} and
+     * @notice Harvests pending rewards from the SmarDex rewards provider contract, and updates {_accRewardPerShare} and
      * {_lastRewardBlock}.
      * @dev If no deposited position exists, {_lastRewardBlock} will be updated but rewards will not be harvested.
      */
@@ -193,7 +195,7 @@ contract UsdnLongFarming is IUsdnLongFarming {
         // farming harvest
         uint256[] memory campaignsIds = new uint256[](1);
         campaignsIds[0] = CAMPAIGN_ID;
-        FARMING_RANGE.harvest(campaignsIds);
+        REWARDS_PROVIDER.harvest(campaignsIds);
 
         uint256 periodRewards = REWARD_TOKEN.balanceOf(address(this)) - rewardsBalanceBefore;
 
