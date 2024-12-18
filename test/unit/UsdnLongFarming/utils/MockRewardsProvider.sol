@@ -6,7 +6,7 @@ import { MockRewardToken } from "./MockRewardToken.sol";
 import { FarmingToken } from "../../../../src/FarmingToken.sol";
 import { IERC20, IFarmingRange } from "../../../../src/interfaces/IFarmingRange.sol";
 
-contract MockFarmingRange {
+contract MockRewardsProvider {
     MockRewardToken internal _rewardToken;
     FarmingToken internal _farmingToken;
     uint256 internal _rewardsPerBlock = 5;
@@ -26,7 +26,7 @@ contract MockFarmingRange {
 
     function harvest(uint256[] calldata) external {
         uint256 rewards = (block.number - _lastRewardsBlock) * _rewardsPerBlock;
-        // to simulate a rewards token transfer to the staking
+        // to simulate a rewards token transfer to the farming
         _rewardToken.mint(address(this), rewards);
         _rewardToken.transfer(msg.sender, rewards);
 

@@ -4,19 +4,19 @@ pragma solidity 0.8.28;
 import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
 
-import { MockFarmingRange } from "./MockFarmingRange.sol";
+import { MockRewardsProvider } from "./MockRewardsProvider.sol";
 import { MockUsdnProtocol } from "./MockUsdnProtocol.sol";
 
-import { UsdnLongStaking } from "../../../../src/UsdnLongStaking.sol";
+import { UsdnLongFarming } from "../../../../src/UsdnLongFarming.sol";
 import { IFarmingRange } from "../../../../src/interfaces/IFarmingRange.sol";
 
 /**
- * @title UsdnLongStakingHandler
- * @dev Utils for testing the USDN Long Staking
+ * @title UsdnLongFarmingHandler
+ * @dev Utils for testing the USDN Long Farming
  */
-contract UsdnLongStakingHandler is UsdnLongStaking {
-    constructor(MockUsdnProtocol usdnProtocol, MockFarmingRange farming)
-        UsdnLongStaking(IUsdnProtocol(address(usdnProtocol)), IFarmingRange(address(farming)), 0)
+contract UsdnLongFarmingHandler is UsdnLongFarming {
+    constructor(MockUsdnProtocol usdnProtocol, MockRewardsProvider rewardsProvider)
+        UsdnLongFarming(IUsdnProtocol(address(usdnProtocol)), IFarmingRange(address(rewardsProvider)), 0)
     { }
 
     function i_updateRewards() external {

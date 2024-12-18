@@ -7,13 +7,13 @@ import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProto
 import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
 
 import { IFarmingRange } from "./interfaces/IFarmingRange.sol";
-import { IUsdnLongStaking } from "./interfaces/IUsdnLongStaking.sol";
+import { IUsdnLongFarming } from "./interfaces/IUsdnLongFarming.sol";
 
 /**
- * @title USDN Long Positions Staking
- * @notice A contract for staking USDN long positions to earn rewards.
+ * @title USDN Long Positions farming
+ * @notice A contract for farming USDN long positions to earn rewards.
  */
-contract UsdnLongStaking is IUsdnLongStaking {
+contract UsdnLongFarming is IUsdnLongFarming {
     /**
      * @dev Scaling factor for {_accRewardPerShare}.
      * In the worst case of having 1 wei of reward tokens per block for a duration of 1 block, and with a total number
@@ -25,10 +25,11 @@ contract UsdnLongStaking is IUsdnLongStaking {
     /// @notice The address of the USDN protocol contract.
     IUsdnProtocol public immutable USDN_PROTOCOL;
 
-    /// @notice The address of the SmarDex farmingRange contract, which is the source of the reward tokens.
-    IFarmingRange public immutable FARMING_RANGE;
+    /// @notice The address of the SmarDex rewards provider contract, which is the source of the reward tokens.
+    IFarmingRange public immutable REWARDS_PROVIDER;
 
-    /// @notice The ID of the campaign in the farmingRange contract which provides reward tokens to this contract.
+    /// @notice The ID of the campaign in the SmarDex rewards provider contract which provides reward tokens to this
+    /// contract.
     uint256 public immutable CAMPAIGN_ID;
 
     /// @notice The address of the reward token.
@@ -57,54 +58,55 @@ contract UsdnLongStaking is IUsdnLongStaking {
 
     /**
      * @param usdnProtocol The address of the USDN protocol contract.
-     * @param farmingRange The address of the farmingRange contract.
-     * @param campaignId The campaign ID in the farmingRange contract which provides reward tokens to this contract.
+     * @param rewardsProvider The address of the SmarDex rewards provider contract.
+     * @param campaignId The campaign ID in the SmarDex rewards provider contract which provides reward tokens to this
+     * contract.
      */
-    constructor(IUsdnProtocol usdnProtocol, IFarmingRange farmingRange, uint256 campaignId) {
+    constructor(IUsdnProtocol usdnProtocol, IFarmingRange rewardsProvider, uint256 campaignId) {
         USDN_PROTOCOL = usdnProtocol;
-        FARMING_RANGE = farmingRange;
+        REWARDS_PROVIDER = rewardsProvider;
         CAMPAIGN_ID = campaignId;
-        IFarmingRange.CampaignInfo memory info = farmingRange.campaignInfo(campaignId);
+        IFarmingRange.CampaignInfo memory info = rewardsProvider.campaignInfo(campaignId);
         REWARD_TOKEN = IERC20(address(info.rewardToken));
         IERC20 farmingToken = IERC20(address(info.stakingToken));
-        // this contract is the sole depositor of the farming token in the farming contract, and will receive all of the
-        // rewards
+        // this contract is the sole depositor of the farming token in the SmarDex rewards provider contract,
+        // and will receive all of the rewards
         farmingToken.transferFrom(msg.sender, address(this), 1);
-        farmingToken.approve(address(farmingRange), 1);
-        farmingRange.deposit(campaignId, 1);
+        farmingToken.approve(address(rewardsProvider), 1);
+        rewardsProvider.deposit(campaignId, 1);
     }
 
-    /// @inheritdoc IUsdnLongStaking
+    /// @inheritdoc IUsdnLongFarming
     function getPositionInfo(bytes32 posHash) external view returns (PositionInfo memory info_) {
         return _positions[posHash];
     }
 
-    /// @inheritdoc IUsdnLongStaking
+    /// @inheritdoc IUsdnLongFarming
     function getPositionsCount() external view returns (uint256 count_) {
         return _positionsCount;
     }
 
-    /// @inheritdoc IUsdnLongStaking
+    /// @inheritdoc IUsdnLongFarming
     function getTotalShares() external view returns (uint256 shares_) {
         return _totalShares;
     }
 
-    /// @inheritdoc IUsdnLongStaking
+    /// @inheritdoc IUsdnLongFarming
     function getAccRewardPerShare() external view returns (uint256 accRewardPerShare_) {
         return _accRewardPerShare;
     }
 
-    /// @inheritdoc IUsdnLongStaking
+    /// @inheritdoc IUsdnLongFarming
     function getLastRewardBlock() external view returns (uint256 block_) {
         return _lastRewardBlock;
     }
 
-    /// @inheritdoc IUsdnLongStaking
+    /// @inheritdoc IUsdnLongFarming
     function hashPosId(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_) {
         return _hashPositionId(tick, tickVersion, index);
     }
 
-    /// @inheritdoc IUsdnLongStaking
+    /// @inheritdoc IUsdnLongFarming
     function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation) external {
         (IUsdnProtocolTypes.Position memory pos,) =
             USDN_PROTOCOL.getLongPosition(IUsdnProtocolTypes.PositionId(tick, tickVersion, index));
@@ -134,11 +136,11 @@ contract UsdnLongStaking is IUsdnLongStaking {
      */
     function _checkPosition(IUsdnProtocolTypes.Position memory position) internal view {
         if (position.user == address(this)) {
-            revert UsdnLongStakingAlreadyDeposited();
+            revert UsdnLongFarmingAlreadyDeposited();
         }
 
         if (!position.validated) {
-            revert UsdnLongStakingPendingPosition();
+            revert UsdnLongFarmingPendingPosition();
         }
     }
 
@@ -173,7 +175,7 @@ contract UsdnLongStaking is IUsdnLongStaking {
     }
 
     /**
-     * @notice Harvests pending rewards from the farmingRange contract, and updates {_accRewardPerShare} and
+     * @notice Harvests pending rewards from the SmarDex rewards provider contract, and updates {_accRewardPerShare} and
      * {_lastRewardBlock}.
      * @dev If no deposited position exists, {_lastRewardBlock} will be updated but rewards will not be harvested.
      */
@@ -193,7 +195,7 @@ contract UsdnLongStaking is IUsdnLongStaking {
         // farming harvest
         uint256[] memory campaignsIds = new uint256[](1);
         campaignsIds[0] = CAMPAIGN_ID;
-        FARMING_RANGE.harvest(campaignsIds);
+        REWARDS_PROVIDER.harvest(campaignsIds);
 
         uint256 periodRewards = REWARD_TOKEN.balanceOf(address(this)) - rewardsBalanceBefore;
 
