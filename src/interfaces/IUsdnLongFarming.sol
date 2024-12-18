@@ -76,7 +76,8 @@ interface IUsdnLongFarming is IUsdnLongFarmingTypes, IUsdnLongFarmingErrors, IUs
 
     /**
      * @notice Sends rewards to the position's owner.
-     * @dev position's rewardDebt is updated.
+     * @dev position's rewardDebt is updated. If no reward is pending then nothing will happen and you will pay a
+     * transaction fee.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
