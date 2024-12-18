@@ -28,9 +28,9 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     uint256 public constant SCALING_FACTOR = 1e38;
 
     /// @notice Denominator for the reward multiplier, will give us a 0.01% basis point.
-    uint32 public constant BPS_DIVISOR = 10_000;
+    uint256 public constant BPS_DIVISOR = 10_000;
 
-    /// @notice Address holding rewards burned during liquidation.
+    /// @notice Address holding rewards rewardsToBurn  during liquidation.
     address public constant DEAD_ADDRESS = address(0xdead);
 
     /// @notice The address of the USDN protocol contract.
@@ -67,8 +67,8 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     /// @dev Block number when the last rewards were calculated.
     uint256 internal _lastRewardBlock;
 
-    /// @dev Ratio of the reward to be distributed to the liquidator in basis points: default is 30%.
-    uint16 internal _liquidatorRewardsBps = 3000;
+    /// @dev Ratio of the reward to be distributed to the notifier in basis points: default is 30%.
+    uint16 internal _notifierRewardsBps = 3000;
 
     /**
      * @param usdnProtocol The address of the USDN protocol contract.
@@ -91,8 +91,8 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     }
 
     /// @inheritdoc IUsdnLongFarming
-    function setliquidatorRewardsBps(uint16 liquidatorRewardsBps) external onlyOwner {
-        _liquidatorRewardsBps = liquidatorRewardsBps;
+    function setNotifierRewardsBps(uint16 notifierRewardsBps) external onlyOwner {
+        _notifierRewardsBps = notifierRewardsBps;
     }
 
     /// @inheritdoc IUsdnLongFarming
@@ -126,8 +126,8 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     }
 
     /// @inheritdoc IUsdnLongFarming
-    function getliquidatorRewardsBps() external view returns (uint16 liquidatorRewardsBps_) {
-        return _liquidatorRewardsBps;
+    function getNotifierRewardsBps() external view returns (uint16 notifierRewardsBps_) {
+        return _notifierRewardsBps;
     }
 
     /// @inheritdoc IUsdnLongFarming
@@ -255,7 +255,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
         uint256 rewards = newRewardDebt_ - posInfo.rewardDebt;
 
         if (isLiquidated_) {
-            _liquidate(positionIdHash, rewards, msg.sender);
+            _slash(positionIdHash, rewards, msg.sender);
             newRewardDebt_ = 0;
         } else {
             if (rewards > 0) {
@@ -277,17 +277,17 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     }
 
     /**
-     * @notice Liquidates a position and sends the rewards to the liquidator and dead address.
+     * @notice Slashes a position and sends the rewards to the notifier and dead address.
      * @param positionIdHash The hash of the position ID.
      * @param rewards The rewards amount to be distributed.
-     * @param liquidator The address of the liquidator.
+     * @param notifier The address which has notified the farming platform about the liquidation in the USDN protocol.
      */
-    function _liquidate(bytes32 positionIdHash, uint256 rewards, address liquidator) internal {
+    function _slash(bytes32 positionIdHash, uint256 rewards, address notifier) internal {
         delete _positions[positionIdHash];
-        uint256 liquidatorRewards = rewards * _liquidatorRewardsBps / BPS_DIVISOR;
-        uint256 burned = rewards - liquidatorRewards;
-        address(REWARD_TOKEN).safeTransfer(DEAD_ADDRESS, burned);
-        address(REWARD_TOKEN).safeTransfer(liquidator, liquidatorRewards);
-        emit Liquidate(liquidator, positionIdHash, liquidatorRewards, burned);
+        uint256 notifierRewards = rewards * _notifierRewardsBps / BPS_DIVISOR;
+        uint256 rewardsToBurn = rewards - notifierRewards;
+        address(REWARD_TOKEN).safeTransfer(DEAD_ADDRESS, rewardsToBurn);
+        address(REWARD_TOKEN).safeTransfer(notifier, notifierRewards);
+        emit Slash(notifier, positionIdHash, notifierRewards, rewardsToBurn);
     }
 }

@@ -112,26 +112,26 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
      * @custom:given The farming contract with a deposited position.
      * @custom:and The position is liquidated in the USDN protocol.
      * @custom:when The function {IUsdnLongFarming.harvest} is called.
-     * @custom:then The reward is sent to the liquidator and the dead address.
+     * @custom:then The reward is sent to the notifier and the dead address.
      * @custom:and The position is deleted and the position's owner does not receive rewards.
-     * @custom:and A `Liquidate` event is emitted.
+     * @custom:and A `Slash` event is emitted.
      */
     function test_harvestPositionLiquidate() public {
         uint256 blockNumberSkip = 100;
         vm.roll(block.number + blockNumberSkip);
 
-        uint256 liquidatorReward = 151;
+        uint256 notifierReward = 151;
         uint256 burned = 354;
 
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, true);
 
         vm.prank(USER_1);
         vm.expectEmit();
-        emit Liquidate(USER_1, posHash, liquidatorReward, burned);
+        emit Slash(USER_1, posHash, notifierReward, burned);
         farming.harvest(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
-        assertEq(rewardToken.balanceOf(address(this)), 0, "The reward sent to the liquidator and the dead address");
+        assertEq(rewardToken.balanceOf(address(this)), 0, "The reward sent to the notifier and the dead address");
         assertEq(rewardToken.balanceOf(address(0xdead)), burned, "Dead address must receive a part of the rewards");
-        assertEq(rewardToken.balanceOf(USER_1), liquidatorReward, "The liquidator must receive a part of the rewards");
+        assertEq(rewardToken.balanceOf(USER_1), notifierReward, "The notifier must receive a part of the rewards");
 
         PositionInfo memory posInfo = farming.getPositionInfo(posHash);
         assertEq(posInfo.owner, address(0), "The reward debt must be updated");
@@ -139,12 +139,12 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
 
     /**
      * @custom:scenario Reverts when caller is not the owner
-     * @custom:when Call the function {IUsdnLongFarming.setliquidatorRewardsBps} with a non-owner account
+     * @custom:when Call the function {IUsdnLongFarming.setNotifierRewardsBps} with a non-owner account
      * @custom:then It reverts with a OwnableUnauthorizedAccount error
      */
-    function test_RevertWhen_setliquidatorRewardsBpsCallerIsNotTheOwner() public {
+    function test_RevertWhen_setNotifierRewardsBpsCallerIsNotTheOwner() public {
         vm.prank(USER_1);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, USER_1));
-        farming.setliquidatorRewardsBps(100);
+        farming.setNotifierRewardsBps(100);
     }
 }

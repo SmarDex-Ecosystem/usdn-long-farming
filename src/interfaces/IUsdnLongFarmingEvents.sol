@@ -20,11 +20,11 @@ interface IUsdnLongFarmingEvents {
     event Harvest(address indexed user, bytes32 indexed positionIdHash, uint256 rewards);
 
     /**
-     * @notice The position has been deleted, and the liquidator received part of the rewards.
-     * @param liquidator The address of the liquidator.
+     * @notice The position has been deleted, and the notifier received part of the rewards.
+     * @param notifier The address of the notifier.
      * @param positionIdHash The hash of the USDN protocol position.
-     * @param liquidatorRewards The amount of rewards received by the liquidator.
-     * @param burned Amount sent to the dead address.
+     * @param notifierRewards The amount of rewards received by the notifier.
+     * @param rewardsToBurn  Amount sent to the dead address.
      */
-    event Liquidate(address indexed liquidator, bytes32 positionIdHash, uint256 liquidatorRewards, uint256 burned);
+    event Slash(address indexed notifier, bytes32 positionIdHash, uint256 notifierRewards, uint256 rewardsToBurn);
 }
