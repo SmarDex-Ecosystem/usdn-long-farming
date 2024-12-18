@@ -6,7 +6,7 @@ import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProto
 import { UsdnLongStakingBaseFixture } from "./utils/Fixtures.sol";
 
 /**
- * @custom:feature Tests the internal {_checkPosition} of the USDN long staking.
+ * @custom:feature Tests the internal {UsdnLongStaking._checkPosition} function of the USDN long staking.
  * @custom:background Given a deployed staking contract and USDN protocol.
  */
 contract TestUsdnLongStakingCheckPosition is UsdnLongStakingBaseFixture {
@@ -25,7 +25,7 @@ contract TestUsdnLongStakingCheckPosition is UsdnLongStakingBaseFixture {
     }
 
     /**
-     * @custom:scenario Tests the {_checkPosition} function with a valid position.
+     * @custom:scenario Tests the {UsdnLongStaking._checkPosition} function with a valid position.
      * @custom:when The function is called.
      * @custom:then The call should not revert.
      */
@@ -34,35 +34,25 @@ contract TestUsdnLongStakingCheckPosition is UsdnLongStakingBaseFixture {
     }
 
     /**
-     * @custom:scenario Tests the {_checkPosition} function with a position already owned by the staking.
+     * @custom:scenario Tests the {UsdnLongStaking._checkPosition} function with a position already owned by the
+     * staking.
      * @custom:when The function is called.
-     * @custom:then The call should revert with {UsdnLongStakingContractOwned}.
+     * @custom:then The call should revert with {IUsdnLongStakingErrors.UsdnLongStakingAlreadyDeposited}.
      */
     function test_RevertWhen_checkPositionOwned() public {
         position.user = address(staking);
-        vm.expectRevert(UsdnLongStakingContractOwned.selector);
+        vm.expectRevert(UsdnLongStakingAlreadyDeposited.selector);
         staking.i_checkPosition(position);
     }
 
     /**
-     * @custom:scenario Tests the {_checkPosition} function with a pending position.
+     * @custom:scenario Tests the {UsdnLongStaking._checkPosition} function with a pending position.
      * @custom:when The function is called.
-     * @custom:then The call should revert with {UsdnLongStakingPendingPosition}.
+     * @custom:then The call should revert with {IUsdnLongStakingErrors.UsdnLongStakingPendingPosition}.
      */
     function test_RevertWhen_checkPositionPending() public {
         position.validated = false;
         vm.expectRevert(UsdnLongStakingPendingPosition.selector);
-        staking.i_checkPosition(position);
-    }
-
-    /**
-     * @custom:scenario Tests the {_checkPosition} function with an invalid trading expo.
-     * @custom:when The function is called.
-     * @custom:then The call should revert with {UsdnLongStakingInvalidTradingExpo}.
-     */
-    function test_RevertWhen_checkPositionInvalidTradingExpo() public {
-        position.amount = position.totalExpo;
-        vm.expectRevert(UsdnLongStakingInvalidTradingExpo.selector);
         staking.i_checkPosition(position);
     }
 }

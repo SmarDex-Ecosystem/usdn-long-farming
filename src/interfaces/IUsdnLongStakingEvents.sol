@@ -8,10 +8,12 @@ pragma solidity >=0.8.0;
 interface IUsdnLongStakingEvents {
     /**
      * @notice A USDN protocol user position has been deposited into the contract.
-     * @param user The prior USDN protocol deposited position user.
-     * @param positionIdHash The hash of the USDN protocol deposited position.
+     * @param owner The prior USDN protocol deposited position owner.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @param index The index of the position inside the tick.
      */
-    event UsdnLongStakingDeposit(address indexed user, bytes32 positionIdHash);
+    event Deposit(address indexed owner, int24 tick, uint256 tickVersion, uint256 index);
 
     /**
      * @notice The Ownership of a USDN protocol position has received accumulated rewards.
