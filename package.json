@@ -1,6 +1,6 @@
 {
   "name": "@smardex/usdn-long-farming",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Contracts for the USDN long farming",
   "repository": "git@github.com:SmarDex-Ecosystem/usdn-long-farming.git",
   "author": {
@@ -30,11 +30,7 @@
     "snapshot:check": "FOUNDRY_PROFILE=ci forge build && FOUNDRY_PROFILE=ci forge snapshot --no-match-test \"(FFI|Fork|Fuzz)\" --no-match-contract Fork --check --offline",
     "test": "forge test -vvv"
   },
-  "files": [
-    "dist",
-    "broadcast",
-    "docs"
-  ],
+  "files": ["dist", "broadcast", "docs"],
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@defi-wonderland/natspec-smells": "^1.1.5",
