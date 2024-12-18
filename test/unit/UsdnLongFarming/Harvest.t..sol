@@ -45,7 +45,7 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
      * @custom:and A `Harvest` event is emitted.
      */
     function test_harvest() public {
-        uint256 rewardsPerBlock = farming.getRewardsPerBlock();
+        uint256 rewardsPerBlock = rewardsProvider.getRewardsPerBlock();
         uint256 blockNumberSkip = 100;
         uint256 expectedRewards = rewardsPerBlock * (blockNumberSkip + 1);
         vm.roll(block.number + blockNumberSkip);
@@ -63,7 +63,7 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
      * @custom:and The reward debt is updated.
      */
     function test_harvestPosInfoUpdated() public {
-        uint256 rewardsPerBlock = farming.getRewardsPerBlock();
+        uint256 rewardsPerBlock = rewardsProvider.getRewardsPerBlock();
         uint256 blockNumberSkip = 100;
 
         vm.roll(block.number + blockNumberSkip);
