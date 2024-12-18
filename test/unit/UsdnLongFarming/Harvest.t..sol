@@ -139,12 +139,12 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
 
     /**
      * @custom:scenario Reverts when caller is not the owner
-     * @custom:when Call the function {IUsdnLongFarming.setLiquidatorRewardBps} with a non-owner account
+     * @custom:when Call the function {IUsdnLongFarming.setliquidatorRewardsBps} with a non-owner account
      * @custom:then It reverts with a OwnableUnauthorizedAccount error
      */
-    function test_RevertWhen_setLiquidatorRewardBpsCallerIsNotTheOwner() public {
+    function test_RevertWhen_setliquidatorRewardsBpsCallerIsNotTheOwner() public {
         vm.prank(USER_1);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, USER_1));
-        farming.setLiquidatorRewardBps(100);
+        farming.setliquidatorRewardsBps(100);
     }
 }

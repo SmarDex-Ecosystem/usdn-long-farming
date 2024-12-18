@@ -8,9 +8,9 @@ import { IUsdnLongFarmingTypes } from "./IUsdnLongFarmingTypes.sol";
 interface IUsdnLongFarming is IUsdnLongFarmingTypes, IUsdnLongFarmingErrors, IUsdnLongFarmingEvents {
     /**
      * @notice Sets the liquidator reward factor.
-     * @param liquidatorRewardBps The liquidator reward factor value, in basis points.
+     * @param liquidatorRewardsBps The liquidator reward factor value, in basis points.
      */
-    function setLiquidatorRewardBps(uint16 liquidatorRewardBps) external;
+    function setliquidatorRewardsBps(uint16 liquidatorRewardsBps) external;
 
     /**
      * @notice Gets the deposited position info of the USDN protocol position.
@@ -49,9 +49,9 @@ interface IUsdnLongFarming is IUsdnLongFarmingTypes, IUsdnLongFarmingErrors, IUs
 
     /**
      * @notice Gets the current liquidator reward factor, in basis points.
-     * @return liquidatorRewardBps_ The liquidator reward factor value.
+     * @return liquidatorRewardsBps_ The liquidator reward factor value.
      */
-    function getLiquidatorRewardBps() external view returns (uint16 liquidatorRewardBps_);
+    function getliquidatorRewardsBps() external view returns (uint16 liquidatorRewardsBps_);
 
     /**
      * @notice Hashes the unique ID of a USDN position.

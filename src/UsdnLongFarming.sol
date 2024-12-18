@@ -2,9 +2,12 @@
 pragma solidity 0.8.28;
 
 import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
 import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
+import { SafeTransferLib } from "solady/src/utils/SafeTransferLib.sol";
 
 import { IFarmingRange } from "./interfaces/IFarmingRange.sol";
 import { IUsdnLongFarming } from "./interfaces/IUsdnLongFarming.sol";
@@ -13,7 +16,9 @@ import { IUsdnLongFarming } from "./interfaces/IUsdnLongFarming.sol";
  * @title USDN Long Positions farming
  * @notice A contract for farming USDN long positions to earn rewards.
  */
-contract UsdnLongFarming is IUsdnLongFarming {
+contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
+    using SafeTransferLib for address;
+
     /**
      * @dev Scaling factor for {_accRewardPerShare}.
      * In the worst case of having 1 wei of reward tokens per block for a duration of 1 block, and with a total number
@@ -63,7 +68,7 @@ contract UsdnLongFarming is IUsdnLongFarming {
     uint256 internal _lastRewardBlock;
 
     /// @dev Ratio of the reward to be distributed to the liquidator in basis points: default is 30%.
-    uint16 internal _liquidatorRewardBps = 3000;
+    uint16 internal _liquidatorRewardsBps = 3000;
 
     /**
      * @param usdnProtocol The address of the USDN protocol contract.
@@ -71,7 +76,7 @@ contract UsdnLongFarming is IUsdnLongFarming {
      * @param campaignId The campaign ID in the SmarDex rewards provider contract which provides reward tokens to this
      * contract.
      */
-    constructor(IUsdnProtocol usdnProtocol, IFarmingRange rewardsProvider, uint256 campaignId) {
+    constructor(IUsdnProtocol usdnProtocol, IFarmingRange rewardsProvider, uint256 campaignId) Ownable(msg.sender) {
         USDN_PROTOCOL = usdnProtocol;
         REWARDS_PROVIDER = rewardsProvider;
         CAMPAIGN_ID = campaignId;
@@ -86,8 +91,8 @@ contract UsdnLongFarming is IUsdnLongFarming {
     }
 
     /// @inheritdoc IUsdnLongFarming
-    function setLiquidatorRewardBps(uint16 liquidatorRewardBps) external onlyOwner {
-        _liquidatorRewardBps = liquidatorRewardBps;
+    function setliquidatorRewardsBps(uint16 liquidatorRewardsBps) external onlyOwner {
+        _liquidatorRewardsBps = liquidatorRewardsBps;
     }
 
     /// @inheritdoc IUsdnLongFarming
@@ -121,8 +126,8 @@ contract UsdnLongFarming is IUsdnLongFarming {
     }
 
     /// @inheritdoc IUsdnLongFarming
-    function getLiquidatorRewardBps() external view returns (uint16 liquidatorRewardBps_) {
-        return _liquidatorRewardBps;
+    function getliquidatorRewardsBps() external view returns (uint16 liquidatorRewardsBps_) {
+        return _liquidatorRewardsBps;
     }
 
     /// @inheritdoc IUsdnLongFarming
@@ -247,15 +252,15 @@ contract UsdnLongFarming is IUsdnLongFarming {
         }
         isLiquidated_ = _isLiquidated(posInfo.tick, posInfo.tickVersion);
         newRewardDebt_ = FixedPointMathLib.fullMulDiv(posInfo.shares, _accRewardPerShare, SCALING_FACTOR);
-        uint256 reward = newRewardDebt_ - posInfo.rewardDebt;
+        uint256 rewards = newRewardDebt_ - posInfo.rewardDebt;
 
         if (isLiquidated_) {
-            _liquidate(positionIdHash, reward, msg.sender);
+            _liquidate(positionIdHash, rewards, msg.sender);
             newRewardDebt_ = 0;
         } else {
-            if (reward > 0) {
-                address(REWARD_TOKEN).safeTransfer(posInfo.owner, reward);
-                emit Harvest(posInfo.owner, positionIdHash, reward);
+            if (rewards > 0) {
+                address(REWARD_TOKEN).safeTransfer(posInfo.owner, rewards);
+                emit Harvest(posInfo.owner, positionIdHash, rewards);
             }
         }
     }
@@ -274,15 +279,15 @@ contract UsdnLongFarming is IUsdnLongFarming {
     /**
      * @notice Liquidates a position and sends the rewards to the liquidator and dead address.
      * @param positionIdHash The hash of the position ID.
-     * @param reward The reward amount to be distributed.
+     * @param rewards The rewards amount to be distributed.
      * @param liquidator The address of the liquidator.
      */
-    function _liquidate(bytes32 positionIdHash, uint256 reward, address liquidator) internal {
+    function _liquidate(bytes32 positionIdHash, uint256 rewards, address liquidator) internal {
         delete _positions[positionIdHash];
-        uint256 liquidatorReward = reward * _liquidatorRewardBps / BPS_DIVISOR;
-        uint256 burned = reward - liquidatorReward;
+        uint256 liquidatorRewards = rewards * _liquidatorRewardsBps / BPS_DIVISOR;
+        uint256 burned = rewards - liquidatorRewards;
         address(REWARD_TOKEN).safeTransfer(DEAD_ADDRESS, burned);
-        address(REWARD_TOKEN).safeTransfer(liquidator, liquidatorReward);
-        emit Liquidate(liquidator, positionIdHash, liquidatorReward, burned);
+        address(REWARD_TOKEN).safeTransfer(liquidator, liquidatorRewards);
+        emit Liquidate(liquidator, positionIdHash, liquidatorRewards, burned);
     }
 }

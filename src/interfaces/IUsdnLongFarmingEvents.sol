@@ -12,19 +12,19 @@ interface IUsdnLongFarmingEvents {
     event Deposit(address indexed owner, int24 tick, uint256 tickVersion, uint256 index);
 
     /**
-     * @notice The Ownership of a USDN protocol position has received accumulated rewards.
+     * @notice The depositor of a USDN protocol position has received rewards.
      * @param user The USDN protocol position owner.
      * @param positionIdHash The hash of the USDN protocol position.
-     * @param reward The reward amount transferred.
+     * @param rewards The rewards amount transferred.
      */
-    event Harvest(address indexed user, bytes32 positionIdHash, uint256 reward);
+    event Harvest(address indexed user, bytes32 indexed positionIdHash, uint256 rewards);
 
     /**
-     * @notice The position has been deleted and the liquidator received part of rewards.
+     * @notice The position has been deleted, and the liquidator received part of the rewards.
      * @param liquidator The address of the liquidator.
      * @param positionIdHash The hash of the USDN protocol position.
-     * @param liquidatorReward Amount received by the liquidator.
+     * @param liquidatorRewards The amount of rewards received by the liquidator.
      * @param burned Amount sent to the dead address.
      */
-    event Liquidate(address indexed liquidator, bytes32 positionIdHash, uint256 liquidatorReward, uint256 burned);
+    event Liquidate(address indexed liquidator, bytes32 positionIdHash, uint256 liquidatorRewards, uint256 burned);
 }
