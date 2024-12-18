@@ -39,4 +39,17 @@ contract TestUsdnLongFarmingAdmin is UsdnLongFarmingBaseFixture {
         vm.prank(DEPLOYER);
         farming.setNotifierRewardsBps(max + 1);
     }
+
+    /**
+     * @custom:scenario Call {IUsdnLongFarming.setNotifierRewardsBps} from admin
+     * @custom:given The initial USDN long farming state
+     * @custom:when Admin wallet triggers admin contract function
+     * @custom:then The notifier rewards bps must be updated
+     */
+    function test_setNotifierRewardsBps() public {
+        uint16 bps = 1000;
+        vm.prank(DEPLOYER);
+        farming.setNotifierRewardsBps(bps);
+        assertEq(farming.getNotifierRewardsBps(), bps, "The notifier rewards bps must be updated");
+    }
 }

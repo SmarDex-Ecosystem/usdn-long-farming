@@ -259,12 +259,9 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
 
         if (isLiquidated_) {
             _slash(positionIdHash, rewards, msg.sender);
-            newRewardDebt_ = 0;
-        } else {
-            if (rewards > 0) {
-                address(REWARD_TOKEN).safeTransfer(posInfo.owner, rewards);
-                emit Harvest(posInfo.owner, positionIdHash, rewards);
-            }
+        } else if (rewards > 0) {
+            address(REWARD_TOKEN).safeTransfer(posInfo.owner, rewards);
+            emit Harvest(posInfo.owner, positionIdHash, rewards);
         }
     }
 
