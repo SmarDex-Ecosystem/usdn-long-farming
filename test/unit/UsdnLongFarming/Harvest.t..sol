@@ -8,13 +8,13 @@ import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProto
 import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
 
 import { USER_1 } from "../../utils/Constants.sol";
-import { UsdnLongStakingBaseFixture } from "./utils/Fixtures.sol";
+import { UsdnLongFarmingBaseFixture } from "./utils/Fixtures.sol";
 
 /**
- * @custom:feature Tests the {IUsdnLongStaking.harvest} of the USDN long staking
- * @custom:background Given a deployed staking contract and USDN protocol
+ * @custom:feature Tests the {IUsdnLongFarming.harvest} of the USDN long farming
+ * @custom:background Given a deployed farming contract and USDN protocol
  */
-contract TestUsdnLongStakingHarvest is UsdnLongStakingBaseFixture {
+contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
     IUsdnProtocolTypes.Position internal position;
     bytes32 posHash;
     int24 internal constant DEFAULT_TICK = 1234;
@@ -33,14 +33,14 @@ contract TestUsdnLongStakingHarvest is UsdnLongStakingBaseFixture {
         });
 
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, false);
-        posHash = staking.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
-        staking.deposit(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX, "");
+        posHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        farming.deposit(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX, "");
     }
 
     /**
      * @custom:scenario Tests the harvest with a deposited position.
-     * @custom:given The staking contract with a deposited position.
-     * @custom:when The function {IUsdnLongStaking.harvest} is called.
+     * @custom:given The farming contract with a deposited position.
+     * @custom:when The function {IUsdnLongFarming.harvest} is called.
      * @custom:then The reward is sent to the position owner.
      * @custom:and A `Harvest` event is emitted.
      */
@@ -51,14 +51,14 @@ contract TestUsdnLongStakingHarvest is UsdnLongStakingBaseFixture {
         vm.roll(block.number + blockNumberSkip);
         vm.expectEmit();
         emit Harvest(address(this), posHash, expectedRewards);
-        staking.harvest(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        farming.harvest(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         assertEq(rewardToken.balanceOf(address(this)), expectedRewards, "The reward token balance must be updated");
     }
 
     /**
      * @custom:scenario Tests the harvest with the position info updated.
-     * @custom:given The staking contract with a deposited position.
-     * @custom:when The function {IUsdnLongStaking.harvest} is called.
+     * @custom:given The farming contract with a deposited position.
+     * @custom:when The function {IUsdnLongFarming.harvest} is called.
      * @custom:then The reward is sent to the position owner.
      * @custom:and The reward debt is updated.
      */
@@ -68,50 +68,50 @@ contract TestUsdnLongStakingHarvest is UsdnLongStakingBaseFixture {
 
         vm.roll(block.number + blockNumberSkip);
         vm.prank(USER_1);
-        staking.harvest(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        farming.harvest(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         assertEq(
             rewardToken.balanceOf(address(this)),
             rewardsPerBlock * (blockNumberSkip + 1),
             "The reward token balance must be updated"
         );
-        PositionInfo memory posInfo = staking.getPositionInfo(posHash);
+        PositionInfo memory posInfo = farming.getPositionInfo(posHash);
         assertEq(
             posInfo.rewardDebt,
-            FixedPointMathLib.fullMulDiv(posInfo.shares, staking.getAccRewardPerShare(), staking.SCALING_FACTOR()),
+            FixedPointMathLib.fullMulDiv(posInfo.shares, farming.getAccRewardPerShare(), farming.SCALING_FACTOR()),
             "The reward debt must be updated"
         );
     }
 
     /**
      * @custom:scenario Zero rewards is pending so no rewards are sent.
-     * @custom:given The staking contract with a deposited position.
-     * @custom:when The function {IUsdnLongStaking.harvest} is called with zero rewards.
+     * @custom:given The farming contract with a deposited position.
+     * @custom:when The function {IUsdnLongFarming.harvest} is called with zero rewards.
      * @custom:then The reward is not sent to the position owner.
      * @custom:and No logs are emitted.
      */
     function test_harvestZeroRewards() public {
         vm.recordLogs();
-        staking.harvest(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        farming.harvest(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         Vm.Log[] memory logs = vm.getRecordedLogs();
         assertEq(logs.length, 0, "No logs must be emitted");
     }
 
     /**
      * @custom:scenario Reverts when the position is invalid.
-     * @custom:given The staking contract with a deposited position.
-     * @custom:when The function {IUsdnLongStaking.harvest} is called with an invalid position.
-     * @custom:then The call should revert with {UsdnLongStakingInvalidPosition} error.
+     * @custom:given The farming contract with a deposited position.
+     * @custom:when The function {IUsdnLongFarming.harvest} is called with an invalid position.
+     * @custom:then The call should revert with {UsdnLongFarmingInvalidPosition} error.
      */
     function test_RevertWhen_harvestInvalidPosition() public {
-        vm.expectRevert(UsdnLongStakingInvalidPosition.selector);
-        staking.harvest(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX + 1);
+        vm.expectRevert(UsdnLongFarmingInvalidPosition.selector);
+        farming.harvest(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX + 1);
     }
 
     /**
      * @custom:scenario Tests the harvest with the position liquidated in the USDN protocol.
-     * @custom:given The staking contract with a deposited position.
+     * @custom:given The farming contract with a deposited position.
      * @custom:and The position is liquidated in the USDN protocol.
-     * @custom:when The function {IUsdnLongStaking.harvest} is called.
+     * @custom:when The function {IUsdnLongFarming.harvest} is called.
      * @custom:then The reward is sent to the liquidator and the dead address.
      * @custom:and The position is deleted and the position's owner does not receive rewards.
      * @custom:and A `Liquidate` event is emitted.
@@ -128,23 +128,23 @@ contract TestUsdnLongStakingHarvest is UsdnLongStakingBaseFixture {
         vm.prank(USER_1);
         vm.expectEmit();
         emit Liquidate(USER_1, posHash, liquidatorReward, burned);
-        staking.harvest(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        farming.harvest(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         assertEq(rewardToken.balanceOf(address(this)), 0, "The reward sent to the liquidator and the dead address");
         assertEq(rewardToken.balanceOf(address(0xdead)), burned, "Dead address must receive a part of the rewards");
         assertEq(rewardToken.balanceOf(USER_1), liquidatorReward, "The liquidator must receive a part of the rewards");
 
-        PositionInfo memory posInfo = staking.getPositionInfo(posHash);
+        PositionInfo memory posInfo = farming.getPositionInfo(posHash);
         assertEq(posInfo.owner, address(0), "The reward debt must be updated");
     }
 
     /**
      * @custom:scenario Reverts when caller is not the owner
-     * @custom:when Call the function {IUsdnLongStaking.setLiquidatorRewardBps} with a non-owner account
+     * @custom:when Call the function {IUsdnLongFarming.setLiquidatorRewardBps} with a non-owner account
      * @custom:then It reverts with a OwnableUnauthorizedAccount error
      */
     function test_RevertWhen_setLiquidatorRewardBpsCallerIsNotTheOwner() public {
         vm.prank(USER_1);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, USER_1));
-        staking.setLiquidatorRewardBps(100);
+        farming.setLiquidatorRewardBps(100);
     }
 }

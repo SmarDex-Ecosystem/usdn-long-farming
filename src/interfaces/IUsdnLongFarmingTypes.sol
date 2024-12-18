@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
-/**
- * @title IUsdnLongStakingTypes
- * @notice Interface for the USDN Long Staking types.
- */
-interface IUsdnLongStakingTypes {
+interface IUsdnLongFarmingTypes {
     /**
      * @notice The information of a staked position.
      * @dev The `PositionId` is destructured into its individual components to pack the struct more closely.
@@ -16,7 +12,7 @@ interface IUsdnLongStakingTypes {
      * @param rewardDebt The reward debt of the position.
      * The amount of rewards entitled to a staked position at any time is defined as:
      * pendingRewards = (pos.shares * _accRewardPerShare) - pos.rewardDebt.
-     * @param shares The initial trading exposure of the position, which constitutes its share in the staking.
+     * @param shares The initial trading exposure of the position, which constitutes its share in the farming.
      */
     struct PositionInfo {
         address owner; // 20 bytes
