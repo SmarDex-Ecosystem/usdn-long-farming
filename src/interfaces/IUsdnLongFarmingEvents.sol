@@ -12,8 +12,8 @@ interface IUsdnLongFarmingEvents {
     event Deposit(address indexed owner, int24 tick, uint256 tickVersion, uint256 index);
 
     /**
-     * @notice The depositor of a USDN protocol position has received rewards.
-     * @param user The USDN protocol position owner.
+     * @notice The owner of the position received the rewards.
+     * @param user The address of the position owner.
      * @param positionIdHash The hash of the USDN protocol position.
      * @param rewards The rewards amount transferred.
      */
