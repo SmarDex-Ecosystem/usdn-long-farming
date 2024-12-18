@@ -92,6 +92,9 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
 
     /// @inheritdoc IUsdnLongFarming
     function setNotifierRewardsBps(uint16 notifierRewardsBps) external onlyOwner {
+        if (notifierRewardsBps > BPS_DIVISOR) {
+            revert UsdnLongFarmingInvalidNotifierRewardsBps();
+        }
         _notifierRewardsBps = notifierRewardsBps;
     }
 

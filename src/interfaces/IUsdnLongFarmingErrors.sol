@@ -10,4 +10,7 @@ interface IUsdnLongFarmingErrors {
 
     /// @dev The USDN protocol position is invalid.
     error UsdnLongFarmingInvalidPosition();
+
+    /// @dev The specified notifierRewardsBps is invalid.
+    error UsdnLongFarmingInvalidNotifierRewardsBps();
 }
