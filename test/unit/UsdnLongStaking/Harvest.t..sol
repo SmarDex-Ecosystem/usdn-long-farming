@@ -33,9 +33,8 @@ contract TestUsdnLongStakingHarvest is UsdnLongStakingBaseFixture {
         });
 
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, false);
-        posHash = staking.getPosIdHash(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
-        bool success = staking.deposit(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX, "");
-        assertTrue(success, "The deposit must be successful");
+        posHash = staking.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        staking.deposit(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX, "");
     }
 
     /**

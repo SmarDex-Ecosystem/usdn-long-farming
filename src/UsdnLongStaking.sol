@@ -119,66 +119,13 @@ contract UsdnLongStaking is IUsdnLongStaking, Ownable2Step {
     }
 
     /// @inheritdoc IUsdnLongStaking
+    function getLiquidatorRewardBps() external view returns (uint16 liquidatorRewardBps_) {
+        return _liquidatorRewardBps;
+    }
+
+    /// @inheritdoc IUsdnLongStaking
     function hashPosId(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_) {
         return _hashPositionId(tick, tickVersion, index);
-    }
-
-    /// @inheritdoc IUsdnLongStaking
-    function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation) external {
-        (IUsdnProtocolTypes.Position memory pos,) =
-            USDN_PROTOCOL.getLongPosition(IUsdnProtocolTypes.PositionId(tick, tickVersion, index));
-
-        _checkPosition(pos);
-        _saveDeposit(pos, tick, tickVersion, index);
-
-        USDN_PROTOCOL.transferPositionOwnership(
-            IUsdnProtocolTypes.PositionId(tick, tickVersion, index), address(this), delegation
-        );
-    }
-
-    /// @inheritdoc IUsdnLongStaking
-    function setLiquidatorRewardBps(uint16 liquidatorRewardBps) external onlyOwner {
-        _liquidatorRewardBps = liquidatorRewardBps;
-    }
-
-    /// @inheritdoc IUsdnLongStaking
-    function getPositionInfo(bytes32 posHash) external view returns (PositionInfo memory posInfo_) {
-        return _positions[posHash];
-    }
-
-    /// @inheritdoc IUsdnLongStaking
-    function getPositionsCount() external view returns (uint256 positionsCount_) {
-        return _positionsCount;
-    }
-
-    /// @inheritdoc IUsdnLongStaking
-    function getTotalShares() external view returns (uint256 totalShares_) {
-        return _totalShares;
-    }
-
-    /// @inheritdoc IUsdnLongStaking
-    function getAccRewardPerShare() external view returns (uint256 accRewardPerShare_) {
-        return _accRewardPerShare;
-    }
-
-    /// @inheritdoc IUsdnLongStaking
-    function getLastRewardBlock() external view returns (uint256 lastRewardBlock_) {
-        return _lastRewardBlock;
-    }
-
-    /// @inheritdoc IUsdnLongStaking
-    function getPosIdHash(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_) {
-        return _hashPositionId(tick, tickVersion, index);
-    }
-
-    /// @inheritdoc IUsdnLongStaking
-    function getLiquidatorRewardBps() external view returns (uint16 liquidatorRewardBps_) {
-        return _liquidatorRewardBps;
-    }
-
-    /// @inheritdoc IUsdnLongStaking
-    function getLiquidatorRewardBps() external view returns (uint16 liquidatorRewardBps_) {
-        return _liquidatorRewardBps;
     }
 
     /// @inheritdoc IUsdnLongStaking
