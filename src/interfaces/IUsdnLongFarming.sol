@@ -5,7 +5,6 @@ import { IUsdnLongFarmingErrors } from "./IUsdnLongFarmingErrors.sol";
 import { IUsdnLongFarmingEvents } from "./IUsdnLongFarmingEvents.sol";
 import { IUsdnLongFarmingTypes } from "./IUsdnLongFarmingTypes.sol";
 
-/// @title Interface for the UsdnLongFarming Contract
 interface IUsdnLongFarming is IUsdnLongFarmingTypes, IUsdnLongFarmingErrors, IUsdnLongFarmingEvents {
     /**
      * @notice Gets the deposited position info of the USDN protocol position.
