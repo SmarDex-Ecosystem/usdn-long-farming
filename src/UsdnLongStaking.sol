@@ -258,7 +258,7 @@ contract UsdnLongStaking is IUsdnLongStaking, Ownable2Step {
         } else {
             if (reward > 0) {
                 address(REWARD_TOKEN).safeTransfer(posInfo.owner, reward);
-                emit UsdnLongStakingHarvest(posInfo.owner, positionIdHash, reward);
+                emit Harvest(posInfo.owner, positionIdHash, reward);
             }
         }
     }
@@ -286,6 +286,6 @@ contract UsdnLongStaking is IUsdnLongStaking, Ownable2Step {
         uint256 burned = reward - liquidatorReward;
         address(REWARD_TOKEN).safeTransfer(DEAD_ADDRESS, burned);
         address(REWARD_TOKEN).safeTransfer(liquidator, liquidatorReward);
-        emit UsdnLongStakingLiquidate(liquidator, positionIdHash, liquidatorReward, burned);
+        emit Liquidate(liquidator, positionIdHash, liquidatorReward, burned);
     }
 }

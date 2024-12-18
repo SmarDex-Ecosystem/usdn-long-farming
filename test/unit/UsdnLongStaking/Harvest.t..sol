@@ -42,7 +42,7 @@ contract TestUsdnLongStakingHarvest is UsdnLongStakingBaseFixture {
      * @custom:given The staking contract with a deposited position.
      * @custom:when The function {IUsdnLongStaking.harvest} is called.
      * @custom:then The reward is sent to the position owner.
-     * @custom:and A `UsdnLongStakingHarvest` event is emitted.
+     * @custom:and A `Harvest` event is emitted.
      */
     function test_harvest() public {
         uint256 rewardsPerBlock = farming.getRewardsPerBlock();
@@ -50,7 +50,7 @@ contract TestUsdnLongStakingHarvest is UsdnLongStakingBaseFixture {
         uint256 expectedRewards = rewardsPerBlock * (blockNumberSkip + 1);
         vm.roll(block.number + blockNumberSkip);
         vm.expectEmit();
-        emit UsdnLongStakingHarvest(address(this), posHash, expectedRewards);
+        emit Harvest(address(this), posHash, expectedRewards);
         staking.harvest(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         assertEq(rewardToken.balanceOf(address(this)), expectedRewards, "The reward token balance must be updated");
     }
@@ -114,7 +114,7 @@ contract TestUsdnLongStakingHarvest is UsdnLongStakingBaseFixture {
      * @custom:when The function {IUsdnLongStaking.harvest} is called.
      * @custom:then The reward is sent to the liquidator and the dead address.
      * @custom:and The position is deleted and the position's owner does not receive rewards.
-     * @custom:and A `UsdnLongStakingLiquidate` event is emitted.
+     * @custom:and A `Liquidate` event is emitted.
      */
     function test_harvestPositionLiquidate() public {
         uint256 blockNumberSkip = 100;
@@ -127,7 +127,7 @@ contract TestUsdnLongStakingHarvest is UsdnLongStakingBaseFixture {
 
         vm.prank(USER_1);
         vm.expectEmit();
-        emit UsdnLongStakingLiquidate(USER_1, posHash, liquidatorReward, burned);
+        emit Liquidate(USER_1, posHash, liquidatorReward, burned);
         staking.harvest(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         assertEq(rewardToken.balanceOf(address(this)), 0, "The reward sent to the liquidator and the dead address");
         assertEq(rewardToken.balanceOf(address(0xdead)), burned, "Dead address must receive a part of the rewards");
