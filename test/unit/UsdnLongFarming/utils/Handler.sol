@@ -27,6 +27,18 @@ contract UsdnLongFarmingHandler is UsdnLongFarming {
         _checkPosition(position);
     }
 
+    function i_slash(bytes32 positionIdHash, uint256 rewards, address notifier) external {
+        _slash(positionIdHash, rewards, notifier);
+    }
+
+    function i_isLiquidated(int24 tick, uint256 tickVersion) external view returns (bool) {
+        return _isLiquidated(tick, tickVersion);
+    }
+
+    function i_harvest(bytes32 positionIdHash) external returns (bool isLiquidated_, uint256 newRewardDebt_) {
+        return _harvest(positionIdHash);
+    }
+
     function setTotalShares(uint256 totalShares) external {
         _totalShares = totalShares;
     }

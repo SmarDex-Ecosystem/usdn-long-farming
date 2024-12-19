@@ -32,7 +32,7 @@ contract MockUsdnProtocol {
 
     function getTickVersion(int24 /*tick*/ ) external view returns (uint256 tickVersion_) {
         if (_liquidated) {
-            return 0;
+            return _tickVersion + 1;
         } else {
             return _tickVersion;
         }
