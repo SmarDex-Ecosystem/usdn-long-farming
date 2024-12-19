@@ -9,7 +9,7 @@ import { USER_1 } from "../../utils/Constants.sol";
 import { UsdnLongFarmingBaseFixture } from "./utils/Fixtures.sol";
 
 /**
- * @custom:feature Tests the {IUsdnLongFarming._slash} of the USDN long farming
+ * @custom:feature Tests the {IUsdnLongFarming._slash} function of the USDN long farming
  * @custom:background Given a deployed farming contract and USDN protocol
  */
 contract TestUsdnLongFarmingSlash is UsdnLongFarmingBaseFixture {
@@ -70,7 +70,7 @@ contract TestUsdnLongFarmingSlash is UsdnLongFarmingBaseFixture {
         // position deleted
         assertEq(farming.getPositionInfo(posHash).owner, address(0), "The position must be deleted");
         // tokens transferred
-        assertEq(rewardToken.balanceOf(address(this)), 0, "The reward sent to the notifier and the dead address");
+        assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
         assertEq(
             rewardToken.balanceOf(address(0xdead)), rewardsToBurn, "Dead address must receive a part of the rewards"
         );

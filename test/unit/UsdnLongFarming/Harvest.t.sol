@@ -10,7 +10,7 @@ import { USER_1 } from "../../utils/Constants.sol";
 import { UsdnLongFarmingBaseFixture } from "./utils/Fixtures.sol";
 
 /**
- * @custom:feature Tests the {IUsdnLongFarming.harvest} of the USDN long farming
+ * @custom:feature Tests the {IUsdnLongFarming.harvest} function of the USDN long farming
  * @custom:background Given a deployed farming contract and USDN protocol
  */
 contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {

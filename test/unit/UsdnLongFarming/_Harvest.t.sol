@@ -10,7 +10,7 @@ import { USER_1 } from "../../utils/Constants.sol";
 import { UsdnLongFarmingBaseFixture } from "./utils/Fixtures.sol";
 
 /**
- * @custom:feature Tests the {IUsdnLongFarming._harvest} of the USDN long farming
+ * @custom:feature Tests the {IUsdnLongFarming._harvest} function of the USDN long farming
  * @custom:background Given a deployed farming contract and USDN protocol
  */
 contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
@@ -68,7 +68,7 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
      * @custom:scenario Tests {IUsdnLongFarming._harvest} sends rewards to the position owner.
      * @custom:given The farming contract with a deposited position.
      * @custom:when The function {IUsdnLongFarming._harvest} is called by USER_1 with rewards.
-     * @custom:then The reward is sent to the position owner.
+     * @custom:then The rewards is sent to the position owner.
      * @custom:and The function return values are correct.
      */
     function test_harvestSendsRewards() public {
@@ -82,13 +82,13 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
         emit Harvest(address(this), posHash, expectedRewards);
         (bool isLiquidated, uint256 newRewardDebt) = farming.i_harvest(posHash);
 
-        assertEq(rewardToken.balanceOf(address(this)), expectedRewards, "The reward token balance must be updated");
+        assertEq(rewardToken.balanceOf(address(this)), expectedRewards, "The rewards token balance must be updated");
         PositionInfo memory posInfo = farming.getPositionInfo(posHash);
         assertEq(isLiquidated, false, "The position must not be liquidated");
         assertEq(
             newRewardDebt,
             FixedPointMathLib.fullMulDiv(posInfo.shares, farming.getAccRewardPerShare(), farming.SCALING_FACTOR()),
-            "The reward debt must be updated"
+            "The rewards debt must be updated"
         );
     }
 
@@ -96,7 +96,7 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
      * @custom:scenario Zero rewards is pending so no rewards are sent.
      * @custom:given The farming contract with a deposited position.
      * @custom:when The function {IUsdnLongFarming._harvest} is called with zero rewards.
-     * @custom:then The reward is not sent to the position owner.
+     * @custom:then The rewards is not sent to the position owner.
      * @custom:and No logs are emitted.
      */
     function test_harvestZeroRewards() public {
@@ -106,6 +106,6 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
         Vm.Log[] memory logs = vm.getRecordedLogs();
         assertEq(logs.length, 0, "No logs must be emitted");
         assertEq(isLiquidated, false, "The position must not be liquidated");
-        assertEq(newRewardDebt, 0, "The reward debt must be zero");
+        assertEq(newRewardDebt, 0, "The rewards debt must be zero");
     }
 }

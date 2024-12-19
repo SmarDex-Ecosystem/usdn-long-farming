@@ -7,8 +7,8 @@ import { IUsdnLongFarmingTypes } from "./IUsdnLongFarmingTypes.sol";
 
 interface IUsdnLongFarming is IUsdnLongFarmingTypes, IUsdnLongFarmingErrors, IUsdnLongFarmingEvents {
     /**
-     * @notice Sets the notifier reward factor.
-     * @param notifierRewardsBps The notifier reward factor value, in basis points.
+     * @notice Sets the notifier rewards factor.
+     * @param notifierRewardsBps The notifier rewards factor value, in basis points.
      */
     function setNotifierRewardsBps(uint16 notifierRewardsBps) external;
 
@@ -48,8 +48,8 @@ interface IUsdnLongFarming is IUsdnLongFarmingTypes, IUsdnLongFarmingErrors, IUs
     function getLastRewardBlock() external view returns (uint256 block_);
 
     /**
-     * @notice Gets the current notifier reward factor, in basis points.
-     * @return notifierRewardsBps_ The notifier reward factor value.
+     * @notice Gets the current notifier rewards factor, in basis points.
+     * @return notifierRewardsBps_ The notifier rewards factor value.
      */
     function getNotifierRewardsBps() external view returns (uint16 notifierRewardsBps_);
 
@@ -77,11 +77,11 @@ interface IUsdnLongFarming is IUsdnLongFarmingTypes, IUsdnLongFarmingErrors, IUs
     /**
      * @notice Sends rewards to the position's owner.
      * @dev If the position is active (not liquidated), the rewards are sent to the position's owner and the position's
-     * rewardDebt is updated to reflect the claimed rewards.If no reward is pending, this function will not execute any
-     * action, but a transaction fee may still be incurred for calling the function If the position has been liquidated
-     * on USDN protocol, the rewards are distributed to `msg.sender` and `DEAD_ADDRESS` and position is deleted.
-     * Note An user can therefore use this function to notify the farming protocol that a position has been liquidated
-     * and be rewarded for this action.
+     * rewardDebt is updated to reflect the claimed rewards. If there're no pending rewards, this function will not
+     * execute any action, but a transaction fee may still be incurred for calling the function. If the position has
+     * been liquidated on the USDN protocol, the rewards are distributed to `msg.sender` and `DEAD_ADDRESS`, and the
+     * position is deleted. Note: An user can therefore use this function to notify the farming protocol that a position
+     * has been liquidated and be rewarded for this action.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.

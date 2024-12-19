@@ -27,7 +27,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
      */
     uint256 public constant SCALING_FACTOR = 1e38;
 
-    /// @notice Denominator for the reward multiplier, will give us a 0.01% basis point.
+    /// @notice Denominator for the rewards multiplier, will give us a 0.01% basis point.
     uint256 public constant BPS_DIVISOR = 10_000;
 
     /// @notice Address holding rewards rewardsToBurn  during liquidation.
@@ -67,7 +67,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     /// @dev Block number when the last rewards were calculated.
     uint256 internal _lastRewardBlock;
 
-    /// @dev Ratio of the reward to be distributed to the notifier in basis points: default is 30%.
+    /// @dev Ratio of the rewards to be distributed to the notifier in basis points: default is 30%.
     uint16 internal _notifierRewardsBps = 3000;
 
     /**

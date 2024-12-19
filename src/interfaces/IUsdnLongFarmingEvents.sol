@@ -12,7 +12,7 @@ interface IUsdnLongFarmingEvents {
     event Deposit(address indexed owner, int24 tick, uint256 tickVersion, uint256 index);
 
     /**
-     * @notice The owner of the position received the rewards.
+     * @notice The rewards are sent to the owner of the position.
      * @param user The address of the position owner.
      * @param positionIdHash The hash of the USDN protocol position.
      * @param rewards The rewards amount transferred.
@@ -20,7 +20,7 @@ interface IUsdnLongFarmingEvents {
     event Harvest(address indexed user, bytes32 indexed positionIdHash, uint256 rewards);
 
     /**
-     * @notice The position has been deleted, and the notifier received part of the rewards.
+     * @notice The position has been deleted, and the notifier has received part of the rewards.
      * @param notifier The address of the notifier.
      * @param positionIdHash The hash of the USDN protocol position.
      * @param notifierRewards The amount of rewards received by the notifier.

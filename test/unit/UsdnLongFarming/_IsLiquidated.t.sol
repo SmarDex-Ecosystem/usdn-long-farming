@@ -6,7 +6,7 @@ import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProto
 import { UsdnLongFarmingBaseFixture } from "./utils/Fixtures.sol";
 
 /**
- * @custom:feature Tests the {IUsdnLongFarming._isLiquidated} of the USDN long farming
+ * @custom:feature Tests the {IUsdnLongFarming._isLiquidated} function of the USDN long farming
  * @custom:background Given a deployed farming contract and USDN protocol
  */
 contract TestUsdnLongFarmingIsLiquidated is UsdnLongFarmingBaseFixture {
