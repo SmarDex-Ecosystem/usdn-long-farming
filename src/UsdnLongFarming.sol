@@ -2,6 +2,8 @@
 pragma solidity 0.8.28;
 
 import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
+import { ERC165 } from "@openzeppelin-contracts-5/utils/introspection/ERC165.sol";
+import { IERC165, IOwnershipCallback } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IOwnershipCallback.sol";
 import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
 import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
@@ -13,7 +15,7 @@ import { IUsdnLongFarming } from "./interfaces/IUsdnLongFarming.sol";
  * @title USDN Long Positions farming
  * @notice A contract for farming USDN long positions to earn rewards.
  */
-contract UsdnLongFarming is IUsdnLongFarming {
+contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming {
     /**
      * @dev Scaling factor for {_accRewardPerShare}.
      * In the worst case of having 1 wei of reward tokens per block for a duration of 1 block, and with a total number
@@ -43,6 +45,9 @@ contract UsdnLongFarming is IUsdnLongFarming {
 
     /// @dev The sum of all locked positions' initial trading exposure.
     uint256 internal _totalShares;
+
+    /// @dev The transient value used by the function {ownershipCallback} to avoid execution if it's set during the deposit.
+    bool internal transient _isDeposit;
 
     /**
      * @dev Accumulated reward tokens per share multiplied by {SCALING_FACTOR}.
@@ -106,8 +111,14 @@ contract UsdnLongFarming is IUsdnLongFarming {
         return _hashPositionId(tick, tickVersion, index);
     }
 
+    /// @inheritdoc IERC165
+    function supportsInterface(bytes4 interfaceId) public view override(ERC165, IERC165) returns (bool) {
+        return interfaceId == type(IOwnershipCallback).interfaceId || super.supportsInterface(interfaceId);
+    }
+
     /// @inheritdoc IUsdnLongFarming
     function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation) external {
+        _isDeposit = true;
         (IUsdnProtocolTypes.Position memory pos,) =
             USDN_PROTOCOL.getLongPosition(IUsdnProtocolTypes.PositionId(tick, tickVersion, index));
 
@@ -117,6 +128,27 @@ contract UsdnLongFarming is IUsdnLongFarming {
         USDN_PROTOCOL.transferPositionOwnership(
             IUsdnProtocolTypes.PositionId(tick, tickVersion, index), address(this), delegation
         );
+    }
+
+    /// @inheritdoc IOwnershipCallback
+    function ownershipCallback(address oldOwner, IUsdnProtocolTypes.PositionId calldata posId) external {
+        if(msg.sender != address(USDN_PROTOCOL)) {
+            revert UsdnLongFarmingInvalidCaller();
+        }
+        
+        if(_isDeposit) {
+            return;
+        }
+
+        (IUsdnProtocolTypes.Position memory pos,) =
+            USDN_PROTOCOL.getLongPosition(IUsdnProtocolTypes.PositionId(posId.tick, posId.tickVersion, posId.index));
+
+        if (!pos.validated) {
+            revert UsdnLongFarmingPendingPosition();
+        }
+
+        pos.user = oldOwner;      
+        _saveDeposit(pos, posId.tick, posId.tickVersion, posId.index);
     }
 
     /**

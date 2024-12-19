@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+import { IOwnershipCallback } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IOwnershipCallback.sol";
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
 
 contract MockUsdnProtocol {
@@ -18,9 +19,12 @@ contract MockUsdnProtocol {
         _position = position;
     }
 
-    function transferPositionOwnership(IUsdnProtocolTypes.PositionId calldata, address newOwner, bytes calldata)
+    function transferPositionOwnership(IUsdnProtocolTypes.PositionId calldata posId, address newOwner, bytes calldata)
         external
     {
+        address oldOwner = _position.user;
         _position.user = newOwner;
+
+        IOwnershipCallback(newOwner).ownershipCallback(oldOwner, posId);
     }
 }

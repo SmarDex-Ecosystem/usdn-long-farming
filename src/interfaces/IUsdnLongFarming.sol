@@ -1,11 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
+import { IERC165, IOwnershipCallback } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IOwnershipCallback.sol";
+
 import { IUsdnLongFarmingErrors } from "./IUsdnLongFarmingErrors.sol";
 import { IUsdnLongFarmingEvents } from "./IUsdnLongFarmingEvents.sol";
 import { IUsdnLongFarmingTypes } from "./IUsdnLongFarmingTypes.sol";
 
-interface IUsdnLongFarming is IUsdnLongFarmingTypes, IUsdnLongFarmingErrors, IUsdnLongFarmingEvents {
+interface IUsdnLongFarming is
+    IUsdnLongFarmingTypes,
+    IUsdnLongFarmingErrors,
+    IUsdnLongFarmingEvents,
+    IERC165,
+    IOwnershipCallback
+{
     /**
      * @notice Gets the deposited position info of the USDN protocol position.
      * @param posHash The hash of the position ID obtained using {hashPosId}.

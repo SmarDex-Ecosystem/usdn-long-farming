@@ -7,4 +7,7 @@ interface IUsdnLongFarmingErrors {
 
     /// @dev The USDN protocol position validation is pending.
     error UsdnLongFarmingPendingPosition();
+
+    /// @dev The caller is invalid.
+    error UsdnLongFarmingInvalidCaller();
 }

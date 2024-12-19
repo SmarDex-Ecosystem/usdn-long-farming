@@ -30,4 +30,8 @@ contract UsdnLongFarmingHandler is UsdnLongFarming {
     function setTotalShares(uint256 totalShares) external {
         _totalShares = totalShares;
     }
+
+    function setDeposit() external {
+        _isDeposit = true;
+    }
 }
