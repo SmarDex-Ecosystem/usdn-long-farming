@@ -54,22 +54,11 @@ contract TestUsdnLongFarmingSlash is UsdnLongFarmingBaseFixture {
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, true);
 
         vm.prank(USER_1);
-        vm.recordLogs();
+        vm.expectEmit();
+        emit Slash(USER_1, posHash, notifierRewards, rewardsToBurn);
         farming.i_slash(posHash, rewards, USER_1);
 
-        // check the Slash event
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-        assertEq(logs.length, 3, "Three logs must be emitted");
-        assertEq(logs[2].topics[0], Slash.selector);
-        (bytes32 positionIdHashEmitted, uint256 notifierRewardsEmitted, uint256 rewardsToBurnEmitted) =
-            abi.decode(logs[2].data, (bytes32, uint256, uint256));
-        assertEq(logs[2].topics[1], bytes32(uint256(uint160(USER_1))), "The notifier must be the USER_1");
-        assertEq(positionIdHashEmitted, posHash, "The position hash must be the posHash");
-        assertEq(notifierRewardsEmitted, notifierRewards, "The notifier rewards must be the notifierRewards");
-        assertEq(rewardsToBurnEmitted, rewardsToBurn, "The rewards to burn must be the rewardsToBurn");
-        // position deleted
         assertEq(farming.getPositionInfo(posHash).owner, address(0), "The position must be deleted");
-        // tokens transferred
         assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
         assertEq(
             rewardToken.balanceOf(address(0xdead)), rewardsToBurn, "Dead address must receive a part of the rewards"
