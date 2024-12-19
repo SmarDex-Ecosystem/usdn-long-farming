@@ -49,19 +49,19 @@ contract TestUsdnLongFarmingSlash is UsdnLongFarmingBaseFixture {
     function test_slash() public {
         uint256 rewards = 505;
         uint256 notifierRewards = 151;
-        uint256 rewardsToBurn = 354;
+        uint256 burnedTokens = 354;
 
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, true);
 
         vm.prank(USER_1);
         vm.expectEmit();
-        emit Slash(USER_1, posHash, notifierRewards, rewardsToBurn);
-        farming.i_slash(posHash, rewards, USER_1);
+        emit Slash(USER_1, notifierRewards, burnedTokens, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        farming.i_slash(posHash, rewards, USER_1, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
 
         assertEq(farming.getPositionInfo(posHash).owner, address(0), "The position must be deleted");
         assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
         assertEq(
-            rewardToken.balanceOf(address(0xdead)), rewardsToBurn, "Dead address must receive a part of the rewards"
+            rewardToken.balanceOf(address(0xdead)), burnedTokens, "Dead address must receive a part of the rewards"
         );
         assertEq(rewardToken.balanceOf(USER_1), notifierRewards, "The notifier must receive a part of the rewards");
     }

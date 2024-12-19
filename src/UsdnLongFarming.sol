@@ -30,7 +30,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     /// @notice Denominator for the rewards multiplier, will give us a 0.01% basis point.
     uint256 public constant BPS_DIVISOR = 10_000;
 
-    /// @notice Address holding rewards rewardsToBurn  during liquidation.
+    /// @notice Address where to send the rewards to burn.
     address public constant DEAD_ADDRESS = address(0xdead);
 
     /// @notice The address of the USDN protocol contract.
@@ -147,11 +147,20 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     }
 
     /// @inheritdoc IUsdnLongFarming
-    function harvest(int24 tick, uint256 tickVersion, uint256 index) external {
+    function harvest(int24 tick, uint256 tickVersion, uint256 index) external returns (bool isLiquidated_) {
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
-        (bool isLiquidated, uint256 newRewardDebt) = _harvest(positionIdHash);
-        if (!isLiquidated) {
+        PositionInfo memory posInfo = _positions[positionIdHash];
+
+        uint256 rewards;
+        uint256 newRewardDebt;
+        (isLiquidated_, rewards, newRewardDebt) = _harvest(posInfo, positionIdHash);
+
+        if (!isLiquidated_) {
             _positions[positionIdHash].rewardDebt = newRewardDebt;
+
+            if (rewards > 0) {
+                _sendRewards(posInfo.owner, rewards, posInfo.tick, posInfo.tickVersion, posInfo.index);
+            }
         }
     }
 
@@ -241,28 +250,42 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     }
 
     /**
-     * @notice Sends rewards to the position's owner or liquidates the position if it has been liquidated in the USDN
-     * protocol.
+     * @notice Verify if position has been liquidated in USDN protocol and calculate the rewards to be distributed.
+     * @param posInfo The position information.
      * @param positionIdHash The hash of the position ID.
      * @return isLiquidated_ Whether the position has been liquidated.
-     * @return newRewardDebt_ The new value of the `rewardDebt`.
+     * @return rewards_ The rewards amount to be distributed.
+     * @return newRewardDebt_ The new reward debt for the position.
      */
-    function _harvest(bytes32 positionIdHash) internal returns (bool isLiquidated_, uint256 newRewardDebt_) {
+    function _harvest(PositionInfo memory posInfo, bytes32 positionIdHash)
+        internal
+        returns (bool isLiquidated_, uint256 rewards_, uint256 newRewardDebt_)
+    {
         _updateRewards();
-        PositionInfo memory posInfo = _positions[positionIdHash];
         if (posInfo.owner == address(0)) {
             revert UsdnLongFarmingInvalidPosition();
         }
-        isLiquidated_ = _isLiquidated(posInfo.tick, posInfo.tickVersion);
-        newRewardDebt_ = FixedPointMathLib.fullMulDiv(posInfo.shares, _accRewardPerShare, SCALING_FACTOR);
-        uint256 rewards = newRewardDebt_ - posInfo.rewardDebt;
 
+        newRewardDebt_ = FixedPointMathLib.fullMulDiv(posInfo.shares, _accRewardPerShare, SCALING_FACTOR);
+        rewards_ = newRewardDebt_ - posInfo.rewardDebt;
+
+        isLiquidated_ = _isLiquidated(posInfo.tick, posInfo.tickVersion);
         if (isLiquidated_) {
-            _slash(positionIdHash, rewards, msg.sender);
-        } else if (rewards > 0) {
-            address(REWARD_TOKEN).safeTransfer(posInfo.owner, rewards);
-            emit Harvest(posInfo.owner, positionIdHash, rewards);
+            _slash(positionIdHash, rewards_, msg.sender, posInfo.tick, posInfo.tickVersion, posInfo.index);
         }
+    }
+
+    /**
+     * @notice Sends the rewards to the `to` address and emits a {Harvest} event.
+     * @param to The address to send the rewards to.
+     * @param amount The amount of rewards to send.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @param index The index of the position inside the tick.
+     */
+    function _sendRewards(address to, uint256 amount, int24 tick, uint256 tickVersion, uint256 index) internal {
+        address(REWARD_TOKEN).safeTransfer(to, amount);
+        emit Harvest(to, amount, tick, tickVersion, index);
     }
 
     /**
@@ -281,13 +304,23 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
      * @param positionIdHash The hash of the position ID.
      * @param rewards The rewards amount to be distributed.
      * @param notifier The address which has notified the farming platform about the liquidation in the USDN protocol.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @param index The index of the position inside the tick.
      */
-    function _slash(bytes32 positionIdHash, uint256 rewards, address notifier) internal {
+    function _slash(
+        bytes32 positionIdHash,
+        uint256 rewards,
+        address notifier,
+        int24 tick,
+        uint256 tickVersion,
+        uint256 index
+    ) internal {
         delete _positions[positionIdHash];
         uint256 notifierRewards = rewards * _notifierRewardsBps / BPS_DIVISOR;
-        uint256 rewardsToBurn = rewards - notifierRewards;
-        address(REWARD_TOKEN).safeTransfer(DEAD_ADDRESS, rewardsToBurn);
+        uint256 burnedTokens = rewards - notifierRewards;
+        address(REWARD_TOKEN).safeTransfer(DEAD_ADDRESS, burnedTokens);
         address(REWARD_TOKEN).safeTransfer(notifier, notifierRewards);
-        emit Slash(notifier, positionIdHash, notifierRewards, rewardsToBurn);
+        emit Slash(notifier, notifierRewards, burnedTokens, tick, tickVersion, index);
     }
 }

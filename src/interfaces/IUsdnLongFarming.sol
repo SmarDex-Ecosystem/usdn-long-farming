@@ -85,6 +85,7 @@ interface IUsdnLongFarming is IUsdnLongFarmingTypes, IUsdnLongFarmingErrors, IUs
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
+     * @return isLiquidated_ A flag indicating if the position was liquidated.
      */
-    function harvest(int24 tick, uint256 tickVersion, uint256 index) external;
+    function harvest(int24 tick, uint256 tickVersion, uint256 index) external returns (bool isLiquidated_);
 }

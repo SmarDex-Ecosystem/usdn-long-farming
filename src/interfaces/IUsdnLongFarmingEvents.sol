@@ -14,17 +14,28 @@ interface IUsdnLongFarmingEvents {
     /**
      * @notice The rewards are sent to the owner of the position.
      * @param user The address of the position owner.
-     * @param positionIdHash The hash of the USDN protocol position.
      * @param rewards The rewards amount transferred.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @param index The index of the position inside the tick.
      */
-    event Harvest(address indexed user, bytes32 indexed positionIdHash, uint256 rewards);
+    event Harvest(address indexed user, uint256 rewards, int24 tick, uint256 tickVersion, uint256 index);
 
     /**
      * @notice The position has been deleted, and the notifier has received part of the rewards.
      * @param notifier The address of the notifier.
-     * @param positionIdHash The hash of the USDN protocol position.
      * @param notifierRewards The amount of rewards received by the notifier.
-     * @param rewardsToBurn  Amount sent to the dead address.
+     * @param burnedTokens  Amount sent to the dead address.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @param index The index of the position inside the tick.
      */
-    event Slash(address indexed notifier, bytes32 positionIdHash, uint256 notifierRewards, uint256 rewardsToBurn);
+    event Slash(
+        address indexed notifier,
+        uint256 notifierRewards,
+        uint256 burnedTokens,
+        int24 tick,
+        uint256 tickVersion,
+        uint256 index
+    );
 }
