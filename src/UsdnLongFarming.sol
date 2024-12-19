@@ -96,6 +96,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
             revert UsdnLongFarmingInvalidNotifierRewardsBps();
         }
         _notifierRewardsBps = notifierRewardsBps;
+        emit NotifierRewardsBpsUpdated(notifierRewardsBps);
     }
 
     /// @inheritdoc IUsdnLongFarming

@@ -38,4 +38,10 @@ interface IUsdnLongFarmingEvents {
         uint256 tickVersion,
         uint256 index
     );
+
+    /**
+     * @notice The notifier rewards factor has been updated.
+     * @param newNotifierRewardsBps The new notifier rewards factor value, in basis points.
+     */
+    event NotifierRewardsBpsUpdated(uint16 newNotifierRewardsBps);
 }

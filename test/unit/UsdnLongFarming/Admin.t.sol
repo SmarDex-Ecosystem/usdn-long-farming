@@ -49,6 +49,8 @@ contract TestUsdnLongFarmingAdmin is UsdnLongFarmingBaseFixture {
     function test_setNotifierRewardsBps() public {
         uint16 bps = 1000;
         vm.prank(DEPLOYER);
+        vm.expectEmit();
+        emit NotifierRewardsBpsUpdated(bps);
         farming.setNotifierRewardsBps(bps);
         assertEq(farming.getNotifierRewardsBps(), bps, "The notifier rewards bps must be updated");
     }
