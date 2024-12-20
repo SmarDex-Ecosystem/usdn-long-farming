@@ -42,6 +42,15 @@ interface IUsdnLongFarming is IUsdnLongFarmingTypes, IUsdnLongFarmingErrors, IUs
     function getLastRewardBlock() external view returns (uint256 block_);
 
     /**
+     * @notice Retrieves the pending rewards for a specific position.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @param index The index of the position inside the tick.
+     * @return rewards_ The amount of pending rewards.
+     */
+    function pendingRewards(int24 tick, uint256 tickVersion, uint256 index) external view returns (uint256 rewards_);
+
+    /**
      * @notice Hashes the unique ID of a USDN position.
      * @dev The hash is computed using `keccak256(abi.encode(tick, tickVersion, index))`.
      * @param tick The tick of the position.

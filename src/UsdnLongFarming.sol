@@ -102,6 +102,16 @@ contract UsdnLongFarming is IUsdnLongFarming {
     }
 
     /// @inheritdoc IUsdnLongFarming
+    function pendingRewards(int24 tick, uint256 tickVersion, uint256 index) external view returns (uint256 rewards_) {
+        uint256 periodRewards = REWARDS_PROVIDER.pendingReward(CAMPAIGN_ID, address(this));
+        uint256 accRewardPerShare =
+            _accRewardPerShare + FixedPointMathLib.fullMulDiv(periodRewards, SCALING_FACTOR, _totalShares);
+        bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
+        PositionInfo memory posInfo = _positions[positionIdHash];
+        return FixedPointMathLib.fullMulDiv(posInfo.shares, accRewardPerShare, SCALING_FACTOR) - posInfo.rewardDebt;
+    }
+
+    /// @inheritdoc IUsdnLongFarming
     function hashPosId(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_) {
         return _hashPositionId(tick, tickVersion, index);
     }
