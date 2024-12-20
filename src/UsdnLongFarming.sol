@@ -148,17 +148,21 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     }
 
     /// @inheritdoc IUsdnLongFarming
-    function harvest(int24 tick, uint256 tickVersion, uint256 index) external returns (bool isLiquidated_) {
+    function harvest(int24 tick, uint256 tickVersion, uint256 index)
+        external
+        returns (bool isLiquidated_, uint256 rewards_)
+    {
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
 
         (bool isLiquidated, uint256 rewards, uint256 newRewardDebt, address owner) = _harvest(positionIdHash);
 
         if (isLiquidated) {
             _slash(positionIdHash, rewards, msg.sender, tick, tickVersion, index);
-            return true;
+            return (true, 0);
         } else {
             _positions[positionIdHash].rewardDebt = newRewardDebt;
             _sendRewards(owner, rewards, tick, tickVersion, index);
+            rewards_ = rewards;
         }
     }
 
