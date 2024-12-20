@@ -61,6 +61,13 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming {
     /// @dev Block number when the last rewards were calculated.
     uint256 internal _lastRewardBlock;
 
+    /// @dev Modifier to ensure that only one deposit can be processed at a time.
+    modifier ensureDeposit {
+        _isDeposit = true;
+        _;
+        _isDeposit = false;
+    }
+
     /**
      * @param usdnProtocol The address of the USDN protocol contract.
      * @param rewardsProvider The address of the SmarDex rewards provider contract.
@@ -117,8 +124,7 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming {
     }
 
     /// @inheritdoc IUsdnLongFarming
-    function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation) external {
-        _isDeposit = true;
+    function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation) external ensureDeposit {
         (IUsdnProtocolTypes.Position memory pos,) =
             USDN_PROTOCOL.getLongPosition(IUsdnProtocolTypes.PositionId(tick, tickVersion, index));
 
