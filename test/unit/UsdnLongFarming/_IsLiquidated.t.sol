@@ -39,9 +39,7 @@ contract TestUsdnLongFarmingIsLiquidated is UsdnLongFarmingBaseFixture {
      * @custom:then Returns false.
      */
     function test_isLiquidatedNotLiquidated() public view {
-        assertEq(
-            farming.i_isLiquidated(DEFAULT_TICK, DEFAULT_TICK_VERSION), false, "The position must not be liquidated"
-        );
+        assertFalse(farming.i_isLiquidated(DEFAULT_TICK, DEFAULT_TICK_VERSION), "The position must not be liquidated");
     }
 
     /**
@@ -52,6 +50,6 @@ contract TestUsdnLongFarmingIsLiquidated is UsdnLongFarmingBaseFixture {
      */
     function test_isLiquidatedLiquidated() public {
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, true);
-        assertEq(farming.i_isLiquidated(DEFAULT_TICK, DEFAULT_TICK_VERSION), true, "The position must be liquidated");
+        assertTrue(farming.i_isLiquidated(DEFAULT_TICK, DEFAULT_TICK_VERSION), "The position must be liquidated");
     }
 }

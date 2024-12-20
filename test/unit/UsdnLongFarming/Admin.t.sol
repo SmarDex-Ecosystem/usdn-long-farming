@@ -33,7 +33,7 @@ contract TestUsdnLongFarmingAdmin is UsdnLongFarmingBaseFixture {
      * @custom:when Admin wallet triggers admin contract function
      * @custom:then Revert because greater than max
      */
-    function test_RevertWhen_setNotifierRewardsBpsToHight() public {
+    function test_RevertWhen_setNotifierRewardsBpsTooHigh() public {
         uint16 max = uint16(farming.BPS_DIVISOR());
         vm.expectRevert(UsdnLongFarmingInvalidNotifierRewardsBps.selector);
         vm.prank(DEPLOYER);

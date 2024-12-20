@@ -248,7 +248,8 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     }
 
     /**
-     * @notice Verify if position has been liquidated in USDN protocol and calculate the rewards to be distributed.
+     * @notice Verifies if the position has been liquidated in the USDN protocol and calculates the rewards to be
+     * distributed.
      * @param positionIdHash The hash of the position ID.
      * @return isLiquidated_ Whether the position has been liquidated.
      * @return rewards_ The rewards amount to be distributed.
@@ -313,7 +314,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     }
 
     /**
-     * @notice Slashes a position and sends the rewards to the notifier and dead address.
+     * @notice Slashes a position and splits the rewards between the notifier and the dead address.
      * @param positionIdHash The hash of the position ID.
      * @param rewards The rewards amount to be distributed.
      * @param notifier The address which has notified the farming platform about the liquidation in the USDN protocol.

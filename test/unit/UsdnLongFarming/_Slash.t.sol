@@ -61,7 +61,9 @@ contract TestUsdnLongFarmingSlash is UsdnLongFarmingBaseFixture {
         assertEq(farming.getPositionInfo(posHash).owner, address(0), "The position must be deleted");
         assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
         assertEq(
-            rewardToken.balanceOf(address(0xdead)), burnedTokens, "Dead address must receive a part of the rewards"
+            rewardToken.balanceOf(farming.DEAD_ADDRESS()),
+            burnedTokens,
+            "Dead address must receive a part of the rewards"
         );
         assertEq(rewardToken.balanceOf(USER_1), notifierRewards, "The notifier must receive a part of the rewards");
     }
