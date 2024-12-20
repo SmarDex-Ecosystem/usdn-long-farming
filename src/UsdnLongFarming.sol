@@ -126,12 +126,16 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
 
     /// @inheritdoc IUsdnLongFarming
     function pendingRewards(int24 tick, uint256 tickVersion, uint256 index) external view returns (uint256 rewards_) {
+        if (_totalShares == 0) {
+            return 0;
+        }
+
         uint256 periodRewards = REWARDS_PROVIDER.pendingReward(CAMPAIGN_ID, address(this));
-        uint256 accRewardPerShare =
+        uint256 newAccRewardPerShare =
             _accRewardPerShare + FixedPointMathLib.fullMulDiv(periodRewards, SCALING_FACTOR, _totalShares);
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
         PositionInfo memory posInfo = _positions[positionIdHash];
-        return FixedPointMathLib.fullMulDiv(posInfo.shares, accRewardPerShare, SCALING_FACTOR) - posInfo.rewardDebt;
+        return FixedPointMathLib.fullMulDiv(posInfo.shares, newAccRewardPerShare, SCALING_FACTOR) - posInfo.rewardDebt;
     }
 
     /// @inheritdoc IUsdnLongFarming
@@ -282,7 +286,6 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
 
         owner_ = posInfo.owner;
         (rewards_, newRewardDebt_) = _calcRewards(posInfo);
-
         isLiquidated_ = _isLiquidated(posInfo.tick, posInfo.tickVersion);
     }
 
