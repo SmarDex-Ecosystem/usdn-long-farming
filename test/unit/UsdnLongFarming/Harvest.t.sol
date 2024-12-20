@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+import { Vm } from "forge-std/Vm.sol";
+
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
 import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
 
@@ -86,5 +88,22 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
         assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
         assertEq(rewardToken.balanceOf(farming.DEAD_ADDRESS()), 354, "Dead address must receive a part of the rewards");
         assertEq(rewardToken.balanceOf(USER_1), 151, "The notifier must receive a part of the rewards");
+    }
+
+    /**
+     * @custom:scenario Tests the {IUsdnLongFarming.harvest} function sends zero rewards to the user.
+     * @custom:when The function is called.
+     * @custom:then The user must not receive rewards.
+     * @custom:and The farming balance must not decrease.
+     * @custom:and No logs are emitted.
+     */
+    function test_harvestZeroRewards() public {
+        vm.recordLogs();
+        (bool isLiquidated_, uint256 rewards_) = farming.harvest(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        assertEq(farming.REWARD_TOKEN().balanceOf(address(this)), 0, "The user must not receive rewards");
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        assertEq(logs.length, 0, "No logs must be emitted");
+        assertFalse(isLiquidated_, "The position must not be liquidated");
+        assertEq(rewards_, 0, "The rewards must be zero");
     }
 }

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import { Vm } from "forge-std/Vm.sol";
-
 import { UsdnLongFarmingBaseFixture } from "./utils/Fixtures.sol";
 
 /**
@@ -32,21 +30,5 @@ contract TestUsdnLongFarmingSendRewards is UsdnLongFarmingBaseFixture {
         farming.i_sendRewards(address(this), reward, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         assertEq(farming.REWARD_TOKEN().balanceOf(address(this)), reward, "The user must receive the rewards");
         assertEq(farming.REWARD_TOKEN().balanceOf(address(farming)), 0, "The farming contract must not have rewards");
-    }
-
-    /**
-     * @custom:scenario Tests the {IUsdnLongFarming._sendRewards} function sends zero rewards to the user.
-     * @custom:when The function is called.
-     * @custom:then The user must not receive rewards.
-     * @custom:and The farming balance must not decrease.
-     * @custom:and No logs are emitted.
-     */
-    function test_sendZeroRewards() public {
-        vm.recordLogs();
-        farming.i_sendRewards(address(this), 0, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
-        assertEq(farming.REWARD_TOKEN().balanceOf(address(this)), 0, "The user must not receive rewards");
-        assertEq(farming.REWARD_TOKEN().balanceOf(address(farming)), reward, "The farming contract must have rewards");
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-        assertEq(logs.length, 0, "No logs must be emitted");
     }
 }

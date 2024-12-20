@@ -67,4 +67,29 @@ contract TestUsdnLongFarmingSlash is UsdnLongFarmingBaseFixture {
         );
         assertEq(rewardToken.balanceOf(USER_1), notifierRewards, "The notifier must receive a part of the rewards");
     }
+
+    /**
+     * @custom:scenario Tests the slash with a deposited position was liquidated in the USDN protocol.
+     * @custom:given The farming contract with a deposited position.
+     * @custom:when The function {IUsdnLongFarming._slash} is called with zero rewards.
+     * @custom:then The position is deleted.
+     * @custom:and The rewards are transferred to the notifier and the dead address.
+     * @custom:and A `Slash` event is emitted and no other events.
+     */
+    function test_slashZeroReward() public {
+        usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, true);
+
+        vm.prank(USER_1);
+        vm.expectEmit();
+        emit Slash(USER_1, 0, 0, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        vm.recordLogs();
+        farming.i_slash(posHash, 0, USER_1, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        assertEq(logs.length, 1, "One event must be emitted");
+
+        assertEq(farming.getPositionInfo(posHash).owner, address(0), "The position must be deleted");
+        assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
+        assertEq(rewardToken.balanceOf(farming.DEAD_ADDRESS()), 0, "Dead address must receive a part of the rewards");
+        assertEq(rewardToken.balanceOf(USER_1), 0, "The notifier must receive a part of the rewards");
+    }
 }

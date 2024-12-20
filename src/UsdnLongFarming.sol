@@ -159,10 +159,10 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
         if (isLiquidated) {
             _slash(positionIdHash, rewards, msg.sender, tick, tickVersion, index);
             return (true, 0);
-        } else {
+        } else if (rewards > 0) {
             _positions[positionIdHash].rewardDebt = newRewardDebt;
             _sendRewards(owner, rewards, tick, tickVersion, index);
-            rewards_ = rewards;
+            return (false, rewards);
         }
     }
 
@@ -266,11 +266,11 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     {
         _updateRewards();
         PositionInfo memory posInfo = _positions[positionIdHash];
-        owner_ = posInfo.owner;
-        if (owner_ == address(0)) {
+        if (posInfo.owner == address(0)) {
             revert UsdnLongFarmingInvalidPosition();
         }
 
+        owner_ = posInfo.owner;
         (rewards_, newRewardDebt_) = _calcRewards(posInfo);
 
         isLiquidated_ = _isLiquidated(posInfo.tick, posInfo.tickVersion);
@@ -300,10 +300,8 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
      * @param index The index of the position inside the tick.
      */
     function _sendRewards(address to, uint256 amount, int24 tick, uint256 tickVersion, uint256 index) internal {
-        if (amount > 0) {
-            address(REWARD_TOKEN).safeTransfer(to, amount);
-            emit Harvest(to, amount, tick, tickVersion, index);
-        }
+        address(REWARD_TOKEN).safeTransfer(to, amount);
+        emit Harvest(to, amount, tick, tickVersion, index);
     }
 
     /**
@@ -335,10 +333,15 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
         uint256 index
     ) internal {
         delete _positions[positionIdHash];
-        uint256 notifierRewards = rewards * _notifierRewardsBps / BPS_DIVISOR;
-        uint256 burnedTokens = rewards - notifierRewards;
-        address(REWARD_TOKEN).safeTransfer(DEAD_ADDRESS, burnedTokens);
-        address(REWARD_TOKEN).safeTransfer(notifier, notifierRewards);
-        emit Slash(notifier, notifierRewards, burnedTokens, tick, tickVersion, index);
+
+        if (rewards == 0) {
+            emit Slash(notifier, 0, 0, tick, tickVersion, index);
+        } else {
+            uint256 notifierRewards = rewards * _notifierRewardsBps / BPS_DIVISOR;
+            uint256 burnedTokens = rewards - notifierRewards;
+            address(REWARD_TOKEN).safeTransfer(DEAD_ADDRESS, burnedTokens);
+            address(REWARD_TOKEN).safeTransfer(notifier, notifierRewards);
+            emit Slash(notifier, notifierRewards, burnedTokens, tick, tickVersion, index);
+        }
     }
 }
