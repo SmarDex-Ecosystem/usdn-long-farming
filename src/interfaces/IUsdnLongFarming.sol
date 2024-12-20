@@ -7,6 +7,12 @@ import { IUsdnLongFarmingTypes } from "./IUsdnLongFarmingTypes.sol";
 
 interface IUsdnLongFarming is IUsdnLongFarmingTypes, IUsdnLongFarmingErrors, IUsdnLongFarmingEvents {
     /**
+     * @notice Sets the notifier rewards factor.
+     * @param notifierRewardsBps The notifier rewards factor value, in basis points.
+     */
+    function setNotifierRewardsBps(uint16 notifierRewardsBps) external;
+
+    /**
      * @notice Gets the deposited position info of the USDN protocol position.
      * @param posHash The hash of the position ID obtained using {hashPosId}.
      * @return info_ The position info.
@@ -42,6 +48,12 @@ interface IUsdnLongFarming is IUsdnLongFarmingTypes, IUsdnLongFarmingErrors, IUs
     function getLastRewardBlock() external view returns (uint256 block_);
 
     /**
+     * @notice Gets the current notifier rewards factor, in basis points.
+     * @return notifierRewardsBps_ The notifier rewards factor value.
+     */
+    function getNotifierRewardsBps() external view returns (uint16 notifierRewardsBps_);
+
+    /**
      * @notice Retrieves the pending rewards for a specific position.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
@@ -70,4 +82,22 @@ interface IUsdnLongFarming is IUsdnLongFarmingTypes, IUsdnLongFarmingErrors, IUs
      * @param index The index of the position inside the tick.
      */
     function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation) external;
+
+    /**
+     * @notice Sends rewards to the position's owner.
+     * @dev If the position is active (not liquidated), the rewards are sent to the position's owner and the position's
+     * rewardDebt is updated to reflect the claimed rewards. If there're no pending rewards, this function will not
+     * execute any action, but a transaction fee may still be incurred for calling the function. If the position has
+     * been liquidated on the USDN protocol, the rewards are distributed to `msg.sender` and `DEAD_ADDRESS`, and the
+     * position is deleted. Note: An user can therefore use this function to notify the farming protocol that a position
+     * has been liquidated and be rewarded for this action.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @param index The index of the position inside the tick.
+     * @return isLiquidated_ A flag indicating if the position was liquidated.
+     * @return rewards_ The amount of rewards distributed to the position's owner. 0 if the position was liquidated.
+     */
+    function harvest(int24 tick, uint256 tickVersion, uint256 index)
+        external
+        returns (bool isLiquidated_, uint256 rewards_);
 }

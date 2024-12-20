@@ -28,7 +28,7 @@ contract TestUsdnLongFarmingDeposit is UsdnLongFarmingBaseFixture {
             amount: 0
         });
 
-        usdnProtocol.setPosition(position);
+        usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, false);
         _defaultPosHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
     }
 
