@@ -150,18 +150,17 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     /// @inheritdoc IUsdnLongFarming
     function harvest(int24 tick, uint256 tickVersion, uint256 index) external returns (bool isLiquidated_) {
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
-        PositionInfo memory posInfo = _positions[positionIdHash];
 
         uint256 rewards;
         uint256 newRewardDebt;
-        (isLiquidated_, rewards, newRewardDebt) = _harvest(posInfo, positionIdHash);
+        address owner;
+        (isLiquidated_, rewards, newRewardDebt, owner) = _harvest(positionIdHash);
 
-        if (!isLiquidated_) {
+        if (isLiquidated_) {
+            _slash(positionIdHash, rewards, msg.sender, tick, tickVersion, index);
+        } else {
             _positions[positionIdHash].rewardDebt = newRewardDebt;
-
-            if (rewards > 0) {
-                _sendRewards(posInfo.owner, rewards, posInfo.tick, posInfo.tickVersion, posInfo.index);
-            }
+            _sendRewards(owner, rewards, tick, tickVersion, index);
         }
     }
 
@@ -252,28 +251,41 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
 
     /**
      * @notice Verify if position has been liquidated in USDN protocol and calculate the rewards to be distributed.
-     * @param posInfo The position information.
      * @param positionIdHash The hash of the position ID.
      * @return isLiquidated_ Whether the position has been liquidated.
      * @return rewards_ The rewards amount to be distributed.
      * @return newRewardDebt_ The new reward debt for the position.
+     * @return owner_ The owner of the position.
      */
-    function _harvest(PositionInfo memory posInfo, bytes32 positionIdHash)
+    function _harvest(bytes32 positionIdHash)
         internal
-        returns (bool isLiquidated_, uint256 rewards_, uint256 newRewardDebt_)
+        returns (bool isLiquidated_, uint256 rewards_, uint256 newRewardDebt_, address owner_)
     {
         _updateRewards();
-        if (posInfo.owner == address(0)) {
+        PositionInfo memory posInfo = _positions[positionIdHash];
+        owner_ = posInfo.owner;
+        if (owner_ == address(0)) {
             revert UsdnLongFarmingInvalidPosition();
         }
 
-        newRewardDebt_ = FixedPointMathLib.fullMulDiv(posInfo.shares, _accRewardPerShare, SCALING_FACTOR);
-        rewards_ = newRewardDebt_ - posInfo.rewardDebt;
+        (rewards_, newRewardDebt_) = _calcRewards(posInfo);
 
         isLiquidated_ = _isLiquidated(posInfo.tick, posInfo.tickVersion);
-        if (isLiquidated_) {
-            _slash(positionIdHash, rewards_, msg.sender, posInfo.tick, posInfo.tickVersion, posInfo.index);
-        }
+    }
+
+    /**
+     * @notice Calculates the rewards to be distributed to a position.
+     * @param posInfo The position information.
+     * @return rewards_ The rewards amount to be distributed.
+     * @return newRewardDebt_ The new reward debt for the position.
+     */
+    function _calcRewards(PositionInfo memory posInfo)
+        internal
+        view
+        returns (uint256 rewards_, uint256 newRewardDebt_)
+    {
+        newRewardDebt_ = FixedPointMathLib.fullMulDiv(posInfo.shares, _accRewardPerShare, SCALING_FACTOR);
+        rewards_ = newRewardDebt_ - posInfo.rewardDebt;
     }
 
     /**
@@ -285,8 +297,10 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
      * @param index The index of the position inside the tick.
      */
     function _sendRewards(address to, uint256 amount, int24 tick, uint256 tickVersion, uint256 index) internal {
-        address(REWARD_TOKEN).safeTransfer(to, amount);
-        emit Harvest(to, amount, tick, tickVersion, index);
+        if (amount > 0) {
+            address(REWARD_TOKEN).safeTransfer(to, amount);
+            emit Harvest(to, amount, tick, tickVersion, index);
+        }
     }
 
     /**
