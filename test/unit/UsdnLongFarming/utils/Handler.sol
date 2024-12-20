@@ -42,11 +42,19 @@ contract UsdnLongFarmingHandler is UsdnLongFarming {
         return _isLiquidated(tick, tickVersion);
     }
 
-    function i_harvest(PositionInfo memory posInfo, bytes32 positionIdHash)
+    function i_harvest(bytes32 positionIdHash)
         external
-        returns (bool isLiquidated_, uint256 rewards_, uint256 newRewardDebt_)
+        returns (bool isLiquidated_, uint256 rewards_, uint256 newRewardDebt_, address owner_)
     {
-        return _harvest(posInfo, positionIdHash);
+        return _harvest(positionIdHash);
+    }
+
+    function i_calcRewards(PositionInfo memory posInfo)
+        external
+        view
+        returns (uint256 rewards_, uint256 newRewardDebt_)
+    {
+        return _calcRewards(posInfo);
     }
 
     function i_sendRewards(address to, uint256 amount, int24 tick, uint256 tickVersion, uint256 index) external {
@@ -55,5 +63,9 @@ contract UsdnLongFarmingHandler is UsdnLongFarming {
 
     function setTotalShares(uint256 totalShares) external {
         _totalShares = totalShares;
+    }
+
+    function set_accRewardPerShare(uint256 accRewardPerShare) external {
+        _accRewardPerShare = accRewardPerShare;
     }
 }

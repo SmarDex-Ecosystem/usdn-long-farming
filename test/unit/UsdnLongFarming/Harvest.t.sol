@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import { Vm } from "forge-std/Vm.sol";
-
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
 import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
 
@@ -41,6 +39,7 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
      * @custom:given The farming contract with a deposited position.
      * @custom:when The function {IUsdnLongFarming.harvest} is called.
      * @custom:then The reward debt is updated.
+     * @custom:and The token balance of the user is updated.
      */
     function test_harvestPosInfoUpdated() public {
         uint256 blockNumberSkip = 100;
@@ -53,6 +52,9 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
             posInfo.rewardDebt,
             FixedPointMathLib.fullMulDiv(posInfo.shares, farming.getAccRewardPerShare(), farming.SCALING_FACTOR()),
             "The reward debt must be updated"
+        );
+        assertEq(
+            farming.REWARD_TOKEN().balanceOf(address(this)), posInfo.rewardDebt, "The token balance must be updated"
         );
     }
 
@@ -74,21 +76,5 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
         PositionInfo memory posInfo = farming.getPositionInfo(posHash);
         assertEq(posInfo.rewardDebt, 0, "The reward debt must deleted");
         assertEq(posInfo.owner, address(0), "The owner must be deleted");
-    }
-
-    /**
-     * @custom:scenario Zero rewards is pending so no rewards are sent.
-     * @custom:given The farming contract with a deposited position.
-     * @custom:when The function {IUsdnLongFarming.harvest} is called with zero rewards.
-     * @custom:then The rewards is not sent to the position owner.
-     * @custom:and No logs are emitted.
-     */
-    function test_harvestZeroRewards() public {
-        vm.recordLogs();
-        (bool isLiquidated) = farming.harvest(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
-
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-        assertEq(logs.length, 0, "No logs must be emitted");
-        assertEq(isLiquidated, false, "The position must not be liquidated");
     }
 }

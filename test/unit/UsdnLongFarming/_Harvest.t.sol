@@ -46,9 +46,8 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
      */
     function test_RevertWhen_harvestInvalidPosition() public {
         posHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX + 1);
-        posInfo = farming.getPositionInfo(posHash);
         vm.expectRevert(UsdnLongFarmingInvalidPosition.selector);
-        farming.i_harvest(posInfo, posHash);
+        farming.i_harvest(posHash);
     }
 
     /**
@@ -63,8 +62,9 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
         vm.roll(block.number + blockNumberSkip);
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, true);
 
-        (bool isLiquidated,,) = farming.i_harvest(posInfo, posHash);
+        (bool isLiquidated,,, address owner) = farming.i_harvest(posHash);
         assertEq(isLiquidated, true, "The position must be liquidated");
+        assertEq(owner, address(this), "The owner must be the user");
     }
 
     /**
@@ -80,7 +80,7 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
 
         vm.roll(block.number + blockNumberSkip);
         vm.prank(USER_1);
-        (bool isLiquidated, uint256 rewards, uint256 newRewardDebt) = farming.i_harvest(posInfo, posHash);
+        (bool isLiquidated, uint256 rewards, uint256 newRewardDebt, address owner) = farming.i_harvest(posHash);
 
         assertEq(isLiquidated, false, "The position must not be liquidated");
         assertEq(rewards, expectedRewards, "The rewards is not correct");
@@ -89,5 +89,6 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
             FixedPointMathLib.fullMulDiv(posInfo.shares, farming.getAccRewardPerShare(), farming.SCALING_FACTOR()),
             "The rewards debt is not correct"
         );
+        assertEq(owner, address(this), "The owner must be the user");
     }
 }
