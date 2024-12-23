@@ -140,7 +140,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
             USDN_PROTOCOL.getLongPosition(IUsdnProtocolTypes.PositionId(tick, tickVersion, index));
 
         _checkPosition(pos);
-        _saveDeposit(pos, tick, tickVersion, index);
+        _registerDeposit(pos, tick, tickVersion, index);
 
         USDN_PROTOCOL.transferPositionOwnership(
             IUsdnProtocolTypes.PositionId(tick, tickVersion, index), address(this), delegation
@@ -173,27 +173,29 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     {
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
         PositionInfo memory posInfo = _positions[positionIdHash];
-        if (msg.sender != posInfo.owner) {
-            revert UsdnLongFarmingInvalidCaller();
-        }
 
-        (bool isLiquidated, uint256 rewards,, address owner) = _harvest(positionIdHash);
+        (bool isLiquidated, uint256 rewards,,) = _harvest(positionIdHash);
 
         if (isLiquidated) {
             _slash(positionIdHash, rewards, msg.sender, tick, tickVersion, index);
             return (true, 0);
-        } else if (rewards > 0) {
-            rewards_ = rewards;
-            _sendRewards(owner, rewards, tick, tickVersion, index);
         }
-
-        USDN_PROTOCOL.transferPositionOwnership(IUsdnProtocolTypes.PositionId(tick, tickVersion, index), owner, "");
+        if (msg.sender != posInfo.owner) {
+            revert UsdnLongFarmingInvalidCaller();
+        }
+        if (rewards > 0) {
+            rewards_ = rewards;
+            _sendRewards(posInfo.owner, rewards, tick, tickVersion, index);
+        }
 
         _totalShares -= posInfo.shares;
         _positionsCount--;
         delete _positions[positionIdHash];
 
-        emit Withdraw(owner, tick, tickVersion, index);
+        emit Withdraw(posInfo.owner, tick, tickVersion, index);
+        USDN_PROTOCOL.transferPositionOwnership(
+            IUsdnProtocolTypes.PositionId(tick, tickVersion, index), posInfo.owner, ""
+        );
     }
 
     /**
@@ -229,9 +231,12 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
      */
-    function _saveDeposit(IUsdnProtocolTypes.Position memory position, int24 tick, uint256 tickVersion, uint256 index)
-        internal
-    {
+    function _registerDeposit(
+        IUsdnProtocolTypes.Position memory position,
+        int24 tick,
+        uint256 tickVersion,
+        uint256 index
+    ) internal {
         _updateRewards();
         uint128 initialTradingExpo = position.totalExpo - position.amount;
         PositionInfo memory posInfo = PositionInfo({
