@@ -14,8 +14,6 @@ import { SafeTransferLib } from "solady/src/utils/SafeTransferLib.sol";
 import { IFarmingRange } from "./interfaces/IFarmingRange.sol";
 import { IUsdnLongFarming } from "./interfaces/IUsdnLongFarming.sol";
 
-import { console2 } from "forge-std/Test.sol";
-
 /**
  * @title USDN Long Positions farming
  * @notice A contract for farming USDN long positions to earn rewards.
