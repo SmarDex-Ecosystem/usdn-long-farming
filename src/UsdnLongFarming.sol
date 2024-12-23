@@ -166,6 +166,36 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
         }
     }
 
+    /// @inheritdoc IUsdnLongFarming
+    function withdraw(int24 tick, uint256 tickVersion, uint256 index)
+        external
+        returns (bool isLiquidated_, uint256 rewards_)
+    {
+        bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
+        PositionInfo memory posInfo = _positions[positionIdHash];
+        if (msg.sender != posInfo.owner) {
+            revert UsdnLongFarmingInvalidCaller();
+        }
+
+        (bool isLiquidated, uint256 rewards,, address owner) = _harvest(positionIdHash);
+
+        if (isLiquidated) {
+            _slash(positionIdHash, rewards, msg.sender, tick, tickVersion, index);
+            return (true, 0);
+        } else if (rewards > 0) {
+            rewards_ = rewards;
+            _sendRewards(owner, rewards, tick, tickVersion, index);
+        }
+
+        USDN_PROTOCOL.transferPositionOwnership(IUsdnProtocolTypes.PositionId(tick, tickVersion, index), owner, "");
+
+        _totalShares -= posInfo.shares;
+        _positionsCount--;
+        delete _positions[positionIdHash];
+
+        emit Withdraw(owner, tick, tickVersion, index);
+    }
+
     /**
      * @notice Hashes a USDN long position's ID to use as key in the {_positions} mapping.
      * @param tick The tick of the position.

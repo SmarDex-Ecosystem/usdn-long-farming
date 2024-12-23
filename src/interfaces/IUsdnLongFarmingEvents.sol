@@ -12,6 +12,15 @@ interface IUsdnLongFarmingEvents {
     event Deposit(address indexed owner, int24 tick, uint256 tickVersion, uint256 index);
 
     /**
+     * @notice A USDN protocol user position has been withdrawn from the contract.
+     * @param owner The prior USDN protocol withdrawn position owner.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @param index The index of the position inside the tick.
+     */
+    event Withdraw(address indexed owner, int24 tick, uint256 tickVersion, uint256 index);
+
+    /**
      * @notice The rewards are sent to the owner of the position.
      * @param user The address of the position owner.
      * @param rewards The rewards amount transferred.
