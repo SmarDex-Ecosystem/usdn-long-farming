@@ -28,7 +28,7 @@ contract TestUsdnLongFarmingOwnershipCallback is UsdnLongFarmingBaseFixture {
             amount: 0
         });
 
-        usdnProtocol.setPosition(position);
+        usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, false);
         _defaultPosHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
     }
 
@@ -49,7 +49,7 @@ contract TestUsdnLongFarmingOwnershipCallback is UsdnLongFarmingBaseFixture {
      */
     function test_RevertWhen_ownershipCallbackPendingPosition() public {
         position.validated = false;
-        usdnProtocol.setPosition(position);
+        usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, false);
         vm.expectRevert(UsdnLongFarmingPendingPosition.selector);
         vm.prank(address(usdnProtocol));
         farming.ownershipCallback(

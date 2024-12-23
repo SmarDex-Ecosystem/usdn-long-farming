@@ -4,18 +4,25 @@ pragma solidity 0.8.28;
 import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
 import { ERC165 } from "@openzeppelin-contracts-5/utils/introspection/ERC165.sol";
 import { IERC165, IOwnershipCallback } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IOwnershipCallback.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
 import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
+import { SafeTransferLib } from "solady/src/utils/SafeTransferLib.sol";
 
 import { IFarmingRange } from "./interfaces/IFarmingRange.sol";
 import { IUsdnLongFarming } from "./interfaces/IUsdnLongFarming.sol";
+
+import { console2 } from "forge-std/Test.sol";
 
 /**
  * @title USDN Long Positions farming
  * @notice A contract for farming USDN long positions to earn rewards.
  */
-contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming {
+contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownable2Step {
+    using SafeTransferLib for address;
+    
     /**
      * @dev Scaling factor for {_accRewardPerShare}.
      * In the worst case of having 1 wei of reward tokens per block for a duration of 1 block, and with a total number
@@ -23,6 +30,12 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming {
      * precise enough.
      */
     uint256 public constant SCALING_FACTOR = 1e38;
+
+    /// @notice Denominator for the rewards multiplier, will give us a 0.01% basis point.
+    uint256 public constant BPS_DIVISOR = 10_000;
+
+    /// @notice Address where to send the rewards to burn.
+    address public constant DEAD_ADDRESS = address(0xdead);
 
     /// @notice The address of the USDN protocol contract.
     IUsdnProtocol public immutable USDN_PROTOCOL;
@@ -61,6 +74,9 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming {
     /// @dev Block number when the last rewards were calculated.
     uint256 internal _lastRewardBlock;
 
+    /// @dev Ratio of the rewards to be distributed to the notifier in basis points: default is 30%.
+    uint16 internal _notifierRewardsBps = 3000;
+
     /// @dev Modifier to ensure that only one deposit can be processed at a time.
     modifier ensureDeposit {
         _isDeposit = true;
@@ -74,7 +90,7 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming {
      * @param campaignId The campaign ID in the SmarDex rewards provider contract which provides reward tokens to this
      * contract.
      */
-    constructor(IUsdnProtocol usdnProtocol, IFarmingRange rewardsProvider, uint256 campaignId) {
+    constructor(IUsdnProtocol usdnProtocol, IFarmingRange rewardsProvider, uint256 campaignId) Ownable(msg.sender) {
         USDN_PROTOCOL = usdnProtocol;
         REWARDS_PROVIDER = rewardsProvider;
         CAMPAIGN_ID = campaignId;
@@ -86,6 +102,15 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming {
         farmingToken.transferFrom(msg.sender, address(this), 1);
         farmingToken.approve(address(rewardsProvider), 1);
         rewardsProvider.deposit(campaignId, 1);
+    }
+
+    /// @inheritdoc IUsdnLongFarming
+    function setNotifierRewardsBps(uint16 notifierRewardsBps) external onlyOwner {
+        if (notifierRewardsBps > BPS_DIVISOR) {
+            revert UsdnLongFarmingInvalidNotifierRewardsBps();
+        }
+        _notifierRewardsBps = notifierRewardsBps;
+        emit NotifierRewardsBpsUpdated(notifierRewardsBps);
     }
 
     /// @inheritdoc IUsdnLongFarming
@@ -124,6 +149,11 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming {
     }
 
     /// @inheritdoc IUsdnLongFarming
+    function getNotifierRewardsBps() external view returns (uint16 notifierRewardsBps_) {
+        return _notifierRewardsBps;
+    }
+
+    /// @inheritdoc IUsdnLongFarming
     function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation) external ensureDeposit {
         (IUsdnProtocolTypes.Position memory pos,) =
             USDN_PROTOCOL.getLongPosition(IUsdnProtocolTypes.PositionId(tick, tickVersion, index));
@@ -155,6 +185,25 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming {
 
         pos.user = oldOwner;      
         _saveDeposit(pos, posId.tick, posId.tickVersion, posId.index);
+    }
+    
+    /// @inheritdoc IUsdnLongFarming
+    function harvest(int24 tick, uint256 tickVersion, uint256 index)
+        external
+        returns (bool isLiquidated_, uint256 rewards_)
+    {
+        bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
+
+        (bool isLiquidated, uint256 rewards, uint256 newRewardDebt, address owner) = _harvest(positionIdHash);
+
+        if (isLiquidated) {
+            _slash(positionIdHash, rewards, msg.sender, tick, tickVersion, index);
+            return (true, 0);
+        } else if (rewards > 0) {
+            _positions[positionIdHash].rewardDebt = newRewardDebt;
+            _sendRewards(owner, rewards, tick, tickVersion, index);
+            return (false, rewards);
+        }
     }
 
     /**
@@ -239,6 +288,100 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming {
 
         if (periodRewards > 0) {
             _accRewardPerShare += FixedPointMathLib.fullMulDiv(periodRewards, SCALING_FACTOR, _totalShares);
+        }
+    }
+
+    /**
+     * @notice Verifies if the position has been liquidated in the USDN protocol and calculates the rewards to be
+     * distributed.
+     * @param positionIdHash The hash of the position ID.
+     * @return isLiquidated_ Whether the position has been liquidated.
+     * @return rewards_ The rewards amount to be distributed.
+     * @return newRewardDebt_ The new reward debt for the position.
+     * @return owner_ The owner of the position.
+     */
+    function _harvest(bytes32 positionIdHash)
+        internal
+        returns (bool isLiquidated_, uint256 rewards_, uint256 newRewardDebt_, address owner_)
+    {
+        _updateRewards();
+        PositionInfo memory posInfo = _positions[positionIdHash];
+        if (posInfo.owner == address(0)) {
+            revert UsdnLongFarmingInvalidPosition();
+        }
+
+        owner_ = posInfo.owner;
+        (rewards_, newRewardDebt_) = _calcRewards(posInfo);
+
+        isLiquidated_ = _isLiquidated(posInfo.tick, posInfo.tickVersion);
+    }
+
+    /**
+     * @notice Calculates the rewards to be distributed to a position.
+     * @param posInfo The position information.
+     * @return rewards_ The rewards amount to be distributed.
+     * @return newRewardDebt_ The new reward debt for the position.
+     */
+    function _calcRewards(PositionInfo memory posInfo)
+        internal
+        view
+        returns (uint256 rewards_, uint256 newRewardDebt_)
+    {
+        newRewardDebt_ = FixedPointMathLib.fullMulDiv(posInfo.shares, _accRewardPerShare, SCALING_FACTOR);
+        rewards_ = newRewardDebt_ - posInfo.rewardDebt;
+    }
+
+    /**
+     * @notice Sends the rewards to the `to` address and emits a {Harvest} event.
+     * @param to The address to send the rewards to.
+     * @param amount The amount of rewards to send.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @param index The index of the position inside the tick.
+     */
+    function _sendRewards(address to, uint256 amount, int24 tick, uint256 tickVersion, uint256 index) internal {
+        address(REWARD_TOKEN).safeTransfer(to, amount);
+        emit Harvest(to, amount, tick, tickVersion, index);
+    }
+
+    /**
+     * @notice Checks if a position has been liquidated in the USDN protocol.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @return isLiquidated_ Whether the position has been liquidated.
+     */
+    function _isLiquidated(int24 tick, uint256 tickVersion) internal view returns (bool isLiquidated_) {
+        uint256 protocolTickVersion = USDN_PROTOCOL.getTickVersion(tick);
+        return protocolTickVersion != tickVersion;
+    }
+
+    /**
+     * @notice Slashes a position and splits the rewards between the notifier and the dead address.
+     * @param positionIdHash The hash of the position ID.
+     * @param rewards The rewards amount to be distributed.
+     * @param notifier The address which has notified the farming platform about the liquidation in the USDN protocol.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @param index The index of the position inside the tick.
+     */
+    function _slash(
+        bytes32 positionIdHash,
+        uint256 rewards,
+        address notifier,
+        int24 tick,
+        uint256 tickVersion,
+        uint256 index
+    ) internal {
+        delete _positions[positionIdHash];
+
+        if (rewards == 0) {
+            emit Slash(notifier, 0, 0, tick, tickVersion, index);
+        } else {
+            uint256 notifierRewards = rewards * _notifierRewardsBps / BPS_DIVISOR;
+            uint256 burnedTokens = rewards - notifierRewards;
+            address(REWARD_TOKEN).safeTransfer(DEAD_ADDRESS, burnedTokens);
+            address(REWARD_TOKEN).safeTransfer(notifier, notifierRewards);
+            emit Slash(notifier, notifierRewards, burnedTokens, tick, tickVersion, index);
         }
     }
 }
