@@ -43,8 +43,9 @@ contract TestUsdnLongFarmingPendingRewards is UsdnLongFarmingBaseFixture {
     }
 
     /**
-     * @custom:scenario Tests the {IUsdnLongFarming.pendingRewards} function result.
-     * @custom:when The function is called for a position without pending rewards.
+     * @custom:scenario Tests the {IUsdnLongFarming.pendingRewards} function result
+     * for a position without pending rewards.
+     * @custom:when The function is called.
      * @custom:then The value returned must be equal 0.
      */
     function test_pendingRewardsWithoutRewards() public view {
@@ -53,8 +54,8 @@ contract TestUsdnLongFarmingPendingRewards is UsdnLongFarmingBaseFixture {
     }
 
     /**
-     * @custom:scenario Tests the {IUsdnLongFarming.pendingRewards} function result.
-     * @custom:when The function is called for a position with pending rewards.
+     * @custom:scenario Tests the {IUsdnLongFarming.pendingRewards} function result for a position with pending rewards.
+     * @custom:when The function is called.
      * @custom:then The value returned must be positive.
      */
     function test_pendingRewardsWithRewards() public {
@@ -65,10 +66,10 @@ contract TestUsdnLongFarmingPendingRewards is UsdnLongFarmingBaseFixture {
 
     /**
      * @custom:scenario Compares the {IUsdnLongFarming.pendingRewards} function result
-     * with the received amount of rewards.
-     * @custom:when The function is called for a position with pending rewards.
+     * of a position with pending rewards with the received amount of rewards.
+     * @custom:when The {IUsdnLongFarming.pendingRewards} function is called.
      * @custom:then The value returned must be positive.
-     * @custom:when The {IUsdnLongFarming.harvest} function is called for the position.
+     * @custom:when The {IUsdnLongFarming.harvest} function is called.
      * @custom:then The amount of rewards sent must be equal to the pending rewards value.
      */
     function test_pendingRewardsEqualReceivedRewards() public {
@@ -82,7 +83,7 @@ contract TestUsdnLongFarmingPendingRewards is UsdnLongFarmingBaseFixture {
 
     /**
      * @custom:scenario Tests the {IUsdnLongFarming.pendingRewards} function result after harvest.
-     * @custom:when The function is called for a position without pending rewards.
+     * @custom:when The function is called.
      * @custom:then The value returned must be equal 0.
      */
     function test_pendingRewardsEqualZero() public {
