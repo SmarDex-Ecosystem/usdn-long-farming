@@ -33,6 +33,10 @@ contract MockRewardsProvider {
         _lastRewardsBlock = block.number;
     }
 
+    function pendingReward(uint256, address) external view returns (uint256) {
+        return (block.number - _lastRewardsBlock) * _rewardsPerBlock;
+    }
+
     function getRewardsPerBlock() external view returns (uint256) {
         return _rewardsPerBlock;
     }
