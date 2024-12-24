@@ -131,8 +131,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
         }
 
         uint256 periodRewards = REWARDS_PROVIDER.pendingReward(CAMPAIGN_ID, address(this));
-        uint256 newAccRewardPerShare =
-            _accRewardPerShare + FixedPointMathLib.fullMulDiv(periodRewards, SCALING_FACTOR, _totalShares);
+        uint256 newAccRewardPerShare = _calcAccRewardPerShare(periodRewards);
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
         PositionInfo memory posInfo = _positions[positionIdHash];
         return FixedPointMathLib.fullMulDiv(posInfo.shares, newAccRewardPerShare, SCALING_FACTOR) - posInfo.rewardDebt;
@@ -236,9 +235,9 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     }
 
     /**
-     * @notice Harvests pending rewards from the SmarDex rewards provider contract, and updates {_accRewardPerShare} and
-     * {_lastRewardBlock}.
-     * @dev If no deposited position exists, {_lastRewardBlock} will be updated but rewards will not be harvested.
+     * @notice Updates {_lastRewardBlock}, harvests pending rewards from the SmarDex rewards provider contract, and
+     * updates {_accRewardPerShare}.
+     * @dev If no deposited position exists, {_lastRewardBlock} will be updated, but rewards will not be harvested.
      */
     function _updateRewards() internal {
         if (_lastRewardBlock == block.number) {
@@ -261,7 +260,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
         uint256 periodRewards = REWARD_TOKEN.balanceOf(address(this)) - rewardsBalanceBefore;
 
         if (periodRewards > 0) {
-            _accRewardPerShare += FixedPointMathLib.fullMulDiv(periodRewards, SCALING_FACTOR, _totalShares);
+            _accRewardPerShare = _calcAccRewardPerShare(periodRewards);
         }
     }
 
@@ -356,5 +355,14 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
             address(REWARD_TOKEN).safeTransfer(notifier, notifierRewards);
             emit Slash(notifier, notifierRewards, burnedTokens, tick, tickVersion, index);
         }
+    }
+
+    /**
+     * @notice Calculates and returns the updated accumulated reward per share.
+     * @param periodRewards The period amount of rewards to consider when calculating the updated reward per share.
+     * @return accRewardPerShare_ The updated accumulated reward per share.
+     */
+    function _calcAccRewardPerShare(uint256 periodRewards) internal view returns (uint256 accRewardPerShare_) {
+        return _accRewardPerShare + FixedPointMathLib.fullMulDiv(periodRewards, SCALING_FACTOR, _totalShares);
     }
 }
