@@ -13,7 +13,7 @@ interface IUsdnLongFarmingEvents {
 
     /**
      * @notice A USDN protocol user position has been withdrawn from the contract.
-     * @param owner The prior USDN protocol withdrawn position owner.
+     * @param owner The address of the position owner.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
