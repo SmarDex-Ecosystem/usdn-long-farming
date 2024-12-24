@@ -376,7 +376,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     }
 
     /**
-     * @notice Deletes a position from the internal state and updates the total shares and positions count.
+     * @notice Deletes a position from the internal state, updates the total shares and positions count.
      * @param positionIdHash The hash of the position ID.
      */
     function _deletePosition(bytes32 positionIdHash) internal {
