@@ -133,8 +133,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
         uint256 periodRewards = REWARDS_PROVIDER.pendingReward(CAMPAIGN_ID, address(this));
         uint256 newAccRewardPerShare = _calcAccRewardPerShare(periodRewards);
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
-        PositionInfo memory posInfo = _positions[positionIdHash];
-        return FixedPointMathLib.fullMulDiv(posInfo.shares, newAccRewardPerShare, SCALING_FACTOR) - posInfo.rewardDebt;
+        (rewards_,) = _calcRewards(_positions[positionIdHash], newAccRewardPerShare);
     }
 
     /// @inheritdoc IUsdnLongFarming
@@ -284,22 +283,23 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
         }
 
         owner_ = posInfo.owner;
-        (rewards_, newRewardDebt_) = _calcRewards(posInfo);
+        (rewards_, newRewardDebt_) = _calcRewards(posInfo, _accRewardPerShare);
         isLiquidated_ = _isLiquidated(posInfo.tick, posInfo.tickVersion);
     }
 
     /**
      * @notice Calculates the rewards to be distributed to a position.
      * @param posInfo The position information.
+     * @param accRewardPerShare The accumulator rewards per share.
      * @return rewards_ The rewards amount to be distributed.
      * @return newRewardDebt_ The new reward debt for the position.
      */
-    function _calcRewards(PositionInfo memory posInfo)
+    function _calcRewards(PositionInfo memory posInfo, uint256 accRewardPerShare)
         internal
-        view
+        pure
         returns (uint256 rewards_, uint256 newRewardDebt_)
     {
-        newRewardDebt_ = FixedPointMathLib.fullMulDiv(posInfo.shares, _accRewardPerShare, SCALING_FACTOR);
+        newRewardDebt_ = FixedPointMathLib.fullMulDiv(posInfo.shares, accRewardPerShare, SCALING_FACTOR);
         rewards_ = newRewardDebt_ - posInfo.rewardDebt;
     }
 

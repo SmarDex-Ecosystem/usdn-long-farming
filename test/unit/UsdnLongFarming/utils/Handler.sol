@@ -49,12 +49,12 @@ contract UsdnLongFarmingHandler is UsdnLongFarming {
         return _harvest(positionIdHash);
     }
 
-    function i_calcRewards(PositionInfo memory posInfo)
+    function i_calcRewards(PositionInfo memory posInfo, uint256 accRewardPerShare)
         external
-        view
+        pure
         returns (uint256 rewards_, uint256 newRewardDebt_)
     {
-        return _calcRewards(posInfo);
+        return _calcRewards(posInfo, accRewardPerShare);
     }
 
     function i_sendRewards(address to, uint256 amount, int24 tick, uint256 tickVersion, uint256 index) external {
