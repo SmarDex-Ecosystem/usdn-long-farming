@@ -3,9 +3,10 @@ pragma solidity 0.8.28;
 
 import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
 import { ERC165 } from "@openzeppelin-contracts-5/utils/introspection/ERC165.sol";
-import { IERC165, IOwnershipCallback } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IOwnershipCallback.sol";
+
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import { IERC165, IOwnershipCallback } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IOwnershipCallback.sol";
 import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
 import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
@@ -20,7 +21,7 @@ import { IUsdnLongFarming } from "./interfaces/IUsdnLongFarming.sol";
  */
 contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownable2Step {
     using SafeTransferLib for address;
-    
+
     /**
      * @dev Scaling factor for {_accRewardPerShare}.
      * In the worst case of having 1 wei of reward tokens per block for a duration of 1 block, and with a total number
@@ -57,9 +58,6 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
     /// @dev The sum of all locked positions' initial trading exposure.
     uint256 internal _totalShares;
 
-    /// @dev The transient value used by the function {ownershipCallback} to avoid execution if it's set during the deposit.
-    bool internal transient _isDeposit;
-
     /**
      * @dev Accumulated reward tokens per share multiplied by {SCALING_FACTOR}.
      * The factor is necessary to represent rewards per shares with enough precision for very small reward quantities
@@ -74,13 +72,6 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
 
     /// @dev Ratio of the rewards to be distributed to the notifier in basis points: default is 30%.
     uint16 internal _notifierRewardsBps = 3000;
-
-    /// @dev Modifier to ensure that only one deposit can be processed at a time.
-    modifier ensureDeposit {
-        _isDeposit = true;
-        _;
-        _isDeposit = false;
-    }
 
     /**
      * @param usdnProtocol The address of the USDN protocol contract.
@@ -151,27 +142,10 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
         return _notifierRewardsBps;
     }
 
-    /// @inheritdoc IUsdnLongFarming
-    function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation) external ensureDeposit {
-        (IUsdnProtocolTypes.Position memory pos,) =
-            USDN_PROTOCOL.getLongPosition(IUsdnProtocolTypes.PositionId(tick, tickVersion, index));
-
-        _checkPosition(pos);
-        _saveDeposit(pos, tick, tickVersion, index);
-
-        USDN_PROTOCOL.transferPositionOwnership(
-            IUsdnProtocolTypes.PositionId(tick, tickVersion, index), address(this), delegation
-        );
-    }
-
     /// @inheritdoc IOwnershipCallback
     function ownershipCallback(address oldOwner, IUsdnProtocolTypes.PositionId calldata posId) external {
-        if(msg.sender != address(USDN_PROTOCOL)) {
+        if (msg.sender != address(USDN_PROTOCOL)) {
             revert UsdnLongFarmingInvalidCaller();
-        }
-        
-        if(_isDeposit) {
-            return;
         }
 
         (IUsdnProtocolTypes.Position memory pos,) =
@@ -181,10 +155,9 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
             revert UsdnLongFarmingPendingPosition();
         }
 
-        pos.user = oldOwner;      
-        _saveDeposit(pos, posId.tick, posId.tickVersion, posId.index);
+        _saveDeposit(oldOwner, pos, posId.tick, posId.tickVersion, posId.index);
     }
-    
+
     /// @inheritdoc IUsdnLongFarming
     function harvest(int24 tick, uint256 tickVersion, uint256 index)
         external
@@ -216,34 +189,25 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
     }
 
     /**
-     * @notice Checks that the user USDN protocol position is currently valid.
-     * @param position The USDN protocol position that must be checked.
-     */
-    function _checkPosition(IUsdnProtocolTypes.Position memory position) internal view {
-        if (position.user == address(this)) {
-            revert UsdnLongFarmingAlreadyDeposited();
-        }
-
-        if (!position.validated) {
-            revert UsdnLongFarmingPendingPosition();
-        }
-    }
-
-    /**
      * @notice Records the information for a new position deposit.
      * @dev Uses the initial position trading expo as shares.
+     * @param owner The prior USDN protocol position owner.
      * @param position The USDN protocol position to deposit.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
      */
-    function _saveDeposit(IUsdnProtocolTypes.Position memory position, int24 tick, uint256 tickVersion, uint256 index)
-        internal
-    {
+    function _saveDeposit(
+        address owner,
+        IUsdnProtocolTypes.Position memory position,
+        int24 tick,
+        uint256 tickVersion,
+        uint256 index
+    ) internal {
         _updateRewards();
         uint128 initialTradingExpo = position.totalExpo - position.amount;
         PositionInfo memory posInfo = PositionInfo({
-            owner: position.user,
+            owner: owner,
             tick: tick,
             tickVersion: tickVersion,
             index: index,

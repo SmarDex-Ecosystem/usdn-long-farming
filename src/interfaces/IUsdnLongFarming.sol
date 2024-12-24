@@ -72,17 +72,6 @@ interface IUsdnLongFarming is
     function hashPosId(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_);
 
     /**
-     * @notice Deposits a USDN protocol position to receive rewards.
-     * @dev Takes into account the initial position trading expo as shares. Uses a delegation signature
-     * to transfer the position ownership to this contract. Reverts if the position is already owned by the
-     * contract or if the position is pending validation.
-     * @param tick The tick of the position.
-     * @param tickVersion The version of the tick.
-     * @param index The index of the position inside the tick.
-     */
-    function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation) external;
-
-    /**
      * @notice Sends rewards to the position's owner.
      * @dev If the position is active (not liquidated), the rewards are sent to the position's owner and the position's
      * rewardDebt is updated to reflect the claimed rewards. If there're no pending rewards, this function will not

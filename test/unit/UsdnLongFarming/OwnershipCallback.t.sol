@@ -58,34 +58,13 @@ contract TestUsdnLongFarmingOwnershipCallback is UsdnLongFarmingBaseFixture {
     }
 
     /**
-     * @custom:scenario Simulates the {IUsdnLongFarming.ownershipCallback} function from the farming deposit.
-     * @custom:when The function is called.
-     * @custom:then The call must not revert.
-     * @custom:and The position must be empty.
-     */
-    function test_ownershipCallbackFromDeposit() public {
-        farming.setDeposit();
-        vm.prank(address(usdnProtocol));
-        farming.ownershipCallback(
-            address(this), IUsdnProtocolTypes.PositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX)
-        );
-
-        PositionInfo memory posInfo = farming.getPositionInfo(_defaultPosHash);
-        assertEq(
-            keccak256(abi.encode(posInfo)),
-            keccak256(abi.encode(PositionInfo(address(0), 0, 0, 0, 0, 0))),
-            "The position must be empty"
-        );
-    }
-
-    /**
      * @custom:scenario Simulates the {IUsdnLongFarming.ownershipCallback} function from the
      * {IUsdnProtocol.transferPositionOwnership} of the USDN protocol.
      * @custom:when The function is called.
      * @custom:then The call must not revert.
      * @custom:and The position must be filled.
      */
-    function test_ownershipCallbackFromUSDNProtocolTransferPositionOwnership() public {
+    function test_ownershipCallbackFromProtocol() public {
         vm.prank(address(usdnProtocol));
         farming.ownershipCallback(
             address(this), IUsdnProtocolTypes.PositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX)

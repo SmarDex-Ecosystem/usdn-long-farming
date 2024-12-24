@@ -33,7 +33,9 @@ contract TestUsdnLongFarmingSlash is UsdnLongFarmingBaseFixture {
 
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, false);
         posHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
-        farming.deposit(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX, "");
+        usdnProtocol.transferPositionOwnership(
+            IUsdnProtocolTypes.PositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX), address(farming), ""
+        );
         vm.roll(block.number + blockNumberSkip);
         farming.i_updateRewards();
     }
