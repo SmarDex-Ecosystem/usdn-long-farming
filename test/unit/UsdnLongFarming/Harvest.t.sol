@@ -76,6 +76,9 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
         vm.roll(block.number + blockNumberSkip);
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, true);
 
+        uint256 totalSharesBefore = farming.getTotalShares();
+        uint256 positionsCountBefore = farming.getPositionsCount();
+
         vm.prank(USER_1);
         vm.expectEmit();
         emit Slash(USER_1, 151, 354, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
@@ -88,6 +91,13 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
         assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
         assertEq(rewardToken.balanceOf(farming.DEAD_ADDRESS()), 354, "Dead address must receive a part of the rewards");
         assertEq(rewardToken.balanceOf(USER_1), 151, "The notifier must receive a part of the rewards");
+        // global state
+        assertEq(
+            farming.getTotalShares(),
+            totalSharesBefore - (position.totalExpo - position.amount),
+            "The total shares must be decreased"
+        );
+        assertEq(farming.getPositionsCount(), positionsCountBefore - 1, "The total exposure must be decreased");
     }
 
     /**

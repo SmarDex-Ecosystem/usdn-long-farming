@@ -14,11 +14,10 @@ import { UsdnLongFarmingBaseFixture } from "./utils/Fixtures.sol";
  */
 contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
     IUsdnProtocolTypes.Position internal position;
+    bytes32 posHash;
     int24 internal constant DEFAULT_TICK = 1234;
     uint256 internal constant DEFAULT_TICK_VERSION = 123;
     uint256 internal constant DEFAULT_INDEX = 12;
-
-    bytes32 internal _defaultPosHash;
 
     function setUp() public {
         _setUp();
@@ -32,7 +31,7 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         });
 
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, false);
-        _defaultPosHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        posHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         farming.deposit(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX, "");
     }
 
@@ -53,24 +52,19 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         vm.expectEmit();
         emit Withdraw(address(this), DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         (bool isLiquidated_, uint256 rewards_) = farming.withdraw(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        // return values
         assertEq(rewards_, 505, "The token is transferred to the user");
         assertFalse(isLiquidated_, "The position must not be liquidated");
-        assertEq(
-            keccak256(abi.encode(farming.getPositionInfo(_defaultPosHash))),
-            keccak256(abi.encode(PositionInfo(address(0), 0, 0, 0, 0, 0))),
-            "The position must be deleted"
-        );
+        // position state
+        _assertPositionDeleted(posHash);
         assertEq(rewardToken.balanceOf(address(this)), 505, "The token is transferred to the user");
+        // USDN state
         (IUsdnProtocolTypes.Position memory USDNPosition,) = farming.USDN_PROTOCOL().getLongPosition(
             IUsdnProtocolTypes.PositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX)
         );
         assertEq(USDNPosition.user, address(this), "The position must be deleted");
-        assertEq(
-            farming.getTotalShares(),
-            totalSharesBefore - (position.totalExpo - position.amount),
-            "The total shares must be decreased"
-        );
-        assertEq(farming.getPositionsCount(), positionsCountBefore - 1, "The total exposure must be decreased");
+        // global state
+        _assertGlobalState(totalSharesBefore, positionsCountBefore);
     }
 
     /**
@@ -104,7 +98,7 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         assertTrue(isLiquidated_, "The position must be liquidated");
         assertEq(rewards_, 0, "The token is transferred to the user");
         // position deleted
-        PositionInfo memory posInfo = farming.getPositionInfo(_defaultPosHash);
+        PositionInfo memory posInfo = farming.getPositionInfo(posHash);
         assertEq(posInfo.rewardDebt, 0, "The reward debt must deleted");
         assertEq(posInfo.owner, address(0), "The owner must be deleted");
         // tokens sent
@@ -125,29 +119,40 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         uint256 totalSharesBefore = farming.getTotalShares();
         uint256 positionsCountBefore = farming.getPositionsCount();
 
-        vm.recordLogs();
         vm.expectEmit();
         emit Withdraw(address(this), DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        vm.recordLogs();
         (bool isLiquidated_, uint256 rewards_) = farming.withdraw(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
 
         // no Harvest event emitted
         Vm.Log[] memory logs = vm.getRecordedLogs();
-        assertEq(logs.length, 2, "One log must be emitted");
-        assertEq(logs[0].topics[0], Withdraw.selector);
-        assertEq(logs[1].topics[0], Withdraw.selector);
+        assertEq(logs.length, 1, "One log must be emitted");
+        assertEq(logs[0].topics[0], Withdraw.selector, "The log topic must be Withdraw and not Harvest");
 
+        // return values
         assertEq(rewards_, 0, "The user must not receive rewards");
         assertFalse(isLiquidated_, "The position must not be liquidated");
-        assertEq(
-            keccak256(abi.encode(farming.getPositionInfo(_defaultPosHash))),
-            keccak256(abi.encode(PositionInfo(address(0), 0, 0, 0, 0, 0))),
-            "The position must be deleted"
-        );
+        // position state
+        _assertPositionDeleted(posHash);
         assertEq(farming.REWARD_TOKEN().balanceOf(address(this)), 0, "The user must not receive rewards");
+        // USDN state
         (IUsdnProtocolTypes.Position memory USDNPosition,) = farming.USDN_PROTOCOL().getLongPosition(
             IUsdnProtocolTypes.PositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX)
         );
         assertEq(USDNPosition.user, address(this), "The position must be deleted");
+        // global state
+        _assertGlobalState(totalSharesBefore, positionsCountBefore);
+    }
+
+    function _assertPositionDeleted(bytes32 _posHash) internal view {
+        assertEq(
+            keccak256(abi.encode(farming.getPositionInfo(_posHash))),
+            keccak256(abi.encode(PositionInfo(address(0), 0, 0, 0, 0, 0))),
+            "The position must be deleted"
+        );
+    }
+
+    function _assertGlobalState(uint256 totalSharesBefore, uint256 positionsCountBefore) internal view {
         assertEq(
             farming.getTotalShares(),
             totalSharesBefore - (position.totalExpo - position.amount),

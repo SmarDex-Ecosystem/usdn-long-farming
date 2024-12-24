@@ -52,6 +52,8 @@ contract TestUsdnLongFarmingSlash is UsdnLongFarmingBaseFixture {
         uint256 burnedTokens = 354;
 
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, true);
+        uint256 totalSharesBefore = farming.getTotalShares();
+        uint256 positionsCountBefore = farming.getPositionsCount();
 
         vm.prank(USER_1);
         vm.expectEmit();
@@ -66,6 +68,13 @@ contract TestUsdnLongFarmingSlash is UsdnLongFarmingBaseFixture {
             "Dead address must receive a part of the rewards"
         );
         assertEq(rewardToken.balanceOf(USER_1), notifierRewards, "The notifier must receive a part of the rewards");
+        // global state
+        assertEq(
+            farming.getTotalShares(),
+            totalSharesBefore - (position.totalExpo - position.amount),
+            "The total shares must be decreased"
+        );
+        assertEq(farming.getPositionsCount(), positionsCountBefore - 1, "The total exposure must be decreased");
     }
 
     /**
@@ -78,6 +87,8 @@ contract TestUsdnLongFarmingSlash is UsdnLongFarmingBaseFixture {
      */
     function test_slashZeroReward() public {
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, true);
+        uint256 totalSharesBefore = farming.getTotalShares();
+        uint256 positionsCountBefore = farming.getPositionsCount();
 
         vm.prank(USER_1);
         vm.expectEmit();
@@ -91,5 +102,12 @@ contract TestUsdnLongFarmingSlash is UsdnLongFarmingBaseFixture {
         assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
         assertEq(rewardToken.balanceOf(farming.DEAD_ADDRESS()), 0, "Dead address must receive a part of the rewards");
         assertEq(rewardToken.balanceOf(USER_1), 0, "The notifier must receive a part of the rewards");
+        // global state
+        assertEq(
+            farming.getTotalShares(),
+            totalSharesBefore - (position.totalExpo - position.amount),
+            "The total shares must be decreased"
+        );
+        assertEq(farming.getPositionsCount(), positionsCountBefore - 1, "The total exposure must be decreased");
     }
 }

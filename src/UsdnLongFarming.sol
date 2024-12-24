@@ -172,30 +172,25 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
         returns (bool isLiquidated_, uint256 rewards_)
     {
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
-        PositionInfo memory posInfo = _positions[positionIdHash];
 
-        (bool isLiquidated, uint256 rewards,,) = _harvest(positionIdHash);
+        (bool isLiquidated, uint256 rewards,, address owner) = _harvest(positionIdHash);
 
         if (isLiquidated) {
             _slash(positionIdHash, rewards, msg.sender, tick, tickVersion, index);
             return (true, 0);
         }
-        if (msg.sender != posInfo.owner) {
+        if (msg.sender != owner) {
             revert UsdnLongFarmingInvalidCaller();
         }
         if (rewards > 0) {
             rewards_ = rewards;
-            _sendRewards(posInfo.owner, rewards, tick, tickVersion, index);
+            _sendRewards(owner, rewards, tick, tickVersion, index);
         }
 
-        _totalShares -= posInfo.shares;
-        _positionsCount--;
-        delete _positions[positionIdHash];
+        _deletePosition(positionIdHash);
 
-        emit Withdraw(posInfo.owner, tick, tickVersion, index);
-        USDN_PROTOCOL.transferPositionOwnership(
-            IUsdnProtocolTypes.PositionId(tick, tickVersion, index), posInfo.owner, ""
-        );
+        emit Withdraw(owner, tick, tickVersion, index);
+        USDN_PROTOCOL.transferPositionOwnership(IUsdnProtocolTypes.PositionId(tick, tickVersion, index), owner, "");
     }
 
     /**
@@ -367,7 +362,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
         uint256 tickVersion,
         uint256 index
     ) internal {
-        delete _positions[positionIdHash];
+        _deletePosition(positionIdHash);
 
         if (rewards == 0) {
             emit Slash(notifier, 0, 0, tick, tickVersion, index);
@@ -378,5 +373,16 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
             address(REWARD_TOKEN).safeTransfer(notifier, notifierRewards);
             emit Slash(notifier, notifierRewards, burnedTokens, tick, tickVersion, index);
         }
+    }
+
+    /**
+     * @notice Deletes a position from the internal state and updates the total shares and positions count.
+     * @param positionIdHash The hash of the position ID.
+     */
+    function _deletePosition(bytes32 positionIdHash) internal {
+        PositionInfo memory posInfo = _positions[positionIdHash];
+        _totalShares -= posInfo.shares;
+        _positionsCount--;
+        delete _positions[positionIdHash];
     }
 }
