@@ -32,7 +32,8 @@ contract TestUsdnLongFarmingCalcRewards is UsdnLongFarmingBaseFixture {
      * @custom:and The new reward debt must be calculated correctly
      */
     function test_calcRewards() public view {
-        (uint256 rewards_, uint256 newRewardDebt_) = farming.i_calcRewards(position);
+        uint256 accRewardPerShare = farming.getAccRewardPerShare();
+        (uint256 rewards_, uint256 newRewardDebt_) = farming.i_calcRewards(position, accRewardPerShare);
         assertEq(rewards_, 19_500, "The rewards must be calculated correctly");
         assertEq(newRewardDebt_, 20_000, "The new reward debt must be calculated correctly");
     }

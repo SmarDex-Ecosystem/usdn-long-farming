@@ -125,6 +125,18 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     }
 
     /// @inheritdoc IUsdnLongFarming
+    function pendingRewards(int24 tick, uint256 tickVersion, uint256 index) external view returns (uint256 rewards_) {
+        if (_totalShares == 0) {
+            return 0;
+        }
+
+        uint256 periodRewards = REWARDS_PROVIDER.pendingReward(CAMPAIGN_ID, address(this));
+        uint256 newAccRewardPerShare = _calcAccRewardPerShare(periodRewards);
+        bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
+        (rewards_,) = _calcRewards(_positions[positionIdHash], newAccRewardPerShare);
+    }
+
+    /// @inheritdoc IUsdnLongFarming
     function hashPosId(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_) {
         return _hashPositionId(tick, tickVersion, index);
     }
@@ -252,9 +264,9 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     }
 
     /**
-     * @notice Harvests pending rewards from the SmarDex rewards provider contract, and updates {_accRewardPerShare} and
-     * {_lastRewardBlock}.
-     * @dev If no deposited position exists, {_lastRewardBlock} will be updated but rewards will not be harvested.
+     * @notice Updates {_lastRewardBlock}, harvests pending rewards from the SmarDex rewards provider contract, and
+     * updates {_accRewardPerShare}.
+     * @dev If no deposited position exists, {_lastRewardBlock} will be updated, but rewards will not be harvested.
      */
     function _updateRewards() internal {
         if (_lastRewardBlock == block.number) {
@@ -277,7 +289,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
         uint256 periodRewards = REWARD_TOKEN.balanceOf(address(this)) - rewardsBalanceBefore;
 
         if (periodRewards > 0) {
-            _accRewardPerShare += FixedPointMathLib.fullMulDiv(periodRewards, SCALING_FACTOR, _totalShares);
+            _accRewardPerShare = _calcAccRewardPerShare(periodRewards);
         }
     }
 
@@ -301,23 +313,23 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
         }
 
         owner_ = posInfo.owner;
-        (rewards_, newRewardDebt_) = _calcRewards(posInfo);
-
+        (rewards_, newRewardDebt_) = _calcRewards(posInfo, _accRewardPerShare);
         isLiquidated_ = _isLiquidated(posInfo.tick, posInfo.tickVersion);
     }
 
     /**
      * @notice Calculates the rewards to be distributed to a position.
      * @param posInfo The position information.
+     * @param accRewardPerShare The accumulator rewards per share.
      * @return rewards_ The rewards amount to be distributed.
      * @return newRewardDebt_ The new reward debt for the position.
      */
-    function _calcRewards(PositionInfo memory posInfo)
+    function _calcRewards(PositionInfo memory posInfo, uint256 accRewardPerShare)
         internal
-        view
+        pure
         returns (uint256 rewards_, uint256 newRewardDebt_)
     {
-        newRewardDebt_ = FixedPointMathLib.fullMulDiv(posInfo.shares, _accRewardPerShare, SCALING_FACTOR);
+        newRewardDebt_ = FixedPointMathLib.fullMulDiv(posInfo.shares, accRewardPerShare, SCALING_FACTOR);
         rewards_ = newRewardDebt_ - posInfo.rewardDebt;
     }
 
@@ -373,6 +385,15 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
             address(REWARD_TOKEN).safeTransfer(notifier, notifierRewards);
             emit Slash(notifier, notifierRewards, burnedTokens, tick, tickVersion, index);
         }
+    }
+
+    /**
+     * @notice Calculates and returns the updated accumulated reward per share.
+     * @param periodRewards The period amount of rewards to consider when calculating the updated reward per share.
+     * @return accRewardPerShare_ The updated accumulated reward per share.
+     */
+    function _calcAccRewardPerShare(uint256 periodRewards) internal view returns (uint256 accRewardPerShare_) {
+        return _accRewardPerShare + FixedPointMathLib.fullMulDiv(periodRewards, SCALING_FACTOR, _totalShares);
     }
 
     /**
