@@ -86,6 +86,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
         // this contract is the sole depositor of the farming token in the SmarDex rewards provider contract,
         // and will receive all of the rewards
         farmingToken.transferFrom(msg.sender, address(this), 1);
+        // slither-disable-next-line unused-return
         farmingToken.approve(address(rewardsProvider), 1);
         rewardsProvider.deposit(campaignId, 1);
     }
