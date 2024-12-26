@@ -185,18 +185,18 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     {
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
 
-        (bool isLiquidated, uint256 rewards,, address owner) = _harvest(positionIdHash);
+        address owner;
+        (isLiquidated_, rewards_,, owner) = _harvest(positionIdHash);
 
-        if (isLiquidated) {
-            _slash(positionIdHash, rewards, msg.sender, tick, tickVersion, index);
+        if (isLiquidated_) {
+            _slash(positionIdHash, rewards_, msg.sender, tick, tickVersion, index);
             return (true, 0);
         }
         if (msg.sender != owner) {
             revert UsdnLongFarmingInvalidCaller();
         }
-        if (rewards > 0) {
-            rewards_ = rewards;
-            _sendRewards(owner, rewards, tick, tickVersion, index);
+        if (rewards_ > 0) {
+            _sendRewards(owner, rewards_, tick, tickVersion, index);
         }
 
         _deletePosition(positionIdHash);
@@ -401,8 +401,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
      * @param positionIdHash The hash of the position ID.
      */
     function _deletePosition(bytes32 positionIdHash) internal {
-        PositionInfo memory posInfo = _positions[positionIdHash];
-        _totalShares -= posInfo.shares;
+        _totalShares -= _positions[positionIdHash].shares;
         _positionsCount--;
         delete _positions[positionIdHash];
     }
