@@ -43,8 +43,7 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
      * @custom:and The contract global state must be updated.
      */
     function test_withdraw() public {
-        uint256 blockNumberSkip = 100;
-        vm.roll(block.number + blockNumberSkip);
+        vm.roll(block.number + 100);
 
         uint256 totalSharesBefore = farming.getTotalShares();
         uint256 positionsCountBefore = farming.getPositionsCount();
@@ -86,8 +85,7 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
      * @custom:and The return values must be correct.
      */
     function test_withdrawPositionLiquidate() public {
-        uint256 blockNumberSkip = 100;
-        vm.roll(block.number + blockNumberSkip);
+        vm.roll(block.number + 100);
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, true);
 
         vm.prank(USER_1);
@@ -109,7 +107,7 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
     }
 
     /**
-     * @custom:scenario Tests the {IUsdnLongFarming.withdraw} function sends zero rewards to the user.
+     * @custom:scenario Tests the {IUsdnLongFarming.withdraw} function when zero reward is pending.
      * @custom:when The function is called.
      * @custom:then The user must not receive rewards.
      * @custom:and The user position state must be updated.

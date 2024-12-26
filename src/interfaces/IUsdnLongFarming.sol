@@ -85,7 +85,7 @@ interface IUsdnLongFarming is IUsdnLongFarmingTypes, IUsdnLongFarmingErrors, IUs
 
     /**
      * @notice Withdraws a USDN protocol position and claims rewards.
-     * @dev If the position is not liquidated, the rewards(from the harvest) are sent to the position's owner
+     * @dev If the position is not liquidated, the rewards from the harvest are sent to the position's owner
      * and the position is withdrawn. If the position has been liquidated on the USDN protocol, the rewards are
      * distributed to `msg.sender` and `DEAD_ADDRESS`, and the position is deleted.
      * @param tick The tick of the position.

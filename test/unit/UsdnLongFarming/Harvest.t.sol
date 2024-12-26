@@ -44,8 +44,7 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
      * @custom:and The token balance of the user is updated.
      */
     function test_harvestPosInfoUpdated() public {
-        uint256 blockNumberSkip = 100;
-        vm.roll(block.number + blockNumberSkip);
+        vm.roll(block.number + 100);
 
         vm.prank(USER_1);
         vm.expectEmit();
@@ -72,8 +71,7 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
      * @custom:and A `Slash` event is emitted.
      */
     function test_harvestPositionLiquidateAndRewardDebtIgnore() public {
-        uint256 blockNumberSkip = 100;
-        vm.roll(block.number + blockNumberSkip);
+        vm.roll(block.number + 100);
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, true);
 
         uint256 totalSharesBefore = farming.getTotalShares();
