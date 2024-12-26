@@ -88,9 +88,14 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         vm.roll(block.number + 100);
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, true);
 
+        uint256 rewards = 505;
+        uint256 notifierRewardsBps = farming.getNotifierRewardsBps();
+        uint256 notifierRewards = rewards * notifierRewardsBps / farming.BPS_DIVISOR();
+        uint256 burnedTokens = rewards - notifierRewards;
+
         vm.prank(USER_1);
         vm.expectEmit();
-        emit Slash(USER_1, 151, 354, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        emit Slash(USER_1, notifierRewards, burnedTokens, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         (bool isLiquidated_, uint256 rewards_) = farming.withdraw(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
 
         assertTrue(isLiquidated_, "The position must be liquidated");
