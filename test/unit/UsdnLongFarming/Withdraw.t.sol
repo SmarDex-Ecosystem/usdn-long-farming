@@ -170,4 +170,9 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         );
         assertEq(farming.getPositionsCount(), positionsCountBefore - 1, "The total exposure must be decreased");
     }
+
+    // to fix the bug because `MockUsdnProtocol` always call `ownershipCallback`
+    function ownershipCallback(address, IUsdnProtocolTypes.PositionId calldata) external pure {
+        return;
+    }
 }
