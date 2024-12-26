@@ -44,13 +44,13 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
      * @custom:and The token balance of the user is updated.
      */
     function test_harvestPosInfoUpdated() public {
-        uint256 blockNumberSkip = 100;
-        vm.roll(block.number + blockNumberSkip);
+        vm.roll(block.number + 100);
 
         vm.prank(USER_1);
         vm.expectEmit();
         emit Harvest(address(this), 505, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         farming.harvest(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+
         PositionInfo memory posInfo = farming.getPositionInfo(posHash);
         assertEq(
             posInfo.rewardDebt,
@@ -72,9 +72,11 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
      * @custom:and A `Slash` event is emitted.
      */
     function test_harvestPositionLiquidateAndRewardDebtIgnore() public {
-        uint256 blockNumberSkip = 100;
-        vm.roll(block.number + blockNumberSkip);
+        vm.roll(block.number + 100);
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, true);
+
+        uint256 totalSharesBefore = farming.getTotalShares();
+        uint256 positionsCountBefore = farming.getPositionsCount();
 
         vm.prank(USER_1);
         vm.expectEmit();
@@ -84,10 +86,17 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
         PositionInfo memory posInfo = farming.getPositionInfo(posHash);
         assertEq(posInfo.rewardDebt, 0, "The reward debt must deleted");
         assertEq(posInfo.owner, address(0), "The owner must be deleted");
-        // tokens sent
+
         assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
         assertEq(rewardToken.balanceOf(farming.DEAD_ADDRESS()), 354, "Dead address must receive a part of the rewards");
         assertEq(rewardToken.balanceOf(USER_1), 151, "The notifier must receive a part of the rewards");
+
+        assertEq(
+            farming.getTotalShares(),
+            totalSharesBefore - (position.totalExpo - position.amount),
+            "The total shares must be decreased"
+        );
+        assertEq(farming.getPositionsCount(), positionsCountBefore - 1, "The total exposure must be decreased");
     }
 
     /**

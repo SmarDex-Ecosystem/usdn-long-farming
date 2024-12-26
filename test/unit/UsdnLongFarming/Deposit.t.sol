@@ -11,11 +11,10 @@ import { UsdnLongFarmingBaseFixture } from "./utils/Fixtures.sol";
  */
 contract TestUsdnLongFarmingDeposit is UsdnLongFarmingBaseFixture {
     IUsdnProtocolTypes.Position internal position;
+    bytes32 posHash;
     int24 internal constant DEFAULT_TICK = 1234;
     uint256 internal constant DEFAULT_TICK_VERSION = 123;
     uint256 internal constant DEFAULT_INDEX = 12;
-
-    bytes32 internal _defaultPosHash;
 
     function setUp() public {
         _setUp();
@@ -29,7 +28,7 @@ contract TestUsdnLongFarmingDeposit is UsdnLongFarmingBaseFixture {
         });
 
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, false);
-        _defaultPosHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        posHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
     }
 
     /**
@@ -48,8 +47,7 @@ contract TestUsdnLongFarmingDeposit is UsdnLongFarmingBaseFixture {
         emit Deposit(address(this), DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         farming.deposit(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX, "");
 
-        // user position state
-        PositionInfo memory posInfo = farming.getPositionInfo(_defaultPosHash);
+        PositionInfo memory posInfo = farming.getPositionInfo(posHash);
         assertEq(posInfo.owner, address(this), "The owner must be the user");
         assertEq(posInfo.tick, DEFAULT_TICK, "The tick must be the default tick");
         assertEq(posInfo.tickVersion, DEFAULT_TICK_VERSION, "The tick version must be the default tick version");
@@ -65,7 +63,6 @@ contract TestUsdnLongFarmingDeposit is UsdnLongFarmingBaseFixture {
             "The rewardDebt must be updated"
         );
 
-        // global contract state
         assertEq(
             farming.getTotalShares(),
             posInfo.shares + previousTotalShares,
