@@ -56,6 +56,10 @@ contract UsdnLongFarmingHandler is UsdnLongFarming {
         _sendRewards(to, amount, tick, tickVersion, index);
     }
 
+    function i_deletePosition(bytes32 positionIdHash) external {
+        _deletePosition(positionIdHash);
+    }
+
     function setTotalShares(uint256 totalShares) external {
         _totalShares = totalShares;
     }

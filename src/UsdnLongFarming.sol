@@ -166,8 +166,7 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
         if (!pos.validated) {
             revert UsdnLongFarmingPendingPosition();
         }
-
-        _saveDeposit(oldOwner, pos, posId.tick, posId.tickVersion, posId.index);
+        _registerDeposit(pos, posId.tick, posId.tickVersion, posId.index);
     }
 
     /// @inheritdoc IUsdnLongFarming
@@ -189,6 +188,33 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
         }
     }
 
+    /// @inheritdoc IUsdnLongFarming
+    function withdraw(int24 tick, uint256 tickVersion, uint256 index)
+        external
+        returns (bool isLiquidated_, uint256 rewards_)
+    {
+        bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
+
+        address owner;
+        (isLiquidated_, rewards_,, owner) = _harvest(positionIdHash);
+
+        if (isLiquidated_) {
+            _slash(positionIdHash, rewards_, msg.sender, tick, tickVersion, index);
+            return (true, 0);
+        }
+        if (msg.sender != owner) {
+            revert UsdnLongFarmingInvalidCaller();
+        }
+        if (rewards_ > 0) {
+            _sendRewards(owner, rewards_, tick, tickVersion, index);
+        }
+
+        _deletePosition(positionIdHash);
+
+        emit Withdraw(owner, tick, tickVersion, index);
+        USDN_PROTOCOL.transferPositionOwnership(IUsdnProtocolTypes.PositionId(tick, tickVersion, index), owner, "");
+    }
+
     /**
      * @notice Hashes a USDN long position's ID to use as key in the {_positions} mapping.
      * @param tick The tick of the position.
@@ -203,14 +229,12 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
     /**
      * @notice Records the information for a new position deposit.
      * @dev Uses the initial position trading expo as shares.
-     * @param owner The prior USDN protocol position owner.
      * @param position The USDN protocol position to deposit.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
      */
-    function _saveDeposit(
-        address owner,
+    function _registerDeposit(
         IUsdnProtocolTypes.Position memory position,
         int24 tick,
         uint256 tickVersion,
@@ -219,7 +243,7 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
         _updateRewards();
         uint128 initialTradingExpo = position.totalExpo - position.amount;
         PositionInfo memory posInfo = PositionInfo({
-            owner: owner,
+            owner: position.user,
             tick: tick,
             tickVersion: tickVersion,
             index: index,
@@ -346,7 +370,7 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
         uint256 tickVersion,
         uint256 index
     ) internal {
-        delete _positions[positionIdHash];
+        _deletePosition(positionIdHash);
 
         if (rewards == 0) {
             emit Slash(notifier, 0, 0, tick, tickVersion, index);
@@ -366,5 +390,15 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
      */
     function _calcAccRewardPerShare(uint256 periodRewards) internal view returns (uint256 accRewardPerShare_) {
         return _accRewardPerShare + FixedPointMathLib.fullMulDiv(periodRewards, SCALING_FACTOR, _totalShares);
+    }
+
+    /**
+     * @notice Deletes a position from the internal state, updates the total shares and positions count.
+     * @param positionIdHash The hash of the position ID.
+     */
+    function _deletePosition(bytes32 positionIdHash) internal {
+        _totalShares -= _positions[positionIdHash].shares;
+        _positionsCount--;
+        delete _positions[positionIdHash];
     }
 }

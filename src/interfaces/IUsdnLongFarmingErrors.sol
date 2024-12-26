@@ -13,4 +13,7 @@ interface IUsdnLongFarmingErrors {
 
     /// @dev The specified notifierRewardsBps is invalid.
     error UsdnLongFarmingInvalidNotifierRewardsBps();
+
+    /// @dev The caller is invalid.
+    error UsdnLongFarmingInvalidCaller();
 }

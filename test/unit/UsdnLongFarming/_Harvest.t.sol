@@ -60,8 +60,7 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
      * @custom:and The function return values are correct.
      */
     function test_harvestPositionLiquidate() public {
-        uint256 blockNumberSkip = 100;
-        vm.roll(block.number + blockNumberSkip);
+        vm.roll(block.number + 100);
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, true);
 
         (bool isLiquidated,,, address owner) = farming.i_harvest(posHash);

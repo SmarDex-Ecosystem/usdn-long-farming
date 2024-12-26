@@ -81,8 +81,24 @@ interface IUsdnLongFarming is
     function hashPosId(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_);
 
     /**
+     * @notice Withdraws a USDN protocol position and claims rewards.
+     * @dev If the position is not liquidated, the rewards from the harvest are sent to the position's owner
+     * and the position is withdrawn. If the position has been liquidated on the USDN protocol, the rewards are
+     * distributed to `msg.sender` and `DEAD_ADDRESS`, and the position is deleted.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @param index The index of the position inside the tick.
+     * @return isLiquidated_ A flag indicating if the position was liquidated.
+     * @return rewards_ The amount of rewards distributed to the position's owner. Returns 0 if the position was
+     * liquidated.
+     */
+    function withdraw(int24 tick, uint256 tickVersion, uint256 index)
+        external
+        returns (bool isLiquidated_, uint256 rewards_);
+
+    /**
      * @notice Sends rewards to the position's owner.
-     * @dev If the position is active (not liquidated), the rewards are sent to the position's owner and the position's
+     * @dev If the position is not liquidated, the rewards are sent to the position's owner and the position's
      * rewardDebt is updated to reflect the claimed rewards. If there're no pending rewards, this function will not
      * execute any action, but a transaction fee may still be incurred for calling the function. If the position has
      * been liquidated on the USDN protocol, the rewards are distributed to `msg.sender` and `DEAD_ADDRESS`, and the
@@ -92,7 +108,8 @@ interface IUsdnLongFarming is
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
      * @return isLiquidated_ A flag indicating if the position was liquidated.
-     * @return rewards_ The amount of rewards distributed to the position's owner. 0 if the position was liquidated.
+     * @return rewards_ The amount of rewards distributed to the position's owner. Returns 0 if the position was
+     * liquidated.
      */
     function harvest(int24 tick, uint256 tickVersion, uint256 index)
         external
