@@ -14,6 +14,7 @@ import { UsdnLongFarmingBaseFixture } from "./utils/Fixtures.sol";
  */
 contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
     IUsdnProtocolTypes.Position internal position;
+    uint256 rewardsPerBlock;
     bytes32 posHash;
     int24 internal constant DEFAULT_TICK = 1234;
     uint256 internal constant DEFAULT_TICK_VERSION = 123;
@@ -33,6 +34,7 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, false);
         posHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         farming.deposit(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX, "");
+        rewardsPerBlock = rewardsProvider.getRewardsPerBlock();
     }
 
     /**
@@ -45,6 +47,7 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
     function test_withdraw() public {
         vm.roll(block.number + 100);
 
+        uint256 expectedRewards = rewardsPerBlock * 101;
         uint256 totalSharesBefore = farming.getTotalShares();
         uint256 positionsCountBefore = farming.getPositionsCount();
 
@@ -52,11 +55,11 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         emit Withdraw(address(this), DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         (bool isLiquidated_, uint256 rewards_) = farming.withdraw(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
 
-        assertEq(rewards_, 505, "The token is transferred to the user");
+        assertEq(rewards_, expectedRewards, "The token is transferred to the user");
         assertFalse(isLiquidated_, "The position must not be liquidated");
 
         _assertPositionDeleted(posHash);
-        assertEq(rewardToken.balanceOf(address(this)), 505, "The token is transferred to the user");
+        assertEq(rewardToken.balanceOf(address(this)), expectedRewards, "The token is transferred to the user");
 
         (IUsdnProtocolTypes.Position memory USDNPosition,) = farming.USDN_PROTOCOL().getLongPosition(
             IUsdnProtocolTypes.PositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX)
@@ -88,7 +91,7 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         vm.roll(block.number + 100);
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, true);
 
-        uint256 rewards = 505;
+        uint256 rewards = rewardsPerBlock * 101;
         uint256 notifierRewardsBps = farming.getNotifierRewardsBps();
         uint256 notifierRewards = rewards * notifierRewardsBps / farming.BPS_DIVISOR();
         uint256 burnedTokens = rewards - notifierRewards;
@@ -106,8 +109,12 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         assertEq(posInfo.owner, address(0), "The owner must be deleted");
 
         assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
-        assertEq(rewardToken.balanceOf(farming.DEAD_ADDRESS()), 354, "Dead address must receive a part of the rewards");
-        assertEq(rewardToken.balanceOf(USER_1), 151, "The notifier must receive a part of the rewards");
+        assertEq(
+            rewardToken.balanceOf(farming.DEAD_ADDRESS()),
+            burnedTokens,
+            "Dead address must receive a part of the rewards"
+        );
+        assertEq(rewardToken.balanceOf(USER_1), notifierRewards, "The notifier must receive a part of the rewards");
     }
 
     /**
