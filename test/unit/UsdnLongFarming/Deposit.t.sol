@@ -47,7 +47,6 @@ contract TestUsdnLongFarmingDeposit is UsdnLongFarmingBaseFixture {
         emit Deposit(address(this), DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         farming.deposit(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX, "");
 
-        // user position state
         PositionInfo memory posInfo = farming.getPositionInfo(posHash);
         assertEq(posInfo.owner, address(this), "The owner must be the user");
         assertEq(posInfo.tick, DEFAULT_TICK, "The tick must be the default tick");
@@ -64,7 +63,6 @@ contract TestUsdnLongFarmingDeposit is UsdnLongFarmingBaseFixture {
             "The rewardDebt must be updated"
         );
 
-        // global contract state
         assertEq(
             farming.getTotalShares(),
             posInfo.shares + previousTotalShares,

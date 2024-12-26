@@ -51,18 +51,18 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         vm.expectEmit();
         emit Withdraw(address(this), DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         (bool isLiquidated_, uint256 rewards_) = farming.withdraw(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
-        // return values
+
         assertEq(rewards_, 505, "The token is transferred to the user");
         assertFalse(isLiquidated_, "The position must not be liquidated");
-        // position state
+
         _assertPositionDeleted(posHash);
         assertEq(rewardToken.balanceOf(address(this)), 505, "The token is transferred to the user");
-        // USDN state
+
         (IUsdnProtocolTypes.Position memory USDNPosition,) = farming.USDN_PROTOCOL().getLongPosition(
             IUsdnProtocolTypes.PositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX)
         );
         assertEq(USDNPosition.user, address(this), "The position must be deleted");
-        // global state
+
         _assertGlobalState(totalSharesBefore, positionsCountBefore);
     }
 
@@ -93,14 +93,13 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         emit Slash(USER_1, 151, 354, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         (bool isLiquidated_, uint256 rewards_) = farming.withdraw(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
 
-        // return values
         assertTrue(isLiquidated_, "The position must be liquidated");
         assertEq(rewards_, 0, "The token is transferred to the user");
-        // position deleted
+
         PositionInfo memory posInfo = farming.getPositionInfo(posHash);
         assertEq(posInfo.rewardDebt, 0, "The reward debt must deleted");
         assertEq(posInfo.owner, address(0), "The owner must be deleted");
-        // tokens sent
+
         assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
         assertEq(rewardToken.balanceOf(farming.DEAD_ADDRESS()), 354, "Dead address must receive a part of the rewards");
         assertEq(rewardToken.balanceOf(USER_1), 151, "The notifier must receive a part of the rewards");
@@ -123,23 +122,21 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         vm.recordLogs();
         (bool isLiquidated_, uint256 rewards_) = farming.withdraw(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
 
-        // no Harvest event emitted
         Vm.Log[] memory logs = vm.getRecordedLogs();
         assertEq(logs.length, 1, "One log must be emitted");
         assertEq(logs[0].topics[0], Withdraw.selector, "The log topic must be Withdraw and not Harvest");
 
-        // return values
         assertEq(rewards_, 0, "The user must not receive rewards");
         assertFalse(isLiquidated_, "The position must not be liquidated");
-        // position state
+
         _assertPositionDeleted(posHash);
         assertEq(farming.REWARD_TOKEN().balanceOf(address(this)), 0, "The user must not receive rewards");
-        // USDN state
+
         (IUsdnProtocolTypes.Position memory USDNPosition,) = farming.USDN_PROTOCOL().getLongPosition(
             IUsdnProtocolTypes.PositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX)
         );
         assertEq(USDNPosition.user, address(this), "The position must be deleted");
-        // global state
+
         _assertGlobalState(totalSharesBefore, positionsCountBefore);
     }
 

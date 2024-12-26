@@ -50,6 +50,7 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
         vm.expectEmit();
         emit Harvest(address(this), 505, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         farming.harvest(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+
         PositionInfo memory posInfo = farming.getPositionInfo(posHash);
         assertEq(
             posInfo.rewardDebt,
@@ -85,11 +86,11 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
         PositionInfo memory posInfo = farming.getPositionInfo(posHash);
         assertEq(posInfo.rewardDebt, 0, "The reward debt must deleted");
         assertEq(posInfo.owner, address(0), "The owner must be deleted");
-        // tokens sent
+
         assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
         assertEq(rewardToken.balanceOf(farming.DEAD_ADDRESS()), 354, "Dead address must receive a part of the rewards");
         assertEq(rewardToken.balanceOf(USER_1), 151, "The notifier must receive a part of the rewards");
-        // global state
+
         assertEq(
             farming.getTotalShares(),
             totalSharesBefore - (position.totalExpo - position.amount),

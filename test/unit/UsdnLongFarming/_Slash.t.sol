@@ -68,7 +68,7 @@ contract TestUsdnLongFarmingSlash is UsdnLongFarmingBaseFixture {
             "Dead address must receive a part of the rewards"
         );
         assertEq(rewardToken.balanceOf(USER_1), notifierRewards, "The notifier must receive a part of the rewards");
-        // global state
+
         assertEq(
             farming.getTotalShares(),
             totalSharesBefore - (position.totalExpo - position.amount),
@@ -95,6 +95,7 @@ contract TestUsdnLongFarmingSlash is UsdnLongFarmingBaseFixture {
         emit Slash(USER_1, 0, 0, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         vm.recordLogs();
         farming.i_slash(posHash, 0, USER_1, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+
         Vm.Log[] memory logs = vm.getRecordedLogs();
         assertEq(logs.length, 1, "One event must be emitted");
 
@@ -102,7 +103,7 @@ contract TestUsdnLongFarmingSlash is UsdnLongFarmingBaseFixture {
         assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
         assertEq(rewardToken.balanceOf(farming.DEAD_ADDRESS()), 0, "Dead address must receive a part of the rewards");
         assertEq(rewardToken.balanceOf(USER_1), 0, "The notifier must receive a part of the rewards");
-        // global state
+
         assertEq(
             farming.getTotalShares(),
             totalSharesBefore - (position.totalExpo - position.amount),
