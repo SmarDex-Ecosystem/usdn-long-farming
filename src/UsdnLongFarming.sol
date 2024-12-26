@@ -166,7 +166,7 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
         if (!pos.validated) {
             revert UsdnLongFarmingPendingPosition();
         }
-        _registerDeposit(pos, posId.tick, posId.tickVersion, posId.index);
+        _registerDeposit(oldOwner, pos, posId.tick, posId.tickVersion, posId.index);
     }
 
     /// @inheritdoc IUsdnLongFarming
@@ -229,12 +229,14 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
     /**
      * @notice Records the information for a new position deposit.
      * @dev Uses the initial position trading expo as shares.
+     * @param owner The prior USDN protocol position owner.
      * @param position The USDN protocol position to deposit.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
      */
     function _registerDeposit(
+        address owner,
         IUsdnProtocolTypes.Position memory position,
         int24 tick,
         uint256 tickVersion,
@@ -243,7 +245,7 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
         _updateRewards();
         uint128 initialTradingExpo = position.totalExpo - position.amount;
         PositionInfo memory posInfo = PositionInfo({
-            owner: position.user,
+            owner: owner,
             tick: tick,
             tickVersion: tickVersion,
             index: index,
