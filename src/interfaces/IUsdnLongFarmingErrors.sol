@@ -5,12 +5,12 @@ interface IUsdnLongFarmingErrors {
     /// @dev The USDN protocol position validation is pending.
     error UsdnLongFarmingPendingPosition();
 
-    /// @dev The caller is invalid.
-    error UsdnLongFarmingInvalidCaller();
-
     /// @dev The USDN protocol position is invalid.
     error UsdnLongFarmingInvalidPosition();
 
     /// @dev The specified notifierRewardsBps is invalid.
     error UsdnLongFarmingInvalidNotifierRewardsBps();
+
+    /// @dev The caller is invalid.
+    error UsdnLongFarmingInvalidCaller();
 }
