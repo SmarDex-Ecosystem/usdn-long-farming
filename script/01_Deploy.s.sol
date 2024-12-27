@@ -5,14 +5,17 @@ import { LibRLP } from "solady-0.0/utils/LibRLP.sol";
 
 import { Script } from "forge-std/Script.sol";
 
+import { FarmingToken } from "src/FarmingToken.sol";
+
 contract DeployUsdnLongFarming is Script {
     address _deployerAddress;
 
-    function run() external {
+    function run() external returns (FarmingToken farmingToken_) {
         _handleEnvVariables();
 
         vm.startBroadcast(_deployerAddress);
 
+        farmingToken_ = new FarmingToken();
         // TODO:
         // - deploy staking token (mints 1 wei to deployer)
         // - create farming campaign with the farming token as staking token
