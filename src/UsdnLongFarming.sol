@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
 import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
@@ -16,7 +17,7 @@ import { IUsdnLongFarming } from "./interfaces/IUsdnLongFarming.sol";
  * @title USDN Long Positions farming
  * @notice A contract for farming USDN long positions to earn rewards.
  */
-contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
+contract UsdnLongFarming is ReentrancyGuard, IUsdnLongFarming, Ownable2Step {
     using SafeTransferLib for address;
 
     /**
@@ -147,7 +148,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     }
 
     /// @inheritdoc IUsdnLongFarming
-    function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation) external {
+    function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation) external nonReentrant {
         (IUsdnProtocolTypes.Position memory pos,) =
             USDN_PROTOCOL.getLongPosition(IUsdnProtocolTypes.PositionId(tick, tickVersion, index));
 
@@ -160,8 +161,10 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     }
 
     /// @inheritdoc IUsdnLongFarming
+    // slither-disable-next-line reentrancy-no-eth
     function harvest(int24 tick, uint256 tickVersion, uint256 index)
         external
+        nonReentrant
         returns (bool isLiquidated_, uint256 rewards_)
     {
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
@@ -179,8 +182,10 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     }
 
     /// @inheritdoc IUsdnLongFarming
+    // slither-disable-next-line reentrancy-no-eth
     function withdraw(int24 tick, uint256 tickVersion, uint256 index)
         external
+        nonReentrant
         returns (bool isLiquidated_, uint256 rewards_)
     {
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
@@ -238,6 +243,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
      */
+    // slither-disable-next-line reentrancy-no-eth
     function _registerDeposit(
         IUsdnProtocolTypes.Position memory position,
         int24 tick,
