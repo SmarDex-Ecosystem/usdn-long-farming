@@ -34,7 +34,7 @@ For a fork, you can use the `50_AddCampaign.s.sol` script:
 forge script script/50_AddCampaign.s.sol:AddCampaign --sender 0x1e3e1128f6bc2264a19d7a065982696d356879c5 -f RPC_URL --broadcast --unlocked
 ```
 
-- The environment variable FARMING_TOKEN_ADDRESS is mandatory. If not set, a prompt will request it.
+- The environment variable `FARMING_TOKEN_ADDRESS` is mandatory. If not set, a prompt will request it.
 - This script works only on a fork that supports impersonation.
 - Ensure the Safe has sufficient ETH to pay for the transaction.
 
@@ -49,9 +49,9 @@ forge script script/02_DeployLongUSDNFarming.s.sol --private-key P_KEY -f RPC_UR
 ```
 
 - The following environment variables are mandatory:
-  - FARMING_TOKEN_ADDRESS
-  - DEPLOYER_ADDRESS
-  - USDN_PROTOCOL_ADDRESS
+  - `FARMING_TOKEN_ADDRESS`
+  - `DEPLOYER_ADDRESS`
+  - `USDN_PROTOCOL_ADDRESS`
 - If these variables are not set, a prompt will request them.
 
 ---
