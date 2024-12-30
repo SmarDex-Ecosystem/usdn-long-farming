@@ -7,7 +7,6 @@ import { LibRLP } from "solady-0.0/utils/LibRLP.sol";
 
 import { Script } from "forge-std/Script.sol";
 
-import { FarmingToken } from "src/FarmingToken.sol";
 import { UsdnLongFarming } from "src/UsdnLongFarming.sol";
 import { IFarmingRange } from "src/interfaces/IFarmingRange.sol";
 
@@ -15,24 +14,28 @@ contract DeployUsdnLongFarming is Script {
     IFarmingRange constant FARMING_RANGE = IFarmingRange(0x7d85C0905a6E1Ab5837a0b57cD94A419d3a77523);
     IERC20 constant SDEX = IERC20(0x5DE8ab7E27f6E7A1fFf3E5B337584Aa43961BEeF);
 
+    IERC20 internal _farmingToken;
     IUsdnProtocol internal _usdnProtocol;
     address internal _deployerAddress;
 
-    function run() external returns (FarmingToken farmingToken_, UsdnLongFarming longFarming_) {
+    function run() external returns (UsdnLongFarming longFarming_) {
         _handleEnvVariables();
 
-        vm.broadcast(_deployerAddress);
-        farmingToken_ = new FarmingToken();
-
-        address owner = FARMING_RANGE.owner();
-        vm.broadcast(owner);
-        FARMING_RANGE.addCampaignInfo(farmingToken_, SDEX, block.number + 1);
-
         uint256 campaignID = FARMING_RANGE.campaignInfoLen() - 1;
+        while (campaignID >= 0) {
+            IFarmingRange.CampaignInfo memory campaignInfo = FARMING_RANGE.campaignInfo(campaignID);
+            if (campaignInfo.stakingToken == _farmingToken && campaignInfo.rewardToken == SDEX) {
+                break;
+            }
+            campaignID--;
+        }
+
+        require(campaignID > 0, "DeployUsdnLongFarming: campaign not found");
+
         address longFarmingAddress = LibRLP.computeAddress(_deployerAddress, vm.getNonce(_deployerAddress) + 1);
 
         vm.startBroadcast(_deployerAddress);
-        farmingToken_.approve(longFarmingAddress, 1);
+        _farmingToken.approve(longFarmingAddress, 1);
         longFarming_ = new UsdnLongFarming(_usdnProtocol, FARMING_RANGE, campaignID);
         vm.stopBroadcast();
     }
@@ -49,6 +52,12 @@ contract DeployUsdnLongFarming is Script {
             _usdnProtocol = IUsdnProtocol(vm.envAddress("USDN_PROTOCOL_ADDRESS"));
         } catch {
             _usdnProtocol = IUsdnProtocol(vm.parseAddress(vm.prompt("enter USDN_PROTOCOL_ADDRESS")));
+        }
+
+        try vm.envAddress("FARMING_TOKEN_ADDRESS") {
+            _farmingToken = IERC20(vm.envAddress("FARMING_TOKEN_ADDRESS"));
+        } catch {
+            _farmingToken = IERC20(vm.parseAddress(vm.prompt("enter FARMING_TOKEN_ADDRESS")));
         }
 
         string memory etherscanApiKey = vm.envOr("ETHERSCAN_API_KEY", string("XXXXXXXXXXXXXXXXX"));
