@@ -24,6 +24,10 @@ interface IFarmingRange {
         uint256 rewardPerBlock;
     }
 
+    function addCampaignInfo(IERC20 _stakingToken, IERC20 _rewardToken, uint256 _startBlock) external;
+
+    function addRewardInfo(uint256 _campaignID, uint256 _endBlock, uint256 _rewardPerBlock) external;
+
     function rewardInfoLen(uint256 campaignID) external view returns (uint256);
 
     function campaignInfoLen() external view returns (uint256);
@@ -70,4 +74,6 @@ interface IFarmingRange {
     function rewardInfoLimit() external view returns (uint256);
 
     function rewardManager() external view returns (address);
+
+    function owner() external view returns (address);
 }
