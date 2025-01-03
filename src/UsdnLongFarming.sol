@@ -161,7 +161,6 @@ contract UsdnLongFarming is ReentrancyGuard, IUsdnLongFarming, Ownable2Step {
     }
 
     /// @inheritdoc IUsdnLongFarming
-    // slither-disable-next-line reentrancy-no-eth
     function harvest(int24 tick, uint256 tickVersion, uint256 index)
         external
         nonReentrant
@@ -182,7 +181,6 @@ contract UsdnLongFarming is ReentrancyGuard, IUsdnLongFarming, Ownable2Step {
     }
 
     /// @inheritdoc IUsdnLongFarming
-    // slither-disable-next-line reentrancy-no-eth
     function withdraw(int24 tick, uint256 tickVersion, uint256 index)
         external
         nonReentrant
@@ -243,7 +241,6 @@ contract UsdnLongFarming is ReentrancyGuard, IUsdnLongFarming, Ownable2Step {
      * @param tickVersion The version of the tick.
      * @param index The index of the position inside the tick.
      */
-    // slither-disable-next-line reentrancy-no-eth
     function _registerDeposit(
         IUsdnProtocolTypes.Position memory position,
         int24 tick,
@@ -290,6 +287,7 @@ contract UsdnLongFarming is ReentrancyGuard, IUsdnLongFarming, Ownable2Step {
         // farming harvest
         uint256[] memory campaignsIds = new uint256[](1);
         campaignsIds[0] = CAMPAIGN_ID;
+        // slither-disable-next-line reentrancy-no-eth
         REWARDS_PROVIDER.harvest(campaignsIds);
 
         uint256 periodRewards = REWARD_TOKEN.balanceOf(address(this)) - rewardsBalanceBefore;
