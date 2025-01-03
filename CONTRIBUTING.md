@@ -25,7 +25,7 @@ import { console2 } from "forge-std/Test.sol";
 import { StdStorage } from "forge-std/Script.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
+import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
 
 import { SomeFixture } from "../Fixtures.sol";
 

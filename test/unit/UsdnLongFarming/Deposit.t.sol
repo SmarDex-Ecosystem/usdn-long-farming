@@ -18,7 +18,6 @@ contract TestUsdnLongFarmingDeposit is UsdnLongFarmingBaseFixture {
 
     function setUp() public {
         _setUp();
-
         position = IUsdnProtocolTypes.Position({
             validated: true,
             timestamp: uint40(block.timestamp),
