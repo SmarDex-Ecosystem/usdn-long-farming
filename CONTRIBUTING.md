@@ -24,7 +24,7 @@ pragma solidity 0.8.28;
 import { console2 } from "forge-std/Test.sol";
 import { StdStorage } from "forge-std/Script.sol";
 
-import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
 
 import { SomeFixture } from "../Fixtures.sol";
