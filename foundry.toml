@@ -26,7 +26,7 @@ remappings = [
     "@openzeppelin-contracts-5/=dependencies/@openzeppelin-contracts-5.1.0/",
     "@smardex-usdn-contracts/=dependencies/@smardex-usdn-contracts-0.24.1/src/",
     "forge-std/=dependencies/forge-std-1.9.4/src/",
-    "solady-0.0/=dependencies/solady-0.0.281/src/",
+    "solady/src/=dependencies/solady-0.0.281/src/",
 ]
 
 # ---------------------------------------------------------------------------- #
