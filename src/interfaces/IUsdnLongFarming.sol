@@ -22,10 +22,15 @@ interface IUsdnLongFarming is
 
     /**
      * @notice Gets the deposited position info of the USDN protocol position.
-     * @param posHash The hash of the position ID obtained using {hashPosId}.
+     * @param tick The tick of the position.
+     * @param tickVersion The version of the tick.
+     * @param index The index of the position inside the tick.
      * @return info_ The position info.
      */
-    function getPositionInfo(bytes32 posHash) external view returns (PositionInfo memory info_);
+    function getPositionInfo(int24 tick, uint256 tickVersion, uint256 index)
+        external
+        view
+        returns (PositionInfo memory info_);
 
     /**
      * @notice Gets the number of deposited positions.
@@ -69,16 +74,6 @@ interface IUsdnLongFarming is
      * @return rewards_ The amount of pending rewards.
      */
     function pendingRewards(int24 tick, uint256 tickVersion, uint256 index) external view returns (uint256 rewards_);
-
-    /**
-     * @notice Hashes the unique ID of a USDN position.
-     * @dev The hash is computed using `keccak256(abi.encode(tick, tickVersion, index))`.
-     * @param tick The tick of the position.
-     * @param tickVersion The version of the tick.
-     * @param index The index of the position inside the tick.
-     * @return hash_ The hash of the ID.
-     */
-    function hashPosId(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_);
 
     /**
      * @notice Withdraws a USDN protocol position and claims rewards.

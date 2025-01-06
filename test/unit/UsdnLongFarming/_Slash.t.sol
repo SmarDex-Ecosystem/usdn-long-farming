@@ -32,7 +32,7 @@ contract TestUsdnLongFarmingSlash is UsdnLongFarmingBaseFixture {
         });
 
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, false);
-        posHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        posHash = farming.i_hashPositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         usdnProtocol.transferPositionOwnership(
             IUsdnProtocolTypes.PositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX), address(farming), ""
         );
@@ -62,7 +62,11 @@ contract TestUsdnLongFarmingSlash is UsdnLongFarmingBaseFixture {
         emit Slash(USER_1, notifierRewards, burnedTokens, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         farming.i_slash(posHash, rewards, USER_1, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
 
-        assertEq(farming.getPositionInfo(posHash).owner, address(0), "The position must be deleted");
+        assertEq(
+            farming.getPositionInfo(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX).owner,
+            address(0),
+            "The position must be deleted"
+        );
         assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
         assertEq(
             rewardToken.balanceOf(farming.DEAD_ADDRESS()),
@@ -101,7 +105,11 @@ contract TestUsdnLongFarmingSlash is UsdnLongFarmingBaseFixture {
         Vm.Log[] memory logs = vm.getRecordedLogs();
         assertEq(logs.length, 1, "One event must be emitted");
 
-        assertEq(farming.getPositionInfo(posHash).owner, address(0), "The position must be deleted");
+        assertEq(
+            farming.getPositionInfo(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX).owner,
+            address(0),
+            "The position must be deleted"
+        );
         assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
         assertEq(rewardToken.balanceOf(farming.DEAD_ADDRESS()), 0, "Dead address must receive a part of the rewards");
         assertEq(rewardToken.balanceOf(USER_1), 0, "The notifier must receive a part of the rewards");

@@ -28,7 +28,7 @@ contract TestUsdnLongFarmingDeletePosition is UsdnLongFarmingBaseFixture {
         });
 
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, false);
-        posHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        posHash = farming.i_hashPositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         usdnProtocol.transferPositionOwnership(
             IUsdnProtocolTypes.PositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX), address(farming), ""
         );
@@ -48,7 +48,7 @@ contract TestUsdnLongFarmingDeletePosition is UsdnLongFarmingBaseFixture {
         assertEq(farming.getPositionsCount(), positionsCountBefore - 1, "The position is deleted");
         assertEq(farming.getTotalShares(), totalSharesBefore - 10, "The shares are updated");
         assertEq(
-            keccak256(abi.encode(farming.getPositionInfo(posHash))),
+            keccak256(abi.encode(farming.getPositionInfo(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX))),
             keccak256(abi.encode(PositionInfo(address(0), 0, 0, 0, 0, 0))),
             "The position info is deleted"
         );

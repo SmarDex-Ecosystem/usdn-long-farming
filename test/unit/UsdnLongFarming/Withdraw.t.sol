@@ -32,7 +32,7 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         });
 
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, false);
-        posHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        posHash = farming.i_hashPositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         usdnProtocol.transferPositionOwnership(
             IUsdnProtocolTypes.PositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX), address(farming), ""
         );
@@ -106,7 +106,7 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         assertTrue(isLiquidated_, "The position must be liquidated");
         assertEq(rewards_, 0, "The token is transferred to the user");
 
-        PositionInfo memory posInfo = farming.getPositionInfo(posHash);
+        PositionInfo memory posInfo = farming.getPositionInfo(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         assertEq(posInfo.rewardDebt, 0, "The reward debt must deleted");
         assertEq(posInfo.owner, address(0), "The owner must be deleted");
 
@@ -156,7 +156,7 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
 
     function _assertPositionDeleted(bytes32 _posHash) internal view {
         assertEq(
-            keccak256(abi.encode(farming.getPositionInfo(_posHash))),
+            keccak256(abi.encode(farming.getPositionInfo(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX))),
             keccak256(abi.encode(PositionInfo(address(0), 0, 0, 0, 0, 0))),
             "The position must be deleted"
         );
