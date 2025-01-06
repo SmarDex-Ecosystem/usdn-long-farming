@@ -16,5 +16,8 @@ interface IUsdnLongFarmingErrors {
     error UsdnLongFarmingInvalidNotifierRewardsBps();
 
     /// @dev The caller is not the owner of the USDN protocol position.
-    error UsdnLongFarmingInvalidCaller();
+    error UsdnLongFarmingNotPositionOwner();
+
+    /// @dev The caller of the callback function is not the USDN protocol.
+    error UsdnLongFarmingInvalidCallbackCaller();
 }

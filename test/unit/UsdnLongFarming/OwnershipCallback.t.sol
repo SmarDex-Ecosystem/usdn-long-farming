@@ -35,10 +35,10 @@ contract TestUsdnLongFarmingOwnershipCallback is UsdnLongFarmingBaseFixture {
     /**
      * @custom:scenario Tests the {IUsdnLongFarming.ownershipCallback} function with an invalid caller.
      * @custom:when The function is called.
-     * @custom:then The call must revert with {IUsdnLongFarmingErrors.UsdnLongFarmingInvalidCaller}.
+     * @custom:then The call must revert with {IUsdnLongFarmingErrors.UsdnLongFarmingInvalidCallbackCaller}.
      */
     function test_RevertWhen_ownershipCallbackInvalidCaller() public {
-        vm.expectRevert(UsdnLongFarmingInvalidCaller.selector);
+        vm.expectRevert(UsdnLongFarmingInvalidCallbackCaller.selector);
         farming.ownershipCallback(address(0), IUsdnProtocolTypes.PositionId(0, 0, 0));
     }
 
