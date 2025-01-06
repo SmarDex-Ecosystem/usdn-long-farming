@@ -157,7 +157,7 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
     /// @inheritdoc IOwnershipCallback
     function ownershipCallback(address oldOwner, IUsdnProtocolTypes.PositionId calldata posId) external nonReentrant {
         if (msg.sender != address(USDN_PROTOCOL)) {
-            revert UsdnLongFarmingInvalidCaller();
+            revert UsdnLongFarmingInvalidCallbackCaller();
         }
 
         (IUsdnProtocolTypes.Position memory pos,) =
@@ -205,7 +205,7 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
             return (true, 0);
         }
         if (msg.sender != owner) {
-            revert UsdnLongFarmingInvalidCaller();
+            revert UsdnLongFarmingNotPositionOwner();
         }
         if (rewards_ > 0) {
             _sendRewards(owner, rewards_, tick, tickVersion, index);

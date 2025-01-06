@@ -74,11 +74,11 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
     /**
      * @custom:scenario Tests the {IUsdnLongFarming.withdraw} function reverts when the caller is not the owner.
      * @custom:when The function is called.
-     * @custom:then The call should revert with {IUsdnLongFarmingErrors.UsdnLongFarmingInvalidPosition}.
+     * @custom:then The call should revert with {IUsdnLongFarmingErrors.UsdnLongFarmingNotPositionOwner}.
      */
     function test_revertWhen_notOwnerWithdraw() public {
         vm.prank(USER_1);
-        vm.expectRevert(UsdnLongFarmingInvalidCaller.selector);
+        vm.expectRevert(UsdnLongFarmingNotPositionOwner.selector);
         farming.withdraw(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
     }
 
