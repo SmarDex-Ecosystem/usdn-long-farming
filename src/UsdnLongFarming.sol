@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import { Ownable } from "@openzeppelin-contracts-5/access/Ownable.sol";
 import { Ownable2Step } from "@openzeppelin-contracts-5/access/Ownable2Step.sol";
 import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
+import { ReentrancyGuard } from "@openzeppelin-contracts-5/utils/ReentrancyGuard.sol";
 import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
 import { FixedPointMathLib } from "solady-0.0.281/utils/FixedPointMathLib.sol";
@@ -16,7 +17,7 @@ import { IUsdnLongFarming } from "./interfaces/IUsdnLongFarming.sol";
  * @title USDN Long Positions farming
  * @notice A contract for farming USDN long positions to earn rewards.
  */
-contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
+contract UsdnLongFarming is ReentrancyGuard, IUsdnLongFarming, Ownable2Step {
     using SafeTransferLib for address;
 
     /**
@@ -85,7 +86,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
         IERC20 farmingToken = IERC20(address(info.stakingToken));
         // this contract is the sole depositor of the farming token in the SmarDex rewards provider contract,
         // and will receive all of the rewards
-        farmingToken.transferFrom(msg.sender, address(this), 1);
+        address(farmingToken).safeTransferFrom(msg.sender, address(this), 1);
         farmingToken.approve(address(rewardsProvider), 1);
         rewardsProvider.deposit(campaignId, 1);
     }
@@ -147,7 +148,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     }
 
     /// @inheritdoc IUsdnLongFarming
-    function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation) external {
+    function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation) external nonReentrant {
         (IUsdnProtocolTypes.Position memory pos,) =
             USDN_PROTOCOL.getLongPosition(IUsdnProtocolTypes.PositionId(tick, tickVersion, index));
 
@@ -162,6 +163,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     /// @inheritdoc IUsdnLongFarming
     function harvest(int24 tick, uint256 tickVersion, uint256 index)
         external
+        nonReentrant
         returns (bool isLiquidated_, uint256 rewards_)
     {
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
@@ -181,6 +183,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
     /// @inheritdoc IUsdnLongFarming
     function withdraw(int24 tick, uint256 tickVersion, uint256 index)
         external
+        nonReentrant
         returns (bool isLiquidated_, uint256 rewards_)
     {
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
@@ -284,6 +287,7 @@ contract UsdnLongFarming is IUsdnLongFarming, Ownable2Step {
         // farming harvest
         uint256[] memory campaignsIds = new uint256[](1);
         campaignsIds[0] = CAMPAIGN_ID;
+        // slither-disable-next-line reentrancy-no-eth
         REWARDS_PROVIDER.harvest(campaignsIds);
 
         uint256 periodRewards = REWARD_TOKEN.balanceOf(address(this)) - rewardsBalanceBefore;
