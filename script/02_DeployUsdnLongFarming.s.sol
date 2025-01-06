@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
 import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
-import { LibRLP } from "solady-0.0/utils/LibRLP.sol";
+import { LibRLP } from "solady-0.0.281/utils/LibRLP.sol";
 
 import { Script } from "forge-std/Script.sol";
 
