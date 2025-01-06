@@ -103,8 +103,13 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
     }
 
     /// @inheritdoc IUsdnLongFarming
-    function getPositionInfo(bytes32 posHash) external view returns (PositionInfo memory info_) {
-        return _positions[posHash];
+    function getPositionInfo(int24 tick, uint256 tickVersion, uint256 index)
+        external
+        view
+        returns (PositionInfo memory info_)
+    {
+        bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
+        return _positions[positionIdHash];
     }
 
     /// @inheritdoc IUsdnLongFarming
