@@ -67,4 +67,8 @@ contract UsdnLongFarmingHandler is UsdnLongFarming {
     function set_accRewardPerShare(uint256 accRewardPerShare) external {
         _accRewardPerShare = accRewardPerShare;
     }
+
+    function i_hashPositionId(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32) {
+        return _hashPositionId(tick, tickVersion, index);
+    }
 }

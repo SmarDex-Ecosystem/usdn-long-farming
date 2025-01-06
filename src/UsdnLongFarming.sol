@@ -144,11 +144,6 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
         (rewards_,) = _calcRewards(_positions[positionIdHash], newAccRewardPerShare);
     }
 
-    /// @inheritdoc IUsdnLongFarming
-    function hashPosId(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_) {
-        return _hashPositionId(tick, tickVersion, index);
-    }
-
     /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public view override(ERC165, IERC165) returns (bool) {
         return interfaceId == type(IOwnershipCallback).interfaceId || super.supportsInterface(interfaceId);

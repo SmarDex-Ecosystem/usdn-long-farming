@@ -76,16 +76,6 @@ interface IUsdnLongFarming is
     function pendingRewards(int24 tick, uint256 tickVersion, uint256 index) external view returns (uint256 rewards_);
 
     /**
-     * @notice Hashes the unique ID of a USDN position.
-     * @dev The hash is computed using `keccak256(abi.encode(tick, tickVersion, index))`.
-     * @param tick The tick of the position.
-     * @param tickVersion The version of the tick.
-     * @param index The index of the position inside the tick.
-     * @return hash_ The hash of the ID.
-     */
-    function hashPosId(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_);
-
-    /**
      * @notice Withdraws a USDN protocol position and claims rewards.
      * @dev If the position is not liquidated, the rewards from the harvest are sent to the position's owner
      * and the position is withdrawn. If the position has been liquidated on the USDN protocol, the rewards are

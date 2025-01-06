@@ -32,7 +32,7 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
         });
 
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, false);
-        posHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        posHash = farming.i_hashPositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         usdnProtocol.transferPositionOwnership(
             IUsdnProtocolTypes.PositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX), address(farming), ""
         );

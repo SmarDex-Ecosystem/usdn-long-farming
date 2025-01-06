@@ -29,7 +29,7 @@ contract TestUsdnLongFarmingOwnershipCallback is UsdnLongFarmingBaseFixture {
         });
 
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, false);
-        _defaultPosHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        _defaultPosHash = farming.i_hashPositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
     }
 
     /**
