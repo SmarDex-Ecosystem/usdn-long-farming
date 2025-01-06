@@ -24,8 +24,8 @@ contract AddCampaign is Script {
 
     /// @notice Handle the environment variables
     function _handleEnvVariables() internal {
-        try vm.envAddress("FARMING_TOKEN_ADDRESS") {
-            _farmingToken = IERC20(vm.envAddress("FARMING_TOKEN_ADDRESS"));
+        try vm.envAddress("FARMING_TOKEN_ADDRESS") returns (address farmingToken_) {
+            _farmingToken = IERC20(farmingToken_);
         } catch {
             _farmingToken = IERC20(vm.parseAddress(vm.prompt("enter FARMING_TOKEN_ADDRESS")));
         }

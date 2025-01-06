@@ -17,8 +17,8 @@ contract DeployFarmingToken is Script {
 
     /// @notice Handle the environment variables
     function _handleEnvVariables() internal {
-        try vm.envAddress("DEPLOYER_ADDRESS") {
-            _deployerAddress = vm.envAddress("DEPLOYER_ADDRESS");
+        try vm.envAddress("DEPLOYER_ADDRESS") returns (address deployerAddress_) {
+            _deployerAddress = deployerAddress_;
         } catch {
             _deployerAddress = vm.parseAddress(vm.prompt("enter DEPLOYER_ADDRESS"));
         }

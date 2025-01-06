@@ -41,20 +41,20 @@ contract DeployUsdnLongFarming is Script {
 
     /// @notice Handle the environment variables
     function _handleEnvVariables() internal {
-        try vm.envAddress("DEPLOYER_ADDRESS") {
-            _deployerAddress = vm.envAddress("DEPLOYER_ADDRESS");
+        try vm.envAddress("DEPLOYER_ADDRESS") returns (address deployerAddress_) {
+            _deployerAddress = deployerAddress_;
         } catch {
             _deployerAddress = vm.parseAddress(vm.prompt("enter DEPLOYER_ADDRESS"));
         }
 
-        try vm.envAddress("USDN_PROTOCOL_ADDRESS") {
-            _usdnProtocol = IUsdnProtocol(vm.envAddress("USDN_PROTOCOL_ADDRESS"));
+        try vm.envAddress("USDN_PROTOCOL_ADDRESS") returns (address usdnProtocol_) {
+            _usdnProtocol = IUsdnProtocol(usdnProtocol_);
         } catch {
             _usdnProtocol = IUsdnProtocol(vm.parseAddress(vm.prompt("enter USDN_PROTOCOL_ADDRESS")));
         }
 
-        try vm.envAddress("FARMING_TOKEN_ADDRESS") {
-            _farmingToken = IERC20(vm.envAddress("FARMING_TOKEN_ADDRESS"));
+        try vm.envAddress("FARMING_TOKEN_ADDRESS") returns (address farmingToken_) {
+            _farmingToken = IERC20(farmingToken_);
         } catch {
             _farmingToken = IERC20(vm.parseAddress(vm.prompt("enter FARMING_TOKEN_ADDRESS")));
         }
