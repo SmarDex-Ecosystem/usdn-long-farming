@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
+import { IERC165, IOwnershipCallback } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IOwnershipCallback.sol";
+
 import { IUsdnLongFarmingErrors } from "./IUsdnLongFarmingErrors.sol";
 import { IUsdnLongFarmingEvents } from "./IUsdnLongFarmingEvents.sol";
 import { IUsdnLongFarmingTypes } from "./IUsdnLongFarmingTypes.sol";
@@ -9,7 +11,13 @@ import { IUsdnLongFarmingTypes } from "./IUsdnLongFarmingTypes.sol";
  * @title USDN Long Farming Interface
  * @notice Interface for the USDN Long Farming contract.
  */
-interface IUsdnLongFarming is IUsdnLongFarmingTypes, IUsdnLongFarmingErrors, IUsdnLongFarmingEvents {
+interface IUsdnLongFarming is
+    IUsdnLongFarmingTypes,
+    IUsdnLongFarmingErrors,
+    IUsdnLongFarmingEvents,
+    IERC165,
+    IOwnershipCallback
+{
     /**
      * @notice Sets the rewards factor for notifiers.
      * @param notifierRewardsBps The notifier rewards factor value, in basis points.
@@ -75,17 +83,6 @@ interface IUsdnLongFarming is IUsdnLongFarmingTypes, IUsdnLongFarmingErrors, IUs
      * @return hash_ The hash of the position ID.
      */
     function hashPosId(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_);
-
-    /**
-     * @notice Deposits a USDN protocol position to earn rewards.
-     * @dev This function uses a delegation signature to transfer ownership of the position to this contract. It reverts
-     * if the position is already owned by the contract or is pending validation.
-     * @param tick The tick of the position.
-     * @param tickVersion The version of the tick.
-     * @param index The index of the position within the tick.
-     * @param delegation The delegation signature for transferring ownership.
-     */
-    function deposit(int24 tick, uint256 tickVersion, uint256 index, bytes calldata delegation) external;
 
     /**
      * @notice Withdraws a USDN protocol position and claims its rewards.

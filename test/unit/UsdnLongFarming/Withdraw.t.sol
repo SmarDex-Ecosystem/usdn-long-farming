@@ -33,7 +33,9 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
 
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, false);
         posHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
-        farming.deposit(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX, "");
+        usdnProtocol.transferPositionOwnership(
+            IUsdnProtocolTypes.PositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX), address(farming), ""
+        );
         rewardsPerBlock = rewardsProvider.getRewardsPerBlock();
     }
 
@@ -167,5 +169,10 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
             "The total shares must be decreased"
         );
         assertEq(farming.getPositionsCount(), positionsCountBefore - 1, "The total exposure must be decreased");
+    }
+
+    // to fix the bug because `MockUsdnProtocol` always call `ownershipCallback`
+    function ownershipCallback(address, IUsdnProtocolTypes.PositionId calldata) external pure {
+        return;
     }
 }
