@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
+/**
+ * @title USDN Long Farming Types
+ * @dev Defines all custom types used by the USDN Long Farming contract.
+ */
 interface IUsdnLongFarmingTypes {
     /**
      * @notice The information of a staked position.

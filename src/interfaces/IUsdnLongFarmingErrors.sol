@@ -3,7 +3,7 @@ pragma solidity >=0.8.0;
 
 /**
  * @title USDN Long Farming Errors
- * @dev Al errors used in the USDN Long Farming contract.
+ * @dev Defines all custom events emitted by the USDN token contract.
  */
 interface IUsdnLongFarmingErrors {
     /// @dev The USDN protocol position validation is pending.
