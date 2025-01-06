@@ -18,8 +18,8 @@ contract MockRewardsProvider {
     }
 
     function campaignInfo(uint256) external view returns (IFarmingRange.CampaignInfo memory info_) {
-        info_.stakingToken = IERC20(address(_farmingToken));
-        info_.rewardToken = IERC20(address(_rewardToken));
+        info_.stakingToken = IERC20(_farmingToken);
+        info_.rewardToken = IERC20(_rewardToken);
     }
 
     function deposit(uint256, uint256) external { }
