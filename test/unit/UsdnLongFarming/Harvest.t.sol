@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 import { Vm } from "forge-std/Vm.sol";
 
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
-import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
+import { FixedPointMathLib } from "solady-0.0.281/utils/FixedPointMathLib.sol";
 
 import { USER_1 } from "../../utils/Constants.sol";
 import { UsdnLongFarmingBaseFixture } from "./utils/Fixtures.sol";
