@@ -6,7 +6,7 @@
 forge-std = "1"
 "@openzeppelin-contracts" = "5"
 "@smardex-usdn-contracts" = { version = "0.24.1", git = "git@github.com:SmarDex-Ecosystem/usdn-contracts.git", tag = "v0.24.1" }
-solady = "^0.0.281"
+solady = "0.0.281"
 
 # ---------------------------------------------------------------------------- #
 #                                Default profile                               #
@@ -23,10 +23,10 @@ invariant = { fail_on_revert = true }
 # -------------------------------- Remappings -------------------------------- #
 
 remappings = [
-    "@openzeppelin/contracts/=dependencies/@openzeppelin-contracts-5.1.0/",
+    "@openzeppelin-contracts-5/=dependencies/@openzeppelin-contracts-5.1.0/",
     "@smardex-usdn-contracts/=dependencies/@smardex-usdn-contracts-0.24.1/src/",
     "forge-std/=dependencies/forge-std-1.9.4/src/",
-    "solady/src/=dependencies/solady-0.0.281/src/",
+    "solady-0.0.281/=dependencies/solady-0.0.281/src/",
 ]
 
 # ---------------------------------------------------------------------------- #
