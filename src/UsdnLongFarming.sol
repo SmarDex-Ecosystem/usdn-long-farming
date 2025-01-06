@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import { Ownable } from "@openzeppelin-contracts-5/access/Ownable.sol";
+import { Ownable2Step } from "@openzeppelin-contracts-5/access/Ownable2Step.sol";
 import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
+import { ReentrancyGuard } from "@openzeppelin-contracts-5/utils/ReentrancyGuard.sol";
 import { ERC165 } from "@openzeppelin-contracts-5/utils/introspection/ERC165.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { IERC165, IOwnershipCallback } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IOwnershipCallback.sol";
 import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
-import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
-import { SafeTransferLib } from "solady/src/utils/SafeTransferLib.sol";
+import { FixedPointMathLib } from "solady-0.0.281/utils/FixedPointMathLib.sol";
+import { SafeTransferLib } from "solady-0.0.281/utils/SafeTransferLib.sol";
 
 import { IFarmingRange } from "./interfaces/IFarmingRange.sol";
 import { IUsdnLongFarming } from "./interfaces/IUsdnLongFarming.sol";
@@ -103,8 +103,13 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
     }
 
     /// @inheritdoc IUsdnLongFarming
-    function getPositionInfo(bytes32 posHash) external view returns (PositionInfo memory info_) {
-        return _positions[posHash];
+    function getPositionInfo(int24 tick, uint256 tickVersion, uint256 index)
+        external
+        view
+        returns (PositionInfo memory info_)
+    {
+        bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
+        return _positions[positionIdHash];
     }
 
     /// @inheritdoc IUsdnLongFarming
@@ -137,11 +142,6 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
         uint256 newAccRewardPerShare = _calcAccRewardPerShare(periodRewards);
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
         (rewards_,) = _calcRewards(_positions[positionIdHash], newAccRewardPerShare);
-    }
-
-    /// @inheritdoc IUsdnLongFarming
-    function hashPosId(int24 tick, uint256 tickVersion, uint256 index) external pure returns (bytes32 hash_) {
-        return _hashPositionId(tick, tickVersion, index);
     }
 
     /// @inheritdoc IERC165

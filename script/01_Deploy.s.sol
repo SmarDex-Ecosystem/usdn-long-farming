@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import { LibRLP } from "solady-0.0/utils/LibRLP.sol";
+import { LibRLP } from "solady-0.0.281/utils/LibRLP.sol";
 
 import { Script } from "forge-std/Script.sol";
 

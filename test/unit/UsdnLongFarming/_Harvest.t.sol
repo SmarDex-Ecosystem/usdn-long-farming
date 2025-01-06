@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 import { Vm } from "forge-std/Vm.sol";
 
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
-import { FixedPointMathLib } from "solady/src/utils/FixedPointMathLib.sol";
+import { FixedPointMathLib } from "solady-0.0.281/utils/FixedPointMathLib.sol";
 
 import { USER_1 } from "../../utils/Constants.sol";
 import { UsdnLongFarmingBaseFixture } from "./utils/Fixtures.sol";
@@ -33,11 +33,11 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
         });
 
         usdnProtocol.setPosition(position, DEFAULT_TICK_VERSION, false);
-        posHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        posHash = farming.i_hashPositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         usdnProtocol.transferPositionOwnership(
             IUsdnProtocolTypes.PositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX), address(farming), ""
         );
-        posInfo = farming.getPositionInfo(posHash);
+        posInfo = farming.getPositionInfo(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
     }
 
     /**
@@ -47,7 +47,7 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
      * @custom:then The call should revert with {UsdnLongFarmingInvalidPosition} error.
      */
     function test_RevertWhen_harvestInvalidPosition() public {
-        posHash = farming.hashPosId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX + 1);
+        posHash = farming.i_hashPositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX + 1);
         vm.expectRevert(UsdnLongFarmingInvalidPosition.selector);
         farming.i_harvest(posHash);
     }
