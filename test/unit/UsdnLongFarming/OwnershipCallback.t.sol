@@ -70,7 +70,7 @@ contract TestUsdnLongFarmingOwnershipCallback is UsdnLongFarmingBaseFixture {
             address(this), IUsdnProtocolTypes.PositionId(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX)
         );
 
-        PositionInfo memory posInfo = farming.getPositionInfo(_defaultPosHash);
+        PositionInfo memory posInfo = farming.getPositionInfo(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         assertEq(
             keccak256(abi.encode(posInfo)),
             keccak256(
