@@ -12,7 +12,6 @@ import { IFarmingRange } from "src/interfaces/IFarmingRange.sol";
 
 contract DeployUsdnLongFarming is Script {
     IFarmingRange constant FARMING_RANGE = IFarmingRange(0x7d85C0905a6E1Ab5837a0b57cD94A419d3a77523);
-    IERC20 constant SDEX = IERC20(0x5DE8ab7E27f6E7A1fFf3E5B337584Aa43961BEeF);
 
     IERC20 internal _farmingToken;
     IUsdnProtocol internal _usdnProtocol;
@@ -24,7 +23,7 @@ contract DeployUsdnLongFarming is Script {
         uint256 campaignID = FARMING_RANGE.campaignInfoLen() - 1;
         while (campaignID >= 0) {
             IFarmingRange.CampaignInfo memory campaignInfo = FARMING_RANGE.campaignInfo(campaignID);
-            if (campaignInfo.stakingToken == _farmingToken && campaignInfo.rewardToken == SDEX) {
+            if (campaignInfo.stakingToken == _farmingToken) {
                 break;
             }
             campaignID--;
