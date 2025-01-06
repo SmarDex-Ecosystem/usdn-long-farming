@@ -5,6 +5,7 @@ import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
 import { ERC165 } from "@openzeppelin-contracts-5/utils/introspection/ERC165.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { IERC165, IOwnershipCallback } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IOwnershipCallback.sol";
 import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
@@ -18,7 +19,7 @@ import { IUsdnLongFarming } from "./interfaces/IUsdnLongFarming.sol";
  * @title USDN Long Positions farming
  * @notice A contract for farming USDN long positions to earn rewards.
  */
-contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownable2Step {
+contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2Step {
     using SafeTransferLib for address;
 
     /**
@@ -87,7 +88,7 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
         IERC20 farmingToken = IERC20(address(info.stakingToken));
         // this contract is the sole depositor of the farming token in the SmarDex rewards provider contract,
         // and will receive all of the rewards
-        farmingToken.transferFrom(msg.sender, address(this), 1);
+        address(farmingToken).safeTransferFrom(msg.sender, address(this), 1);
         farmingToken.approve(address(rewardsProvider), 1);
         rewardsProvider.deposit(campaignId, 1);
     }
@@ -154,7 +155,7 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
     }
 
     /// @inheritdoc IOwnershipCallback
-    function ownershipCallback(address oldOwner, IUsdnProtocolTypes.PositionId calldata posId) external {
+    function ownershipCallback(address oldOwner, IUsdnProtocolTypes.PositionId calldata posId) external nonReentrant {
         if (msg.sender != address(USDN_PROTOCOL)) {
             revert UsdnLongFarmingInvalidCaller();
         }
@@ -171,6 +172,7 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
     /// @inheritdoc IUsdnLongFarming
     function harvest(int24 tick, uint256 tickVersion, uint256 index)
         external
+        nonReentrant
         returns (bool isLiquidated_, uint256 rewards_)
     {
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
@@ -190,6 +192,7 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
     /// @inheritdoc IUsdnLongFarming
     function withdraw(int24 tick, uint256 tickVersion, uint256 index)
         external
+        nonReentrant
         returns (bool isLiquidated_, uint256 rewards_)
     {
         bytes32 positionIdHash = _hashPositionId(tick, tickVersion, index);
@@ -281,6 +284,7 @@ contract UsdnLongFarming is ERC165, IOwnershipCallback, IUsdnLongFarming, Ownabl
         // farming harvest
         uint256[] memory campaignsIds = new uint256[](1);
         campaignsIds[0] = CAMPAIGN_ID;
+        // slither-disable-next-line reentrancy-no-eth
         REWARDS_PROVIDER.harvest(campaignsIds);
 
         uint256 periodRewards = REWARD_TOKEN.balanceOf(address(this)) - rewardsBalanceBefore;
