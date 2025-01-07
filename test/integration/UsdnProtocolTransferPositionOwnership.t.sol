@@ -6,7 +6,8 @@ import { MOCK_PYTH_DATA } from "@smardex-usdn-test/unit/Middlewares/utils/Consta
 import { UsdnLongFarmingIntegrationFixture } from "./utils/Fixtures.sol";
 
 /**
- * @custom:feature Tests the `transferPositionOwnership` function of the USDN protocol to the USDN long farming.
+ * @custom:feature Tests the `transferPositionOwnership` function of the USDN protocol transferring the position to the
+ * USDN long farming.
  * @custom:background Given a deployed farming contract and USDN protocol.
  */
 contract TestForkTransferPositionOwnershipUsdnLongFarming is UsdnLongFarmingIntegrationFixture {
