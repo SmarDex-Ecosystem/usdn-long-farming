@@ -19,7 +19,7 @@ Example (note, there is no `script` import in the example):
 
 ```solidity
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import { console2 } from "forge-std/Test.sol";
 import { StdStorage } from "forge-std/Script.sol";
@@ -188,7 +188,7 @@ Here is an example `Transfer.t.sol` file implementing those:
 
 ```solidity
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 // imports
 

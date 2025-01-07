@@ -1,28 +1,38 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 /* -------------------------------------------------------------------------- */
 /*                              General Constants                             */
 /* -------------------------------------------------------------------------- */
 
-/* -------------------------------- MaxUints -------------------------------- */
-
-uint256 constant MAX_UINT256 = type(uint256).max;
-int256 constant MAX_INT256 = type(int256).max;
-int256 constant MIN_INT256 = type(int256).min;
-
 /* -------------------------------- Accounts -------------------------------- */
-// Contract deployer
-address constant DEPLOYER = payable(address(0x1234123412341234123412341234123412341234));
+// contract deployer
+address payable constant DEPLOYER = payable(address(0x1234123412341234123412341234123412341234));
 
-// Proxies contract admin
-address constant ADMIN = payable(address(0x1212121212121212121212121212121212121212));
+// proxies contract admin
+address payable constant ADMIN = payable(address(0x1212121212121212121212121212121212121212));
 
-// Generic users
-address constant USER_1 = payable(address(0x1111111111111111111111111111111111111111));
-address constant USER_2 = payable(address(0x2222222222222222222222222222222222222222));
-address constant USER_3 = payable(address(0x3333333333333333333333333333333333333333));
-address constant USER_4 = payable(address(0x4444444444444444444444444444444444444444));
+// roles
+address payable constant SET_EXTERNAL_MANAGER = payable(address(0x1313131313131313131313131313131313131313));
+address payable constant CRITICAL_FUNCTIONS_MANAGER = payable(address(0x1414141414141414141414141414141414141414));
+address payable constant SET_PROTOCOL_PARAMS_MANAGER = payable(address(0x1515151515151515151515151515151515151515));
+address payable constant SET_USDN_PARAMS_MANAGER = payable(address(0x1616161616161616161616161616161616161616));
+address payable constant SET_OPTIONS_MANAGER = payable(address(0x1717171717171717171717171717171717171717));
+address payable constant PROXY_UPGRADE_MANAGER = payable(address(0x1717171717171717171717171717171717171718));
+address payable constant PAUSER_MANAGER = payable(address(0x1717171717171717171717171717171717171719));
+address payable constant UNPAUSER_MANAGER = payable(address(0x1717171717171717171717171717171717171720));
+address payable constant SET_EXTERNAL_ROLE_ADMIN = payable(address(0x1818181818181818181818181818181818181818));
+address payable constant CRITICAL_FUNCTIONS_ROLE_ADMIN = payable(address(0x1919191919191919191919191919191919191919));
+address payable constant SET_PROTOCOL_PARAMS_ROLE_ADMIN = payable(address(0x2020202020202020202020202020202020202020));
+address payable constant SET_USDN_PARAMS_ROLE_ADMIN = payable(address(0x2121212121212121212121212121212121212121));
+address payable constant SET_OPTIONS_ROLE_ADMIN = payable(address(0x2323232323232323232323232323232323232323));
+address payable constant PROXY_UPGRADE_ROLE_ADMIN = payable(address(0x2424242424242424242424242424242424242424));
+
+// generic users
+address payable constant USER_1 = payable(address(0x1111111111111111111111111111111111111111));
+address payable constant USER_2 = payable(address(0x2222222222222222222222222222222222222222));
+address payable constant USER_3 = payable(address(0x3333333333333333333333333333333333333333));
+address payable constant USER_4 = payable(address(0x4444444444444444444444444444444444444444));
 
 /* -------------------------------------------------------------------------- */
 /*                              Ethereum mainnet                              */
@@ -34,6 +44,15 @@ address constant USDC = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
 address constant USDT = address(0xdAC17F958D2ee523a2206206994597C13D831ec7);
 address constant WETH = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
 address constant SDEX = address(0x5DE8ab7E27f6E7A1fFf3E5B337584Aa43961BEeF);
+address constant WSTETH = address(0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0);
+
+/* --------------------------------- Oracles -------------------------------- */
+
+address constant PYTH_ORACLE = address(0x4305FB66699C3B2702D4d05CF36551390A4c69C6);
+address constant CHAINLINK_ORACLE_ETH = address(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419); // ETH-USD
+bytes32 constant PYTH_ETH_USD = bytes32(0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace);
+bytes32 constant PYTH_WSTETH_USD = bytes32(0x6df640f3b8963d8f8358f791f352b8364513f6ab1cca5ed3f1f7b5448980e784);
+bytes32 constant REDSTONE_ETH_USD = bytes32("ETH");
 
 /* -------------------------------------------------------------------------- */
 /*                               Polygon mainnet                              */
