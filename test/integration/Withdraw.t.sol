@@ -9,12 +9,12 @@ import { SDEX, SET_PROTOCOL_PARAMS_MANAGER } from "../utils/Constants.sol";
 import { UsdnLongFarmingBaseIntegrationFixture } from "./utils/Fixtures.sol";
 
 /**
- * @custom:feature Tests the {IUsdnLongFarming.withdraw} function of the USDN long farming
- * @custom:background Given a deployed farming contract and USDN protocol
+ * @custom:feature Tests the {IUsdnLongFarming.withdraw} function of the USDN long farming.
+ * @custom:background Given a deployed farming contract and USDN protocol.
  */
 contract TestUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegrationFixture {
-    PositionId posId1;
-    PositionId posId2;
+    PositionId internal posId1;
+    PositionId internal posId2;
 
     function setUp() public {
         _setUp();
@@ -24,53 +24,22 @@ contract TestUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegratio
         wstETH.approve(address(protocol), type(uint256).max);
         IERC20(SDEX).approve(address(protocol), type(uint256).max);
 
-        // disable imbalance checks to make it easier to have heavy fundings
+        // Disable imbalance checks to facilitate heavy funding
         vm.prank(SET_PROTOCOL_PARAMS_MANAGER);
         protocol.setExpoImbalanceLimits(0, 0, 0, 0, 0, 0);
+
         uint256 oracleFee = oracleMiddleware.validationCost(MOCK_PYTH_DATA, ProtocolAction.None);
+        uint256 securityDeposit = protocol.getSecurityDepositValue();
 
-        uint256 _securityOpenPosition = protocol.getSecurityDepositValue();
-
-        {
-            uint128 ethPrice = uint128(wstETH.getWstETHByStETH(DEFAULT_PARAMS.initialPrice)) / 1e10;
-            mockPyth.setConf(0);
-            mockPyth.setPrice(int64(uint64(ethPrice)));
-            mockPyth.setLastPublishTime(block.timestamp - 1);
-        }
+        _initializeMockPyth();
         oracleFee = oracleMiddleware.validationCost(MOCK_PYTH_DATA, ProtocolAction.ValidateOpenPosition);
 
-        (, posId1) = protocol.initiateOpenPosition{ value: _securityOpenPosition }(
-            2.5 ether,
-            1000 ether,
-            type(uint128).max,
-            protocol.getMaxLeverage(),
-            address(this),
-            payable(address(this)),
-            type(uint256).max,
-            "",
-            EMPTY_PREVIOUS_DATA
-        );
-        _waitDelay();
-        protocol.validateOpenPosition{ value: oracleFee }(payable(address(this)), MOCK_PYTH_DATA, EMPTY_PREVIOUS_DATA);
-
-        (, posId2) = protocol.initiateOpenPosition{ value: _securityOpenPosition }(
-            2.5 ether,
-            1500 ether,
-            type(uint128).max,
-            protocol.getMaxLeverage(),
-            address(this),
-            payable(address(this)),
-            type(uint256).max,
-            "",
-            EMPTY_PREVIOUS_DATA
-        );
-        _waitDelay();
-        protocol.validateOpenPosition{ value: oracleFee }(payable(address(this)), MOCK_PYTH_DATA, EMPTY_PREVIOUS_DATA);
+        posId1 = _openAndValidatePosition(2.5 ether, 1000 ether, securityDeposit, oracleFee);
+        posId2 = _openAndValidatePosition(2.5 ether, 1500 ether, securityDeposit, oracleFee);
 
         protocol.transferPositionOwnership(posId1, address(farming), "");
         protocol.transferPositionOwnership(posId2, address(farming), "");
 
-        // start farming
         vm.roll(rewardStartingBlock);
     }
 
@@ -81,12 +50,12 @@ contract TestUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegratio
      * @custom:then The call must not revert.
      * @custom:and The user position state must be updated.
      * @custom:and The contract global state must be updated.
-     * @custom:and The second position does not effected.
+     * @custom:and The first position is not affected.
      */
     function test_OtherPositionNotAffectedByWithdraw() public {
-        // 100 blocks passed
+        // Simulate 100 blocks passing
         vm.roll(rewardStartingBlock + 101);
-        uint256 expectedRewards = REWARD_PER_BLOCKS * 100;
+        uint256 expectedTotalRewards = REWARD_PER_BLOCKS * 100;
 
         uint256 totalSharesBefore = farming.getTotalShares();
         uint256 positionsCountBefore = farming.getPositionsCount();
@@ -96,15 +65,41 @@ contract TestUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegratio
         (, uint256 rewardPos2) = farming.withdraw(posId2.tick, posId2.tickVersion, posId2.index);
         (, uint256 rewardPos1) = farming.harvest(posId1.tick, posId1.tickVersion, posId1.index);
 
-        _assertPositionDeleted();
+        _assertPositionDeleted(posId2);
         _assertGlobalState(totalSharesBefore, positionsCountBefore);
-        assertEq(rewardPos1, expectedRewardPos1, "The reward must be not affected by the second position");
-        assertEq(rewardPos2 + rewardPos1, expectedRewards, "The reward must be calculated correctly");
+        assertEq(rewardPos1, expectedRewardPos1, "The reward must not be affected by the second position");
+        assertEq(rewardPos2 + rewardPos1, expectedTotalRewards, "Rewards must be calculated correctly");
     }
 
-    function _assertPositionDeleted() internal view {
+    function _initializeMockPyth() internal {
+        uint128 ethPrice = uint128(wstETH.getWstETHByStETH(DEFAULT_PARAMS.initialPrice)) / 1e10;
+        mockPyth.setConf(0);
+        mockPyth.setPrice(int64(uint64(ethPrice)));
+        mockPyth.setLastPublishTime(block.timestamp - 1);
+    }
+
+    function _openAndValidatePosition(uint128 leverage, uint128 amount, uint256 securityDeposit, uint256 oracleFee)
+        internal
+        returns (PositionId memory positionId)
+    {
+        (, positionId) = protocol.initiateOpenPosition{ value: securityDeposit }(
+            leverage,
+            amount,
+            type(uint128).max,
+            protocol.getMaxLeverage(),
+            address(this),
+            payable(address(this)),
+            type(uint256).max,
+            "",
+            EMPTY_PREVIOUS_DATA
+        );
+        _waitDelay();
+        protocol.validateOpenPosition{ value: oracleFee }(payable(address(this)), MOCK_PYTH_DATA, EMPTY_PREVIOUS_DATA);
+    }
+
+    function _assertPositionDeleted(PositionId memory positionId) internal view {
         assertEq(
-            keccak256(abi.encode(farming.getPositionInfo(posId2.tick, posId2.tickVersion, posId2.index))),
+            keccak256(abi.encode(farming.getPositionInfo(positionId.tick, positionId.tickVersion, positionId.index))),
             keccak256(abi.encode(PositionInfo(address(0), 0, 0, 0, 0, 0))),
             "The position must be deleted"
         );
@@ -114,11 +109,9 @@ contract TestUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegratio
         (IUsdnProtocolTypes.Position memory pos,) =
             protocol.getLongPosition(IUsdnProtocolTypes.PositionId(posId2.tick, posId2.tickVersion, posId2.index));
         assertEq(
-            farming.getTotalShares(),
-            totalSharesBefore - (pos.totalExpo - pos.amount),
-            "The total shares must be decreased"
+            farming.getTotalShares(), totalSharesBefore - (pos.totalExpo - pos.amount), "Total shares must decrease"
         );
-        assertEq(farming.getPositionsCount(), positionsCountBefore - 1, "The total exposure must be decreased");
+        assertEq(farming.getPositionsCount(), positionsCountBefore - 1, "Positions count must decrease");
     }
 
     receive() external payable { }
