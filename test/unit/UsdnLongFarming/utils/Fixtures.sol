@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
 import { LibRLP } from "solady-0.0.281//utils/LibRLP.sol";
 
@@ -7,7 +7,7 @@ import { DEPLOYER } from "../../../utils/Constants.sol";
 import { BaseFixture } from "../../../utils/Fixtures.sol";
 import { UsdnLongFarmingHandler } from "./Handler.sol";
 
-import { MockRewardToken } from "./MockRewardToken.sol";
+import { MockRewardToken } from "../utils/MockRewardToken.sol";
 import { MockRewardsProvider } from "./MockRewardsProvider.sol";
 import { MockUsdnProtocol } from "./MockUsdnProtocol.sol";
 

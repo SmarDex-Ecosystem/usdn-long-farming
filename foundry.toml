@@ -13,7 +13,7 @@ solady = "0.0.281"
 # ---------------------------------------------------------------------------- #
 
 [profile.default]
-solc_version = "0.8.28"
+solc_version = "0.8.26"
 evm_version = "cancun"
 optimizer = true
 optimizer_runs = 20_000
@@ -25,6 +25,7 @@ invariant = { fail_on_revert = true }
 remappings = [
     "@openzeppelin-contracts-5/=dependencies/@openzeppelin-contracts-5.1.0/",
     "@smardex-usdn-contracts/=dependencies/@smardex-usdn-contracts-0.24.1/src/",
+    "@smardex-usdn-test/=dependencies/@smardex-usdn-contracts-0.24.1/test/",
     "forge-std/=dependencies/forge-std-1.9.4/src/",
     "solady-0.0.281/=dependencies/solady-0.0.281/src/",
 ]

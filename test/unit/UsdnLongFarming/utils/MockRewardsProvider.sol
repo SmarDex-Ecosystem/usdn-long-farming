@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.28;
+pragma solidity 0.8.26;
 
-import { MockRewardToken } from "./MockRewardToken.sol";
+import { MockRewardToken } from "../utils/MockRewardToken.sol";
 
 import { FarmingToken } from "../../../../src/FarmingToken.sol";
 import { IERC20, IFarmingRange } from "../../../../src/interfaces/IFarmingRange.sol";
