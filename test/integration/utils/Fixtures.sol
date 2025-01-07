@@ -27,9 +27,11 @@ contract UsdnLongFarmingBaseIntegrationFixture is
 {
     FarmingToken internal _farmingToken;
     IFarmingRange internal rewardsProvider = IFarmingRange(address(0x7d85C0905a6E1Ab5837a0b57cD94A419d3a77523));
-    uint256 campagnID;
-    uint256 REWARD_PER_BLOCKS = 1;
-    address rewardsProviderOwner;
+    address internal rewardsProviderOwner;
+    uint256 internal rewardStartingBlock;
+    uint256 internal rewardEndingBlock;
+    uint256 internal campagnID;
+    uint256 internal REWARD_PER_BLOCKS = 1;
     UsdnLongFarming internal farming;
 
     function _setUp() internal virtual {
@@ -38,7 +40,8 @@ contract UsdnLongFarmingBaseIntegrationFixture is
         vm.rollFork(20_014_134);
         _setUp(DEFAULT_PARAMS);
 
-        deal(address(SDEX), address(this), 1e6 ether);
+        rewardStartingBlock = block.number + 10;
+        rewardEndingBlock = block.number + 1000;
 
         vm.prank(DEPLOYER);
         _farmingToken = new FarmingToken();
@@ -46,9 +49,10 @@ contract UsdnLongFarmingBaseIntegrationFixture is
         rewardsProviderOwner = rewardsProvider.owner();
         vm.startPrank(rewardsProviderOwner);
         campagnID = rewardsProvider.campaignInfoLen();
-        rewardsProvider.addCampaignInfo(_farmingToken, IERC20(SDEX), block.number + 10);
-        rewardsProvider.addRewardInfo(campagnID, block.number + 1000, REWARD_PER_BLOCKS);
+        rewardsProvider.addCampaignInfo(_farmingToken, IERC20(SDEX), rewardStartingBlock);
+        rewardsProvider.addRewardInfo(campagnID, rewardEndingBlock, REWARD_PER_BLOCKS);
         vm.stopPrank();
+
         // approve future farming contract
         address farmingAddress = LibRLP.computeAddress(DEPLOYER, vm.getNonce(DEPLOYER));
         vm.startPrank(DEPLOYER);
