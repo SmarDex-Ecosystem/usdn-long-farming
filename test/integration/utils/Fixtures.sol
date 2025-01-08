@@ -38,7 +38,9 @@ contract UsdnLongFarmingBaseIntegrationFixture is
         string memory url = vm.rpcUrl("mainnet");
         vm.createSelectFork(url);
         vm.rollFork(20_014_134);
-        _setUp(DEFAULT_PARAMS);
+        SetUpParams memory params = DEFAULT_PARAMS;
+        params.enableRoles = false;
+        _setUp(params);
 
         vm.prank(DEPLOYER);
         farmingToken = new FarmingToken();

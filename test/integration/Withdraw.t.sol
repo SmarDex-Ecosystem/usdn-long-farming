@@ -5,7 +5,7 @@ import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
 import { MOCK_PYTH_DATA } from "@smardex-usdn-test/unit/Middlewares/utils/Constants.sol";
 
-import { SDEX, SET_PROTOCOL_PARAMS_MANAGER, USER_1 } from "../utils/Constants.sol";
+import { ADMIN, SDEX, USER_1 } from "../utils/Constants.sol";
 import { UsdnLongFarmingBaseIntegrationFixture } from "./utils/Fixtures.sol";
 
 /**
@@ -23,7 +23,7 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
         wstETH.mintAndApprove(address(this), 1e6 ether, address(protocol), type(uint256).max);
 
         // Disable imbalance checks to facilitate heavy funding
-        vm.prank(SET_PROTOCOL_PARAMS_MANAGER);
+        vm.prank(ADMIN);
         protocol.setExpoImbalanceLimits(0, 0, 0, 0, 0, 0);
 
         _setOraclePrices(2000 ether);
