@@ -12,7 +12,7 @@ import { UsdnLongFarmingBaseIntegrationFixture } from "./utils/Fixtures.sol";
  * @custom:feature Tests the {IUsdnLongFarming.withdraw} function of the USDN long farming.
  * @custom:background Given a deployed farming contract and USDN protocol.
  */
-contract TestUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegrationFixture {
+contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegrationFixture {
     PositionId internal posId1;
     PositionId internal posId2;
     uint256 oracleFee;
@@ -52,7 +52,7 @@ contract TestUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegratio
      * @custom:and The contract global state must be updated.
      * @custom:and The first position is not affected.
      */
-    function test_otherPositionNotAffectedByWithdraw() public {
+    function test_ForkOtherPositionNotAffectedByWithdraw() public {
         uint256 expectedTotalRewards = REWARD_PER_BLOCKS * 100;
         uint256 totalSharesBefore = farming.getTotalShares();
         uint256 positionsCountBefore = farming.getPositionsCount();
@@ -82,7 +82,7 @@ contract TestUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegratio
      * @custom:and The contract global state must be updated.
      * @custom:and The first position is not affected.
      */
-    function test_otherPositionNotAffectedByLiquidation() public {
+    function test_ForkOtherPositionNotAffectedByLiquidation() public {
         uint256 expectedTotalRewards = REWARD_PER_BLOCKS * 100;
         uint256 totalSharesBefore = farming.getTotalShares();
         uint256 positionsCountBefore = farming.getPositionsCount();
