@@ -25,12 +25,12 @@ contract UsdnLongFarmingBaseIntegrationFixture is
     IUsdnLongFarmingErrors,
     IUsdnLongFarmingEvents
 {
-    FarmingToken internal _farmingToken;
+    FarmingToken internal farmingToken;
     IFarmingRange internal rewardsProvider = IFarmingRange(address(0x7d85C0905a6E1Ab5837a0b57cD94A419d3a77523));
     address internal rewardsProviderOwner;
     uint256 internal rewardStartingBlock;
     uint256 internal rewardEndingBlock;
-    uint256 internal campagnID;
+    uint256 internal campaignID;
     uint256 internal REWARD_PER_BLOCKS = 1;
     UsdnLongFarming internal farming;
 
@@ -40,24 +40,24 @@ contract UsdnLongFarmingBaseIntegrationFixture is
         vm.rollFork(20_014_134);
         _setUp(DEFAULT_PARAMS);
 
+        vm.prank(DEPLOYER);
+        farmingToken = new FarmingToken();
+
         rewardStartingBlock = block.number + 10;
         rewardEndingBlock = block.number + 1000;
-
-        vm.prank(DEPLOYER);
-        _farmingToken = new FarmingToken();
-
         rewardsProviderOwner = rewardsProvider.owner();
+        campaignID = rewardsProvider.campaignInfoLen();
+
         vm.startPrank(rewardsProviderOwner);
-        campagnID = rewardsProvider.campaignInfoLen();
-        rewardsProvider.addCampaignInfo(_farmingToken, IERC20(SDEX), rewardStartingBlock);
-        rewardsProvider.addRewardInfo(campagnID, rewardEndingBlock, REWARD_PER_BLOCKS);
+        rewardsProvider.addCampaignInfo(farmingToken, IERC20(SDEX), rewardStartingBlock);
+        rewardsProvider.addRewardInfo(campaignID, rewardEndingBlock, REWARD_PER_BLOCKS);
         vm.stopPrank();
 
         // approve future farming contract
         address farmingAddress = LibRLP.computeAddress(DEPLOYER, vm.getNonce(DEPLOYER));
         vm.startPrank(DEPLOYER);
-        _farmingToken.approve(farmingAddress, 1);
-        farming = new UsdnLongFarming(IUsdnProtocol(address(protocol)), rewardsProvider, campagnID);
+        farmingToken.approve(farmingAddress, 1);
+        farming = new UsdnLongFarming(IUsdnProtocol(address(protocol)), rewardsProvider, campaignID);
         vm.stopPrank();
     }
 }

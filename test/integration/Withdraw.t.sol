@@ -20,10 +20,7 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
     function setUp() public {
         _setUp();
 
-        deal(address(wstETH), address(this), 1e6 ether);
-        deal(address(SDEX), address(this), 1e6 ether);
-        wstETH.approve(address(protocol), type(uint256).max);
-        IERC20(SDEX).approve(address(protocol), type(uint256).max);
+        wstETH.mintAndApprove(address(this), 1e6 ether, address(protocol), type(uint256).max);
 
         // Disable imbalance checks to facilitate heavy funding
         vm.prank(SET_PROTOCOL_PARAMS_MANAGER);
