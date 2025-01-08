@@ -5,7 +5,7 @@ import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
 import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocolTypes.sol";
 import { MOCK_PYTH_DATA } from "@smardex-usdn-test/unit/Middlewares/utils/Constants.sol";
 
-import { SDEX, SET_PROTOCOL_PARAMS_MANAGER } from "../utils/Constants.sol";
+import { SDEX, SET_PROTOCOL_PARAMS_MANAGER, USER_1 } from "../utils/Constants.sol";
 import { UsdnLongFarmingBaseIntegrationFixture } from "./utils/Fixtures.sol";
 
 /**
@@ -15,6 +15,7 @@ import { UsdnLongFarmingBaseIntegrationFixture } from "./utils/Fixtures.sol";
 contract TestUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegrationFixture {
     PositionId internal posId1;
     PositionId internal posId2;
+    uint256 oracleFee;
 
     function setUp() public {
         _setUp();
@@ -28,19 +29,18 @@ contract TestUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegratio
         vm.prank(SET_PROTOCOL_PARAMS_MANAGER);
         protocol.setExpoImbalanceLimits(0, 0, 0, 0, 0, 0);
 
-        uint256 oracleFee = oracleMiddleware.validationCost(MOCK_PYTH_DATA, ProtocolAction.None);
         uint256 securityDeposit = protocol.getSecurityDepositValue();
 
-        _initializeMockPyth();
+        _setOraclePrices(2000 ether);
         oracleFee = oracleMiddleware.validationCost(MOCK_PYTH_DATA, ProtocolAction.ValidateOpenPosition);
 
-        posId1 = _openAndValidatePosition(2.5 ether, 1000 ether, securityDeposit, oracleFee);
-        posId2 = _openAndValidatePosition(2.5 ether, 1500 ether, securityDeposit, oracleFee);
+        posId1 = _openAndValidatePosition(2.5 ether, 1000 ether, securityDeposit);
+        posId2 = _openAndValidatePosition(2.5 ether, 1500 ether, securityDeposit);
 
         protocol.transferPositionOwnership(posId1, address(farming), "");
         protocol.transferPositionOwnership(posId2, address(farming), "");
 
-        vm.roll(rewardStartingBlock);
+        vm.roll(rewardStartingBlock + 101);
     }
 
     /**
@@ -52,11 +52,8 @@ contract TestUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegratio
      * @custom:and The contract global state must be updated.
      * @custom:and The first position is not affected.
      */
-    function test_OtherPositionNotAffectedByWithdraw() public {
-        // Simulate 100 blocks passing
-        vm.roll(rewardStartingBlock + 101);
+    function test_otherPositionNotAffectedByWithdraw() public {
         uint256 expectedTotalRewards = REWARD_PER_BLOCKS * 100;
-
         uint256 totalSharesBefore = farming.getTotalShares();
         uint256 positionsCountBefore = farming.getPositionsCount();
 
@@ -66,35 +63,73 @@ contract TestUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegratio
         (, uint256 rewardPos1) = farming.harvest(posId1.tick, posId1.tickVersion, posId1.index);
 
         _assertPositionDeleted(posId2);
-        _assertGlobalState(totalSharesBefore, positionsCountBefore);
+        (IUsdnProtocolTypes.Position memory pos,) =
+            protocol.getLongPosition(IUsdnProtocolTypes.PositionId(posId2.tick, posId2.tickVersion, posId2.index));
+        assertEq(
+            farming.getTotalShares(), totalSharesBefore - (pos.totalExpo - pos.amount), "Total shares must decrease"
+        );
+        assertEq(farming.getPositionsCount(), positionsCountBefore - 1, "Positions count must decrease");
         assertEq(rewardPos1, expectedRewardPos1, "The reward must not be affected by the second position");
         assertEq(rewardPos2 + rewardPos1, expectedTotalRewards, "Rewards must be calculated correctly");
     }
 
-    function _initializeMockPyth() internal {
-        uint128 ethPrice = uint128(wstETH.getWstETHByStETH(DEFAULT_PARAMS.initialPrice)) / 1e10;
-        mockPyth.setConf(0);
-        mockPyth.setPrice(int64(uint64(ethPrice)));
-        mockPyth.setLastPublishTime(block.timestamp - 1);
+    /**
+     * @custom:scenario Tests the {IUsdnLongFarming.withdraw} function with two positions and one liquidation operation.
+     * @custom:given There are two positions and the second position is liquidated on the protocol.
+     * @custom:when The function is called to withdraw the second position.
+     * @custom:then The call must not revert.
+     * @custom:and The second position must be liquidated instead of withdrawn.
+     * @custom:and The contract global state must be updated.
+     * @custom:and The first position is not affected.
+     */
+    function test_otherPositionNotAffectedByLiquidation() public {
+        uint256 expectedTotalRewards = REWARD_PER_BLOCKS * 100;
+        uint256 totalSharesBefore = farming.getTotalShares();
+        uint256 positionsCountBefore = farming.getPositionsCount();
+        uint256 expectedRewardPos1 = farming.pendingRewards(posId1.tick, posId1.tickVersion, posId1.index);
+
+        skip(oracleMiddleware.getPythRecentPriceDelay());
+        _setOraclePrices(1200 ether);
+        oracleFee = oracleMiddleware.validationCost(MOCK_PYTH_DATA, ProtocolAction.Liquidation);
+        protocol.liquidate{ value: oracleFee }(MOCK_PYTH_DATA);
+
+        uint256 balanceBeforeWithdraw = IERC20(SDEX).balanceOf(USER_1);
+        uint256 balanceDeadBeforeWithdraw = IERC20(SDEX).balanceOf(farming.DEAD_ADDRESS());
+        vm.prank(USER_1);
+        (bool isLiquidate, uint256 rewardPos2) = farming.withdraw(posId2.tick, posId2.tickVersion, posId2.index);
+        (, uint256 rewardPos1) = farming.harvest(posId1.tick, posId1.tickVersion, posId1.index);
+
+        assertTrue(isLiquidate, "The position must be liquidated");
+        _assertPositionDeleted(posId2);
+        assertEq(rewardPos2, 0, "The reward must be 0");
+        assertEq(rewardPos1, expectedRewardPos1, "The reward must not be affected by the second position");
+        assertEq(positionsCountBefore - 1, farming.getPositionsCount(), "Positions count must decrease");
+        assertEq(
+            rewardPos1 + (IERC20(SDEX).balanceOf(USER_1) - balanceBeforeWithdraw)
+                + (IERC20(SDEX).balanceOf(farming.DEAD_ADDRESS()) - balanceDeadBeforeWithdraw),
+            expectedTotalRewards,
+            "Rewards must be calculated correctly"
+        );
+        assertGt(totalSharesBefore, farming.getTotalShares(), "Total shares must decrease");
     }
 
-    function _openAndValidatePosition(uint128 leverage, uint128 amount, uint256 securityDeposit, uint256 oracleFee)
+    function _openAndValidatePosition(uint128 amount, uint128 desiredLiqPrice, uint256 securityDeposit)
         internal
         returns (PositionId memory positionId)
     {
         (, positionId) = protocol.initiateOpenPosition{ value: securityDeposit }(
-            leverage,
             amount,
+            desiredLiqPrice,
             type(uint128).max,
             protocol.getMaxLeverage(),
             address(this),
-            payable(address(this)),
+            payable(this),
             type(uint256).max,
             "",
             EMPTY_PREVIOUS_DATA
         );
         _waitDelay();
-        protocol.validateOpenPosition{ value: oracleFee }(payable(address(this)), MOCK_PYTH_DATA, EMPTY_PREVIOUS_DATA);
+        protocol.validateOpenPosition{ value: oracleFee }(payable(this), MOCK_PYTH_DATA, EMPTY_PREVIOUS_DATA);
     }
 
     function _assertPositionDeleted(PositionId memory positionId) internal view {
@@ -103,15 +138,6 @@ contract TestUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegratio
             keccak256(abi.encode(PositionInfo(address(0), 0, 0, 0, 0, 0))),
             "The position must be deleted"
         );
-    }
-
-    function _assertGlobalState(uint256 totalSharesBefore, uint256 positionsCountBefore) internal view {
-        (IUsdnProtocolTypes.Position memory pos,) =
-            protocol.getLongPosition(IUsdnProtocolTypes.PositionId(posId2.tick, posId2.tickVersion, posId2.index));
-        assertEq(
-            farming.getTotalShares(), totalSharesBefore - (pos.totalExpo - pos.amount), "Total shares must decrease"
-        );
-        assertEq(farming.getPositionsCount(), positionsCountBefore - 1, "Positions count must decrease");
     }
 
     receive() external payable { }
