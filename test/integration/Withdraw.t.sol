@@ -36,8 +36,6 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
 
         protocol.transferPositionOwnership(posId1, address(farming), "");
         protocol.transferPositionOwnership(posId2, address(farming), "");
-
-        vm.roll(rewardStartingBlock + 101);
     }
 
     /**
@@ -50,6 +48,7 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
      * @custom:and The first position is not affected.
      */
     function test_ForkOtherPositionNotAffectedByWithdraw() public {
+        vm.roll(rewardStartingBlock + 101);
         uint256 expectedTotalRewards = REWARD_PER_BLOCKS * 100;
         uint256 totalSharesBefore = farming.getTotalShares();
         uint256 positionsCountBefore = farming.getPositionsCount();
@@ -80,10 +79,13 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
      * @custom:and The first position is not affected.
      */
     function test_ForkOtherPositionNotAffectedByLiquidation() public {
+        vm.roll(rewardStartingBlock + 101);
         uint256 expectedTotalRewards = REWARD_PER_BLOCKS * 100;
         uint256 totalSharesBefore = farming.getTotalShares();
         uint256 positionsCountBefore = farming.getPositionsCount();
         uint256 expectedRewardPos1 = farming.pendingRewards(posId1.tick, posId1.tickVersion, posId1.index);
+        (IUsdnProtocolTypes.Position memory pos,) =
+            protocol.getLongPosition(IUsdnProtocolTypes.PositionId(posId2.tick, posId2.tickVersion, posId2.index));
 
         skip(oracleMiddleware.getPythRecentPriceDelay());
         _setOraclePrices(1200 ether);
@@ -98,6 +100,9 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
 
         assertTrue(isLiquidate, "The position must be liquidated");
         _assertPositionDeleted(posId2);
+        assertEq(
+            farming.getTotalShares(), totalSharesBefore - (pos.totalExpo - pos.amount), "Total shares must decrease"
+        );
         assertEq(rewardPos2, 0, "The reward must be 0");
         assertEq(rewardPos1, expectedRewardPos1, "The reward must not be affected by the second position");
         assertEq(positionsCountBefore - 1, farming.getPositionsCount(), "Positions count must decrease");
@@ -107,7 +112,31 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
             expectedTotalRewards,
             "Rewards must be calculated correctly"
         );
-        assertGt(totalSharesBefore, farming.getTotalShares(), "Total shares must decrease");
+    }
+
+    /**
+     * @custom:scenario Tests the {IUsdnLongFarming.withdraw} function with two positions and one withdraw operation.
+     * @custom:given There are two positions and the reward period has not started yet.
+     * @custom:when The function is called to withdraw the second position.
+     * @custom:then The call must not revert.
+     * @custom:and The user position state must be updated.
+     * @custom:and The contract global state must be updated.
+     * @custom:and The first position is not affected.
+     */
+    function test_ForkNoRewardSendBeforeRewardStart() public {
+        uint256 totalSharesBefore = farming.getTotalShares();
+        uint256 positionsCountBefore = farming.getPositionsCount();
+        (IUsdnProtocolTypes.Position memory pos,) =
+            protocol.getLongPosition(IUsdnProtocolTypes.PositionId(posId2.tick, posId2.tickVersion, posId2.index));
+
+        (, uint256 rewardPos2) = farming.withdraw(posId2.tick, posId2.tickVersion, posId2.index);
+
+        assertEq(rewardPos2, 0, "The reward must be 0");
+        _assertPositionDeleted(posId2);
+        assertEq(
+            farming.getTotalShares(), totalSharesBefore - (pos.totalExpo - pos.amount), "Total shares must decrease"
+        );
+        assertEq(positionsCountBefore - 1, farming.getPositionsCount(), "Positions count must decrease");
     }
 
     function _openAndValidatePosition(uint128 amount, uint128 desiredLiqPrice, uint256 securityDeposit)
