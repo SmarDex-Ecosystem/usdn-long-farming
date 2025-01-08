@@ -26,13 +26,11 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
         vm.prank(SET_PROTOCOL_PARAMS_MANAGER);
         protocol.setExpoImbalanceLimits(0, 0, 0, 0, 0, 0);
 
-        uint256 securityDeposit = protocol.getSecurityDepositValue();
-
         _setOraclePrices(2000 ether);
         oracleFee = oracleMiddleware.validationCost(MOCK_PYTH_DATA, ProtocolAction.ValidateOpenPosition);
 
-        posId1 = _openAndValidatePosition(2.5 ether, 1000 ether, securityDeposit);
-        posId2 = _openAndValidatePosition(2.5 ether, 1500 ether, securityDeposit);
+        posId1 = _openAndValidatePosition(2.5 ether, 1000 ether);
+        posId2 = _openAndValidatePosition(2.5 ether, 1500 ether);
 
         protocol.transferPositionOwnership(posId1, address(farming), "");
         protocol.transferPositionOwnership(posId2, address(farming), "");
@@ -139,11 +137,11 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
         assertEq(positionsCountBefore - 1, farming.getPositionsCount(), "Positions count must decrease");
     }
 
-    function _openAndValidatePosition(uint128 amount, uint128 desiredLiqPrice, uint256 securityDeposit)
+    function _openAndValidatePosition(uint128 amount, uint128 desiredLiqPrice)
         internal
         returns (PositionId memory positionId)
     {
-        (, positionId) = protocol.initiateOpenPosition{ value: securityDeposit }(
+        (, positionId) = protocol.initiateOpenPosition{ value: protocol.getSecurityDepositValue() }(
             amount,
             desiredLiqPrice,
             type(uint128).max,
