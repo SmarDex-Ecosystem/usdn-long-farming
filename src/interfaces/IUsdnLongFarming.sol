@@ -96,7 +96,7 @@ interface IUsdnLongFarming is
     /**
      * @notice Claims rewards for a USDN protocol position and updates its status.
      * @dev If the position is not liquidated, rewards are sent to the owner, and `rewardDebt` is updated. If
-     * liquidated, rewards are split between the `msg.sender` the position's owner, and the position is deleted. This
+     * liquidated, rewards are split between the `msg.sender` and the position's owner, and the position is deleted. This
      * function can notify the farming protocol of a liquidation and reward the notifier.
      * If there are no pending rewards, this function will not perform any actions. However, calling the function may
      * still incur a transaction fee.

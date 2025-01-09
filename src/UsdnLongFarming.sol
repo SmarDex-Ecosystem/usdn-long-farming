@@ -358,7 +358,7 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
     /**
      * @notice Slashes a position and splits the rewards between the notifier and the owner.
      * @param positionIdHash The hash of the position ID.
-     * @param owner The of the position.
+     * @param owner The owner of the position.
      * @param rewards The rewards amount to be distributed.
      * @param notifier The address which has notified the farming platform about the liquidation in the USDN protocol.
      * @param tick The tick of the position.
