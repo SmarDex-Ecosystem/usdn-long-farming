@@ -40,6 +40,7 @@ contract UsdnLongFarmingBaseIntegrationFixture is
         vm.rollFork(20_014_134);
         SetUpParams memory params = DEFAULT_PARAMS;
         params.enableRoles = false;
+        params.initialLong = 1000 ether;
         _setUp(params);
 
         vm.prank(DEPLOYER);
