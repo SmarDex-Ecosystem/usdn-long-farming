@@ -47,6 +47,7 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
         uint256 positionsCountBefore = farming.getPositionsCount();
 
         uint256 expectedRewardPos1 = farming.pendingRewards(posId1.tick, posId1.tickVersion, posId1.index);
+        uint256 expectedRewardPos2 = farming.pendingRewards(posId2.tick, posId2.tickVersion, posId2.index);
 
         (, uint256 rewardPos1) = farming.withdraw(posId1.tick, posId1.tickVersion, posId1.index);
         (, uint256 rewardPos2) = farming.harvest(posId2.tick, posId2.tickVersion, posId2.index);
@@ -58,7 +59,8 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
             farming.getTotalShares(), totalSharesBefore - (pos.totalExpo - pos.amount), "Total shares must decrease"
         );
         assertEq(farming.getPositionsCount(), positionsCountBefore - 1, "Positions count must decrease");
-        assertEq(rewardPos1, expectedRewardPos1, "The reward must not be affected by the second position");
+        assertEq(rewardPos1, expectedRewardPos1, "The reward must not be affected by the first position");
+        assertEq(rewardPos2, expectedRewardPos2, "The reward must not be affected by the second position");
         assertEq(rewardPos2 + rewardPos1, expectedTotalRewards, "Rewards must be calculated correctly");
     }
 
