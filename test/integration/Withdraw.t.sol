@@ -23,7 +23,6 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
         wstETH.mintAndApprove(address(this), 1e6 ether, address(protocol), type(uint256).max);
 
         _setOraclePrices(2000 ether);
-        oracleFee = oracleMiddleware.validationCost(MOCK_PYTH_DATA, ProtocolAction.ValidateOpenPosition);
 
         posId1 = _openAndValidatePosition(2.5 ether, 1500 ether);
         posId2 = _openAndValidatePosition(2.5 ether, 1000 ether);
@@ -43,7 +42,7 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
      */
     function test_ForkOtherPositionNotAffectedByWithdraw() public {
         vm.roll(rewardStartingBlock + 101);
-        uint256 expectedTotalRewards = REWARD_PER_BLOCKS * 100;
+        uint256 expectedTotalRewards = REWARD_PER_BLOCKS * (block.number - 1 - rewardStartingBlock);
         uint256 totalSharesBefore = farming.getTotalShares();
         uint256 positionsCountBefore = farming.getPositionsCount();
 
@@ -74,7 +73,7 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
      */
     function test_ForkOtherPositionNotAffectedByLiquidation() public {
         vm.roll(rewardStartingBlock + 101);
-        uint256 expectedTotalRewards = REWARD_PER_BLOCKS * 100;
+        uint256 expectedTotalRewards = REWARD_PER_BLOCKS * (block.number - 1 - rewardStartingBlock);
         uint256 totalSharesBefore = farming.getTotalShares();
         uint256 positionsCountBefore = farming.getPositionsCount();
         uint256 expectedRewardPos2 = farming.pendingRewards(posId2.tick, posId2.tickVersion, posId2.index);
@@ -86,7 +85,7 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
         oracleFee = oracleMiddleware.validationCost(MOCK_PYTH_DATA, ProtocolAction.Liquidation);
         protocol.liquidate{ value: oracleFee }(MOCK_PYTH_DATA);
 
-        uint256 balanceBeforeWithdraw = IERC20(SDEX).balanceOf(USER_1);
+        uint256 balanceNotifierBeforeWithdraw = IERC20(SDEX).balanceOf(USER_1);
         uint256 balanceDeadBeforeWithdraw = IERC20(SDEX).balanceOf(farming.DEAD_ADDRESS());
         vm.prank(USER_1);
         (bool isLiquidate, uint256 rewardPos1) = farming.withdraw(posId1.tick, posId1.tickVersion, posId1.index);
@@ -100,11 +99,10 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
         assertEq(rewardPos1, 0, "The reward must be 0");
         assertEq(rewardPos2, expectedRewardPos2, "The reward must not be affected by the second position");
         assertEq(positionsCountBefore - 1, farming.getPositionsCount(), "Positions count must decrease");
+        uint256 rewardNotifier = IERC20(SDEX).balanceOf(USER_1) - balanceNotifierBeforeWithdraw;
+        uint256 rewardBurned = IERC20(SDEX).balanceOf(farming.DEAD_ADDRESS()) - balanceDeadBeforeWithdraw;
         assertEq(
-            rewardPos2 + (IERC20(SDEX).balanceOf(USER_1) - balanceBeforeWithdraw)
-                + (IERC20(SDEX).balanceOf(farming.DEAD_ADDRESS()) - balanceDeadBeforeWithdraw),
-            expectedTotalRewards,
-            "Rewards must be calculated correctly"
+            rewardPos2 + rewardNotifier + rewardBurned, expectedTotalRewards, "Rewards must be calculated correctly"
         );
     }
 
@@ -149,7 +147,7 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
             EMPTY_PREVIOUS_DATA
         );
         _waitDelay();
-        protocol.validateOpenPosition{ value: oracleFee }(payable(this), MOCK_PYTH_DATA, EMPTY_PREVIOUS_DATA);
+        protocol.validateOpenPosition(payable(this), MOCK_PYTH_DATA, EMPTY_PREVIOUS_DATA);
     }
 
     function _assertPositionDeleted(PositionId memory positionId) internal view {
