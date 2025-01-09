@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.28;
+pragma solidity ^0.8.26;
 
 import { LibRLP } from "solady-0.0.281//utils/LibRLP.sol";
 
