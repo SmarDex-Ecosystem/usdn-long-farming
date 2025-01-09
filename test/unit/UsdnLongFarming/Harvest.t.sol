@@ -89,8 +89,7 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
         assertEq(posInfo.rewardDebt, 0, "The reward debt must deleted");
         assertEq(posInfo.owner, address(0), "The owner must be deleted");
 
-        assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
-        assertEq(rewardToken.balanceOf(farming.DEAD_ADDRESS()), 354, "Dead address must receive a part of the rewards");
+        assertEq(rewardToken.balanceOf(address(this)), 354, "The owner must receive a part of the rewards");
         assertEq(rewardToken.balanceOf(USER_1), 151, "The notifier must receive a part of the rewards");
 
         assertEq(

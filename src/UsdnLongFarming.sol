@@ -33,9 +33,6 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
     /// @notice Denominator for the rewards multiplier, will give us a 0.01% basis point.
     uint256 public constant BPS_DIVISOR = 10_000;
 
-    /// @notice Address where to send the rewards to burn.
-    address public constant DEAD_ADDRESS = address(0xdead);
-
     /// @notice The address of the USDN protocol contract.
     IUsdnProtocol public immutable USDN_PROTOCOL;
 
@@ -180,7 +177,7 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
         (bool isLiquidated, uint256 rewards, uint256 newRewardDebt, address owner) = _harvest(positionIdHash);
 
         if (isLiquidated) {
-            _slash(positionIdHash, rewards, msg.sender, tick, tickVersion, index);
+            _slash(positionIdHash, owner, rewards, msg.sender, tick, tickVersion, index);
             return (true, 0);
         } else if (rewards > 0) {
             _positions[positionIdHash].rewardDebt = newRewardDebt;
@@ -201,7 +198,7 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
         (isLiquidated_, rewards_,, owner) = _harvest(positionIdHash);
 
         if (isLiquidated_) {
-            _slash(positionIdHash, rewards_, msg.sender, tick, tickVersion, index);
+            _slash(positionIdHash, owner, rewards_, msg.sender, tick, tickVersion, index);
             return (true, 0);
         }
         if (msg.sender != owner) {
@@ -359,8 +356,9 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
     }
 
     /**
-     * @notice Slashes a position and splits the rewards between the notifier and the dead address.
+     * @notice Slashes a position and splits the rewards between the notifier and the owner.
      * @param positionIdHash The hash of the position ID.
+     * @param owner The of the position.
      * @param rewards The rewards amount to be distributed.
      * @param notifier The address which has notified the farming platform about the liquidation in the USDN protocol.
      * @param tick The tick of the position.
@@ -369,6 +367,7 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
      */
     function _slash(
         bytes32 positionIdHash,
+        address owner,
         uint256 rewards,
         address notifier,
         int24 tick,
@@ -381,10 +380,10 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
             emit Slash(notifier, 0, 0, tick, tickVersion, index);
         } else {
             uint256 notifierRewards = rewards * _notifierRewardsBps / BPS_DIVISOR;
-            uint256 burnedTokens = rewards - notifierRewards;
-            address(REWARD_TOKEN).safeTransfer(DEAD_ADDRESS, burnedTokens);
+            uint256 ownerRewards = rewards - notifierRewards;
+            address(REWARD_TOKEN).safeTransfer(owner, ownerRewards);
             address(REWARD_TOKEN).safeTransfer(notifier, notifierRewards);
-            emit Slash(notifier, notifierRewards, burnedTokens, tick, tickVersion, index);
+            emit Slash(notifier, notifierRewards, ownerRewards, tick, tickVersion, index);
         }
     }
 

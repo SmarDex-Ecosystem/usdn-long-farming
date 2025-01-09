@@ -96,11 +96,11 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         uint256 rewards = rewardsPerBlock * 101;
         uint256 notifierRewardsBps = farming.getNotifierRewardsBps();
         uint256 notifierRewards = rewards * notifierRewardsBps / farming.BPS_DIVISOR();
-        uint256 burnedTokens = rewards - notifierRewards;
+        uint256 ownerRewards = rewards - notifierRewards;
 
         vm.prank(USER_1);
         vm.expectEmit();
-        emit Slash(USER_1, notifierRewards, burnedTokens, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
+        emit Slash(USER_1, notifierRewards, ownerRewards, DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
         (bool isLiquidated_, uint256 rewards_) = farming.withdraw(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX);
 
         assertTrue(isLiquidated_, "The position must be liquidated");
@@ -110,12 +110,7 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         assertEq(posInfo.rewardDebt, 0, "The reward debt must deleted");
         assertEq(posInfo.owner, address(0), "The owner must be deleted");
 
-        assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
-        assertEq(
-            rewardToken.balanceOf(farming.DEAD_ADDRESS()),
-            burnedTokens,
-            "Dead address must receive a part of the rewards"
-        );
+        assertEq(rewardToken.balanceOf(address(this)), ownerRewards, "The owner must receive a part of the rewards");
         assertEq(rewardToken.balanceOf(USER_1), notifierRewards, "The notifier must receive a part of the rewards");
     }
 

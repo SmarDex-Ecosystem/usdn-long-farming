@@ -24,13 +24,14 @@ contract UsdnLongFarmingHandler is UsdnLongFarming {
 
     function i_slash(
         bytes32 positionIdHash,
+        address owner,
         uint256 rewards,
         address notifier,
         int24 tick,
         uint256 tickVersion,
         uint256 index
     ) external {
-        _slash(positionIdHash, rewards, notifier, tick, tickVersion, index);
+        _slash(positionIdHash, owner, rewards, notifier, tick, tickVersion, index);
     }
 
     function i_isLiquidated(int24 tick, uint256 tickVersion) external view returns (bool) {
