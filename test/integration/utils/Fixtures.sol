@@ -56,9 +56,9 @@ contract UsdnLongFarmingBaseIntegrationFixture is
         rewardsProvider.addRewardInfo(campaignID, rewardEndingBlock, REWARD_PER_BLOCKS);
         vm.stopPrank();
 
-        // approve future farming contract
         address farmingAddress = LibRLP.computeAddress(DEPLOYER, vm.getNonce(DEPLOYER));
         vm.startPrank(DEPLOYER);
+        // approve future farming contract
         farmingToken.approve(farmingAddress, 1);
         farming = new UsdnLongFarming(IUsdnProtocol(address(protocol)), rewardsProvider, campaignID);
         vm.stopPrank();
