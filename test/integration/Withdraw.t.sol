@@ -25,8 +25,8 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
         _setOraclePrices(2000 ether);
         oracleFee = oracleMiddleware.validationCost(MOCK_PYTH_DATA, ProtocolAction.ValidateOpenPosition);
 
-        posId1 = _openAndValidatePosition(2.5 ether, 1000 ether);
-        posId2 = _openAndValidatePosition(2.5 ether, 1500 ether);
+        posId1 = _openAndValidatePosition(2.5 ether, 1500 ether);
+        posId2 = _openAndValidatePosition(2.5 ether, 1000 ether);
 
         protocol.transferPositionOwnership(posId1, address(farming), "");
         protocol.transferPositionOwnership(posId2, address(farming), "");
@@ -35,11 +35,11 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
     /**
      * @custom:scenario Tests the {IUsdnLongFarming.withdraw} function with two positions and one withdraw operation.
      * @custom:given There are two positions.
-     * @custom:when The function is called to withdraw the second position.
+     * @custom:when The function is called to withdraw the first position.
      * @custom:then The call must not revert.
      * @custom:and The user position state must be updated.
      * @custom:and The contract global state must be updated.
-     * @custom:and The first position is not affected.
+     * @custom:and The second position is not affected.
      */
     function test_ForkOtherPositionNotAffectedByWithdraw() public {
         vm.roll(rewardStartingBlock + 101);
@@ -49,12 +49,12 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
 
         uint256 expectedRewardPos1 = farming.pendingRewards(posId1.tick, posId1.tickVersion, posId1.index);
 
-        (, uint256 rewardPos2) = farming.withdraw(posId2.tick, posId2.tickVersion, posId2.index);
-        (, uint256 rewardPos1) = farming.harvest(posId1.tick, posId1.tickVersion, posId1.index);
+        (, uint256 rewardPos1) = farming.withdraw(posId1.tick, posId1.tickVersion, posId1.index);
+        (, uint256 rewardPos2) = farming.harvest(posId2.tick, posId2.tickVersion, posId2.index);
 
-        _assertPositionDeleted(posId2);
+        _assertPositionDeleted(posId1);
         (IUsdnProtocolTypes.Position memory pos,) =
-            protocol.getLongPosition(IUsdnProtocolTypes.PositionId(posId2.tick, posId2.tickVersion, posId2.index));
+            protocol.getLongPosition(IUsdnProtocolTypes.PositionId(posId1.tick, posId1.tickVersion, posId1.index));
         assertEq(
             farming.getTotalShares(), totalSharesBefore - (pos.totalExpo - pos.amount), "Total shares must decrease"
         );
@@ -65,21 +65,21 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
 
     /**
      * @custom:scenario Tests the {IUsdnLongFarming.withdraw} function with two positions and one liquidation operation.
-     * @custom:given There are two positions and the second position is liquidated on the protocol.
-     * @custom:when The function is called to withdraw the second position.
+     * @custom:given There are two positions and the first position is liquidated on the protocol.
+     * @custom:when The function is called to withdraw the first position.
      * @custom:then The call must not revert.
-     * @custom:and The second position must be liquidated instead of withdrawn.
+     * @custom:and The first position must be liquidated instead of withdrawn.
      * @custom:and The contract global state must be updated.
-     * @custom:and The first position is not affected.
+     * @custom:and The second position is not affected.
      */
     function test_ForkOtherPositionNotAffectedByLiquidation() public {
         vm.roll(rewardStartingBlock + 101);
         uint256 expectedTotalRewards = REWARD_PER_BLOCKS * 100;
         uint256 totalSharesBefore = farming.getTotalShares();
         uint256 positionsCountBefore = farming.getPositionsCount();
-        uint256 expectedRewardPos1 = farming.pendingRewards(posId1.tick, posId1.tickVersion, posId1.index);
+        uint256 expectedRewardPos2 = farming.pendingRewards(posId2.tick, posId2.tickVersion, posId2.index);
         (IUsdnProtocolTypes.Position memory pos,) =
-            protocol.getLongPosition(IUsdnProtocolTypes.PositionId(posId2.tick, posId2.tickVersion, posId2.index));
+            protocol.getLongPosition(IUsdnProtocolTypes.PositionId(posId1.tick, posId1.tickVersion, posId1.index));
 
         skip(oracleMiddleware.getPythRecentPriceDelay());
         _setOraclePrices(1200 ether);
@@ -89,19 +89,19 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
         uint256 balanceBeforeWithdraw = IERC20(SDEX).balanceOf(USER_1);
         uint256 balanceDeadBeforeWithdraw = IERC20(SDEX).balanceOf(farming.DEAD_ADDRESS());
         vm.prank(USER_1);
-        (bool isLiquidate, uint256 rewardPos2) = farming.withdraw(posId2.tick, posId2.tickVersion, posId2.index);
-        (, uint256 rewardPos1) = farming.harvest(posId1.tick, posId1.tickVersion, posId1.index);
+        (bool isLiquidate, uint256 rewardPos1) = farming.withdraw(posId1.tick, posId1.tickVersion, posId1.index);
+        (, uint256 rewardPos2) = farming.harvest(posId2.tick, posId2.tickVersion, posId2.index);
 
         assertTrue(isLiquidate, "The position must be liquidated");
-        _assertPositionDeleted(posId2);
+        _assertPositionDeleted(posId1);
         assertEq(
             farming.getTotalShares(), totalSharesBefore - (pos.totalExpo - pos.amount), "Total shares must decrease"
         );
-        assertEq(rewardPos2, 0, "The reward must be 0");
-        assertEq(rewardPos1, expectedRewardPos1, "The reward must not be affected by the second position");
+        assertEq(rewardPos1, 0, "The reward must be 0");
+        assertEq(rewardPos2, expectedRewardPos2, "The reward must not be affected by the second position");
         assertEq(positionsCountBefore - 1, farming.getPositionsCount(), "Positions count must decrease");
         assertEq(
-            rewardPos1 + (IERC20(SDEX).balanceOf(USER_1) - balanceBeforeWithdraw)
+            rewardPos2 + (IERC20(SDEX).balanceOf(USER_1) - balanceBeforeWithdraw)
                 + (IERC20(SDEX).balanceOf(farming.DEAD_ADDRESS()) - balanceDeadBeforeWithdraw),
             expectedTotalRewards,
             "Rewards must be calculated correctly"
