@@ -379,11 +379,16 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
         if (rewards == 0) {
             emit Slash(notifier, 0, 0, tick, tickVersion, index);
         } else {
-            uint256 notifierRewards = rewards * _notifierRewardsBps / BPS_DIVISOR;
-            uint256 ownerRewards = rewards - notifierRewards;
-            address(REWARD_TOKEN).safeTransfer(owner, ownerRewards);
-            address(REWARD_TOKEN).safeTransfer(notifier, notifierRewards);
-            emit Slash(notifier, notifierRewards, ownerRewards, tick, tickVersion, index);
+            if (owner == notifier) {
+                address(REWARD_TOKEN).safeTransfer(owner, rewards);
+                emit Slash(notifier, 0, rewards, tick, tickVersion, index);
+            } else {
+                uint256 notifierRewards = rewards * _notifierRewardsBps / BPS_DIVISOR;
+                uint256 ownerRewards = rewards - notifierRewards;
+                address(REWARD_TOKEN).safeTransfer(owner, ownerRewards);
+                address(REWARD_TOKEN).safeTransfer(notifier, notifierRewards);
+                emit Slash(notifier, notifierRewards, ownerRewards, tick, tickVersion, index);
+            }
         }
     }
 

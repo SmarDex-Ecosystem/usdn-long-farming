@@ -83,8 +83,8 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
     }
 
     /**
-     * @custom:scenario Tests the {IUsdnLongFarming.withdraw} function sends rewards to the msg.sender and the dead
-     * address and liquidates the position.
+     * @custom:scenario Tests the {IUsdnLongFarming.withdraw} function sends rewards to the msg.sender and the owner
+     * of the position and liquidates the position.
      * @custom:when The function is called and the position is liquidated.
      * @custom:then The position must be liquidated.
      * @custom:and The return values must be correct.

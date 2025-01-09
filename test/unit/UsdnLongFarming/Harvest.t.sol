@@ -70,7 +70,7 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
      * @custom:when The function {IUsdnLongFarming.harvest} is called and the position is liquidated.
      * @custom:then The reward debt is ignored and set to zero because the position was deleted.
      * @custom:and The position owner is deleted.
-     * @custom:and The rewards are transferred to the notifier and the dead address.
+     * @custom:and The rewards are transferred to the notifier and owner of the position.
      * @custom:and A `Slash` event is emitted.
      */
     function test_harvestPositionLiquidateAndRewardDebtIgnore() public {
