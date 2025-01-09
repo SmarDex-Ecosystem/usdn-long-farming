@@ -60,7 +60,7 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         assertEq(rewards_, expectedRewards, "The token is transferred to the user");
         assertFalse(isLiquidated_, "The position must not be liquidated");
 
-        _assertPositionDeleted(posHash);
+        _assertPositionDeleted();
         assertEq(rewardToken.balanceOf(address(this)), expectedRewards, "The token is transferred to the user");
 
         (IUsdnProtocolTypes.Position memory USDNPosition,) = farming.USDN_PROTOCOL().getLongPosition(
@@ -143,7 +143,7 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         assertEq(rewards_, 0, "The user must not receive rewards");
         assertFalse(isLiquidated_, "The position must not be liquidated");
 
-        _assertPositionDeleted(posHash);
+        _assertPositionDeleted();
         assertEq(farming.REWARD_TOKEN().balanceOf(address(this)), 0, "The user must not receive rewards");
 
         (IUsdnProtocolTypes.Position memory USDNPosition,) = farming.USDN_PROTOCOL().getLongPosition(
@@ -154,7 +154,7 @@ contract TestUsdnLongFarmingWithdraw is UsdnLongFarmingBaseFixture {
         _assertGlobalState(totalSharesBefore, positionsCountBefore);
     }
 
-    function _assertPositionDeleted(bytes32 _posHash) internal view {
+    function _assertPositionDeleted() internal view {
         assertEq(
             keccak256(abi.encode(farming.getPositionInfo(DEFAULT_TICK, DEFAULT_TICK_VERSION, DEFAULT_INDEX))),
             keccak256(abi.encode(PositionInfo(address(0), 0, 0, 0, 0, 0))),
