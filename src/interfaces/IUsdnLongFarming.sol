@@ -82,7 +82,7 @@ interface IUsdnLongFarming is
     /**
      * @notice Withdraws a USDN protocol position and claims its rewards.
      * @dev If the position is not liquidated, rewards are sent to the position's owner, and the position is withdrawn.
-     * If liquidated, rewards are distributed to `msg.sender` and `DEAD_ADDRESS`, and the position is deleted.
+     * If liquidated, rewards are split between the `msg.sender` and the position's owner, and the position is deleted.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
      * @param index The index of the position within the tick.
@@ -96,7 +96,7 @@ interface IUsdnLongFarming is
     /**
      * @notice Claims rewards for a USDN protocol position and updates its status.
      * @dev If the position is not liquidated, rewards are sent to the owner, and `rewardDebt` is updated. If
-     * liquidated, rewards are distributed to `msg.sender` and `DEAD_ADDRESS`, and the position is deleted. This
+     * liquidated, rewards are split between the `msg.sender` and the position's owner, and the position is deleted. This
      * function can notify the farming protocol of a liquidation and reward the notifier.
      * If there are no pending rewards, this function will not perform any actions. However, calling the function may
      * still incur a transaction fee.

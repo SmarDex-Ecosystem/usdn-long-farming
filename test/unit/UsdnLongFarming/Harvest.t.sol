@@ -70,7 +70,7 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
      * @custom:when The function {IUsdnLongFarming.harvest} is called and the position is liquidated.
      * @custom:then The reward debt is ignored and set to zero because the position was deleted.
      * @custom:and The position owner is deleted.
-     * @custom:and The rewards are transferred to the notifier and the dead address.
+     * @custom:and The rewards are transferred to the notifier and owner of the position.
      * @custom:and A `Slash` event is emitted.
      */
     function test_harvestPositionLiquidateAndRewardDebtIgnore() public {
@@ -89,8 +89,7 @@ contract TestUsdnLongFarmingHarvest is UsdnLongFarmingBaseFixture {
         assertEq(posInfo.rewardDebt, 0, "The reward debt must deleted");
         assertEq(posInfo.owner, address(0), "The owner must be deleted");
 
-        assertEq(rewardToken.balanceOf(address(this)), 0, "The rewards sent to the notifier and the dead address");
-        assertEq(rewardToken.balanceOf(farming.DEAD_ADDRESS()), 354, "Dead address must receive a part of the rewards");
+        assertEq(rewardToken.balanceOf(address(this)), 354, "The owner must receive a part of the rewards");
         assertEq(rewardToken.balanceOf(USER_1), 151, "The notifier must receive a part of the rewards");
 
         assertEq(

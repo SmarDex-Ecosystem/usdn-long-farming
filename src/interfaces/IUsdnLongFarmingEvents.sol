@@ -38,7 +38,7 @@ interface IUsdnLongFarmingEvents {
      * @notice A position has been deleted and the notifier has received part of the rewards.
      * @param notifier The address of the notifier.
      * @param notifierRewards The amount of rewards received by the notifier.
-     * @param burnedTokens The amount sent to the dead address.
+     * @param ownerRewards The amount of rewards received by the owner.
      * @param tick The tick of the position.
      * @param tickVersion The version of the tick.
      * @param index The index of the position within the tick.
@@ -46,7 +46,7 @@ interface IUsdnLongFarmingEvents {
     event Slash(
         address indexed notifier,
         uint256 notifierRewards,
-        uint256 burnedTokens,
+        uint256 ownerRewards,
         int24 tick,
         uint256 tickVersion,
         uint256 index
