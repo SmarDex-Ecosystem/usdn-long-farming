@@ -204,11 +204,12 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
         if (msg.sender != owner) {
             revert UsdnLongFarmingNotPositionOwner();
         }
+
+        _deletePosition(positionIdHash);
+
         if (rewards_ > 0) {
             _sendRewards(owner, rewards_, tick, tickVersion, index);
         }
-
-        _deletePosition(positionIdHash);
 
         emit Withdraw(owner, tick, tickVersion, index);
         USDN_PROTOCOL.transferPositionOwnership(IUsdnProtocolTypes.PositionId(tick, tickVersion, index), owner, "");
