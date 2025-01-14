@@ -88,9 +88,11 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
         protocol.liquidate{ value: oracleFee }(MOCK_PYTH_DATA);
 
         uint256 balanceNotifierBeforeWithdraw = IERC20(SDEX).balanceOf(USER_1);
-        uint256 balanceDeadBeforeWithdraw = IERC20(SDEX).balanceOf(farming.DEAD_ADDRESS());
+        uint256 balanceOwnerBeforeWithdraw = IERC20(SDEX).balanceOf(address(this));
         vm.prank(USER_1);
         (bool isLiquidate, uint256 rewardPos1) = farming.withdraw(posId1.tick, posId1.tickVersion, posId1.index);
+        uint256 rewardNotifier = IERC20(SDEX).balanceOf(USER_1) - balanceNotifierBeforeWithdraw;
+        uint256 rewardOwner = IERC20(SDEX).balanceOf(address(this)) - balanceOwnerBeforeWithdraw;
         (, uint256 rewardPos2) = farming.harvest(posId2.tick, posId2.tickVersion, posId2.index);
 
         assertTrue(isLiquidate, "The position must be liquidated");
@@ -101,10 +103,8 @@ contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegr
         assertEq(rewardPos1, 0, "The reward must be 0");
         assertEq(rewardPos2, expectedRewardPos2, "The reward must not be affected by the second position");
         assertEq(positionsCountBefore - 1, farming.getPositionsCount(), "Positions count must decrease");
-        uint256 rewardNotifier = IERC20(SDEX).balanceOf(USER_1) - balanceNotifierBeforeWithdraw;
-        uint256 rewardBurned = IERC20(SDEX).balanceOf(farming.DEAD_ADDRESS()) - balanceDeadBeforeWithdraw;
         assertEq(
-            rewardPos2 + rewardNotifier + rewardBurned, expectedTotalRewards, "Rewards must be calculated correctly"
+            rewardPos2 + rewardNotifier + rewardOwner, expectedTotalRewards, "Rewards must be calculated correctly"
         );
     }
 
