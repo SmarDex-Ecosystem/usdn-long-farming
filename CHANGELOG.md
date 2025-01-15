@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.2.0](https://github.com/SmarDex-Ecosystem/usdn-long-farming/compare/v0.1.0...v0.2.0) (2025-01-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **slash:** The `burnedTokens` attribute of the `Slash` event has been renamed to `ownerRewards`
+
+### Features
+
+* **slash:** send slashed tokens to position owner instead of dead address ([#27](https://github.com/SmarDex-Ecosystem/usdn-long-farming/issues/27)) ([511f351](https://github.com/SmarDex-Ecosystem/usdn-long-farming/commit/511f351578b9de065df1f950ef726e72e11fe3b9))
+
+
+### Bug Fixes
+
+* follow cei ([#29](https://github.com/SmarDex-Ecosystem/usdn-long-farming/issues/29)) ([2050627](https://github.com/SmarDex-Ecosystem/usdn-long-farming/commit/2050627b97678aa690fd6e6bcba0445ba54f29f6))
+
+
+### Miscellaneous Chores
+
+* update flake and trufflehog ([#23](https://github.com/SmarDex-Ecosystem/usdn-long-farming/issues/23)) ([1a8cf6e](https://github.com/SmarDex-Ecosystem/usdn-long-farming/commit/1a8cf6e5ff3900386ee6b7aa20993bd00f7d4dd8))
+
 ## [0.1.0](https://github.com/SmarDex-Ecosystem/usdn-long-farming/compare/v0.0.1...v0.1.0) (2025-01-06)
 
 
