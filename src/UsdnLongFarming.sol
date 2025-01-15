@@ -16,7 +16,7 @@ import { IFarmingRange } from "./interfaces/IFarmingRange.sol";
 import { IUsdnLongFarming } from "./interfaces/IUsdnLongFarming.sol";
 
 /**
- * @title USDN Long Positions farming
+ * @title USDN Long Positions Farming
  * @notice A contract for farming USDN long positions to earn rewards.
  */
 contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2Step {
@@ -30,7 +30,7 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
      */
     uint256 public constant SCALING_FACTOR = 1e38;
 
-    /// @notice Denominator for the rewards multiplier, will give us a 0.01% basis point.
+    /// @notice Denominator for the rewards multiplier, will give a 0.01% basis point.
     uint256 public constant BPS_DIVISOR = 10_000;
 
     /// @notice The address of the USDN protocol contract.
@@ -319,8 +319,8 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
     /**
      * @notice Calculates the rewards to be distributed to a position.
      * @param posInfo The position information.
-     * @param accRewardPerShare The accumulator rewards per share.
-     * @return rewards_ The rewards amount to be distributed.
+     * @param accRewardPerShare The rewards per share accumulator.
+     * @return rewards_ The rewards to be distributed.
      * @return newRewardDebt_ The new reward debt for the position.
      */
     function _calcRewards(PositionInfo memory posInfo, uint256 accRewardPerShare)
@@ -358,6 +358,8 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
 
     /**
      * @notice Slashes a position and splits the rewards between the notifier and the owner.
+     * @dev The notifier and the owner can be the same address, in which case a single transfer is performed and the
+     * emitted event has a zero value for the notifier rewards.
      * @param positionIdHash The hash of the position ID.
      * @param owner The owner of the position.
      * @param rewards The rewards amount to be distributed.
@@ -395,7 +397,7 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
 
     /**
      * @notice Calculates and returns the updated accumulated reward per share.
-     * @param periodRewards The period amount of rewards to consider when calculating the updated reward per share.
+     * @param periodRewards The amount of rewards for the elapsed period.
      * @return accRewardPerShare_ The updated accumulated reward per share.
      */
     function _calcAccRewardPerShare(uint256 periodRewards) internal view returns (uint256 accRewardPerShare_) {
