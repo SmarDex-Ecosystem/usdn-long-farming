@@ -7,19 +7,20 @@ import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/I
 import { UsdnProtocolBaseIntegrationFixture } from "@smardex-usdn-test/integration/UsdnProtocol/utils/Fixtures.sol";
 import { LibRLP } from "solady-0.0.281//utils/LibRLP.sol";
 
+import { DEPLOYER, SDEX } from "../../utils/Constants.sol";
+
 import { FarmingToken } from "../../../src/FarmingToken.sol";
 import { UsdnLongFarming } from "../../../src/UsdnLongFarming.sol";
 import { IFarmingRange } from "../../../src/interfaces/IFarmingRange.sol";
 import { IUsdnLongFarmingErrors } from "../../../src/interfaces/IUsdnLongFarmingErrors.sol";
 import { IUsdnLongFarmingEvents } from "../../../src/interfaces/IUsdnLongFarmingEvents.sol";
 import { IUsdnLongFarmingTypes } from "../../../src/interfaces/IUsdnLongFarmingTypes.sol";
-import { DEPLOYER, SDEX } from "../../utils/Constants.sol";
 
 /**
- * @title UsdnLongFarmingBaseIntegrationFixture
+ * @title UsdnLongFarmingIntegrationFixture
  * @dev Utils for testing the USDN Long Farming
  */
-contract UsdnLongFarmingBaseIntegrationFixture is
+contract UsdnLongFarmingIntegrationFixture is
     UsdnProtocolBaseIntegrationFixture,
     IUsdnLongFarmingTypes,
     IUsdnLongFarmingErrors,

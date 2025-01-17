@@ -6,13 +6,13 @@ import { IUsdnProtocolTypes } from "@smardex-usdn-contracts/interfaces/UsdnProto
 import { MOCK_PYTH_DATA } from "@smardex-usdn-test/unit/Middlewares/utils/Constants.sol";
 
 import { SDEX, USER_1 } from "../utils/Constants.sol";
-import { UsdnLongFarmingBaseIntegrationFixture } from "./utils/Fixtures.sol";
+import { UsdnLongFarmingIntegrationFixture } from "./utils/Fixtures.sol";
 
 /**
  * @custom:feature Tests the {IUsdnLongFarming.withdraw} function of the USDN long farming.
  * @custom:background Given a deployed farming contract and USDN protocol.
  */
-contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegrationFixture {
+contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingIntegrationFixture {
     PositionId internal posId1;
     PositionId internal posId2;
     uint256 oracleFee;
