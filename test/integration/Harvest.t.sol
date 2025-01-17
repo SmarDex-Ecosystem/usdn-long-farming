@@ -5,13 +5,13 @@ import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
 import { MOCK_PYTH_DATA } from "@smardex-usdn-test/unit/Middlewares/utils/Constants.sol";
 
 import { SDEX, USER_1 } from "../utils/Constants.sol";
-import { UsdnLongFarmingBaseIntegrationFixture } from "./utils/Fixtures.sol";
+import { UsdnLongFarmingIntegrationFixture } from "./utils/Fixtures.sol";
 
 /**
  * @custom:feature Tests the {IUsdnLongFarming.harvest} function of the USDN long farming.
  * @custom:background Given a deployed farming contract and USDN protocol.
  */
-contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingBaseIntegrationFixture {
+contract TestForkUsdnLongFarmingIntegrationWithdraw is UsdnLongFarmingIntegrationFixture {
     PositionId internal posId1;
     PositionId internal posId2;
     uint256 oracleFee;
