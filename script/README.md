@@ -45,7 +45,7 @@ forge script script/50_AddCampaign.s.sol:AddCampaign --sender 0x1e3e1128f6bc2264
 Run the following command to deploy the long USDN protocol farming contract:
 
 ```shell
-forge script script/02_DeployUsdnLongFarming.s.sol --private-key P_KEY -f RPC_URL --broadcast
+forge script script/02_DeployUsdnLongFarming.s.sol -i 1 -f RPC_URL --broadcast
 ```
 
 - The following environment variables are mandatory:

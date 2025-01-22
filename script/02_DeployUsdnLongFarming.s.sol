@@ -5,7 +5,7 @@ import { IERC20 } from "@openzeppelin-contracts-5/token/ERC20/IERC20.sol";
 import { IUsdnProtocol } from "@smardex-usdn-contracts/interfaces/UsdnProtocol/IUsdnProtocol.sol";
 import { LibRLP } from "solady-0.0.281/utils/LibRLP.sol";
 
-import { Script } from "forge-std/Script.sol";
+import { Script, console2 } from "forge-std/Script.sol";
 
 import { UsdnLongFarming } from "src/UsdnLongFarming.sol";
 import { IFarmingRange } from "src/interfaces/IFarmingRange.sol";
@@ -18,6 +18,7 @@ contract DeployUsdnLongFarming is Script {
     function run() external returns (UsdnLongFarming longFarming_) {
         _handleEnvVariables();
 
+        console2.log(msg.sender);
         uint256 campaignID = FARMING_RANGE.campaignInfoLen() - 1;
         while (campaignID >= 0) {
             IFarmingRange.CampaignInfo memory campaignInfo = FARMING_RANGE.campaignInfo(campaignID);
