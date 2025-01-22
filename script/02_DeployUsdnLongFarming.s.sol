@@ -16,6 +16,9 @@ contract DeployUsdnLongFarming is Script {
     IERC20 internal FARMING_TOKEN = IERC20(0xCE1bc72A070349cb444743Ec3b2b4d8BF398DAf5);
 
     function run() external returns (UsdnLongFarming longFarming_) {
+        string memory etherscanApiKey = vm.envOr("ETHERSCAN_API_KEY", string("XXXXXXXXXXXXXXXXX"));
+        vm.setEnv("ETHERSCAN_API_KEY", etherscanApiKey);
+
         uint256 campaignID = FARMING_RANGE.campaignInfoLen() - 1;
         while (campaignID >= 0) {
             IFarmingRange.CampaignInfo memory campaignInfo = FARMING_RANGE.campaignInfo(campaignID);
