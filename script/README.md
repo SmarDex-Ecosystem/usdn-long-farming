@@ -49,7 +49,9 @@ forge script script/02_DeployUsdnLongFarming.s.sol -i 1 -f RPC_URL --broadcast
 ```
 
 - The following environment variables are mandatory:
+  - `FARMING_TOKEN_ADDRESS`
   - `DEPLOYER_ADDRESS`
+  - `USDN_PROTOCOL_ADDRESS`
 - If these variables are not set, a prompt will request them.
 
 ---
