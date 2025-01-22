@@ -1,6 +1,6 @@
 {
   "name": "@smardex/usdn-long-farming",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Contracts for the USDN long farming",
   "repository": "git@github.com:SmarDex-Ecosystem/usdn-long-farming.git",
   "author": {
