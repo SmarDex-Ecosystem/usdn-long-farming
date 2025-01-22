@@ -49,9 +49,7 @@ forge script script/02_DeployUsdnLongFarming.s.sol --private-key P_KEY -f RPC_UR
 ```
 
 - The following environment variables are mandatory:
-  - `FARMING_TOKEN_ADDRESS`
   - `DEPLOYER_ADDRESS`
-  - `USDN_PROTOCOL_ADDRESS`
 - If these variables are not set, a prompt will request them.
 
 ---

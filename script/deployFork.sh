@@ -27,7 +27,10 @@ cast send 0x1E3e1128F6bC2264a19D7a065982696d356879c5 --private-key "$deployerPri
 # Add the campaign
 forge script --sender 0x1e3e1128f6bc2264a19d7a065982696d356879c5 --non-interactive -f "$rpcUrl" script/50_AddCampaign.s.sol:AddCampaign --broadcast --unlocked
 
+# Send ETH to the the farming token deployer
+cast send 0x6Ac005d9A24a22C3c95107466CF06F1c90b3cE42 --private-key "$deployerPrivateKey" --value 10ether -r "$rpcUrl" >/dev/null
+
 # Deploy the USDN long farming
-forge script --non-interactive --private-key "$deployerPrivateKey" -f "$rpcUrl" script/02_DeployUsdnLongFarming.s.sol:DeployUsdnLongFarming --broadcast
+forge script --sender 0x6Ac005d9A24a22C3c95107466CF06F1c90b3cE42 --non-interactive -f "$rpcUrl" script/02_DeployUsdnLongFarming.s.sol:DeployUsdnLongFarming --broadcast --unlocked
 
 popd

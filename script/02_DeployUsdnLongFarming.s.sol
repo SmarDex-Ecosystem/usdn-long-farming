@@ -12,10 +12,8 @@ import { IFarmingRange } from "src/interfaces/IFarmingRange.sol";
 
 contract DeployUsdnLongFarming is Script {
     IFarmingRange constant FARMING_RANGE = IFarmingRange(0x7d85C0905a6E1Ab5837a0b57cD94A419d3a77523);
-
-    IERC20 internal _farmingToken;
-    IUsdnProtocol internal _usdnProtocol;
-    address internal _deployerAddress;
+    IUsdnProtocol internal USDN_PROTOCOL = IUsdnProtocol(0x656cB8C6d154Aad29d8771384089be5B5141f01a);
+    IERC20 internal FARMING_TOKEN = IERC20(0xCE1bc72A070349cb444743Ec3b2b4d8BF398DAf5);
 
     function run() external returns (UsdnLongFarming longFarming_) {
         _handleEnvVariables();
@@ -23,7 +21,7 @@ contract DeployUsdnLongFarming is Script {
         uint256 campaignID = FARMING_RANGE.campaignInfoLen() - 1;
         while (campaignID >= 0) {
             IFarmingRange.CampaignInfo memory campaignInfo = FARMING_RANGE.campaignInfo(campaignID);
-            if (campaignInfo.stakingToken == _farmingToken) {
+            if (campaignInfo.stakingToken == FARMING_TOKEN) {
                 break;
             }
             campaignID--;
@@ -31,34 +29,16 @@ contract DeployUsdnLongFarming is Script {
 
         require(campaignID > 0, "DeployUsdnLongFarming: campaign not found");
 
-        address longFarmingAddress = LibRLP.computeAddress(_deployerAddress, vm.getNonce(_deployerAddress) + 1);
+        address longFarmingAddress = LibRLP.computeAddress(msg.sender, vm.getNonce(msg.sender) + 1);
 
-        vm.startBroadcast(_deployerAddress);
-        _farmingToken.approve(longFarmingAddress, 1);
-        longFarming_ = new UsdnLongFarming(_usdnProtocol, FARMING_RANGE, campaignID);
+        vm.startBroadcast(msg.sender);
+        FARMING_TOKEN.approve(longFarmingAddress, 1);
+        longFarming_ = new UsdnLongFarming(USDN_PROTOCOL, FARMING_RANGE, campaignID);
         vm.stopBroadcast();
     }
 
     /// @notice Handle the environment variables
     function _handleEnvVariables() internal {
-        try vm.envAddress("DEPLOYER_ADDRESS") returns (address deployerAddress_) {
-            _deployerAddress = deployerAddress_;
-        } catch {
-            _deployerAddress = vm.parseAddress(vm.prompt("enter DEPLOYER_ADDRESS"));
-        }
-
-        try vm.envAddress("USDN_PROTOCOL_ADDRESS") returns (address usdnProtocol_) {
-            _usdnProtocol = IUsdnProtocol(usdnProtocol_);
-        } catch {
-            _usdnProtocol = IUsdnProtocol(vm.parseAddress(vm.prompt("enter USDN_PROTOCOL_ADDRESS")));
-        }
-
-        try vm.envAddress("FARMING_TOKEN_ADDRESS") returns (address farmingToken_) {
-            _farmingToken = IERC20(farmingToken_);
-        } catch {
-            _farmingToken = IERC20(vm.parseAddress(vm.prompt("enter FARMING_TOKEN_ADDRESS")));
-        }
-
         string memory etherscanApiKey = vm.envOr("ETHERSCAN_API_KEY", string("XXXXXXXXXXXXXXXXX"));
         vm.setEnv("ETHERSCAN_API_KEY", etherscanApiKey);
     }
