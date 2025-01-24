@@ -11,7 +11,7 @@ deployerPrivateKey=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f
 
 # Setup deployment script environment variables
 export DEPLOYER_ADDRESS=$(cast wallet address --private-key "$deployerPrivateKey") #0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-export USDN_PROTOCOL_ADDRESS=0x0000000000000000000000000000000000000000
+export USDN_PROTOCOL_ADDRESS=0x656cB8C6d154Aad29d8771384089be5B5141f01a
 
 # Deploy the farming token
 forge script --non-interactive --private-key "$deployerPrivateKey" -f "$rpcUrl" script/01_DeployFarmingToken.s.sol:DeployFarmingToken --broadcast

@@ -71,7 +71,8 @@ To configure the anvil fork, launch it with at least the following parameters:
 
 - `-f <Mainnet RPC URL>`: Fork mainnet at the latest block height.
 - `--auto-impersonate`: Enable address impersonation, such as the Safe address.
+- `--fork-block-number`: Fork mainnet at a specific block number to be sure the protocol is not imbalanced.
 
 ```bash
-anvil -f [Mainnet RPC] --auto-impersonate
+anvil -f [Mainnet RPC] --auto-impersonate --fork-block-number 21682000
 ```
