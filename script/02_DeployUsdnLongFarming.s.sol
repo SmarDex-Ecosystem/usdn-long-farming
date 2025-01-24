@@ -13,7 +13,7 @@ import { IFarmingRange } from "src/interfaces/IFarmingRange.sol";
 contract DeployUsdnLongFarming is Script {
     IFarmingRange constant FARMING_RANGE = IFarmingRange(0x7d85C0905a6E1Ab5837a0b57cD94A419d3a77523);
     IUsdnProtocol internal USDN_PROTOCOL = IUsdnProtocol(0x656cB8C6d154Aad29d8771384089be5B5141f01a);
-    IERC20 internal FARMING_TOKEN = IERC20(0xCE1bc72A070349cb444743Ec3b2b4d8BF398DAf5);
+    IERC20 internal FARMING_TOKEN;
     address internal _deployerAddress;
 
     function run() external returns (UsdnLongFarming longFarming_) {
@@ -44,6 +44,12 @@ contract DeployUsdnLongFarming is Script {
             _deployerAddress = deployerAddress_;
         } catch {
             _deployerAddress = vm.parseAddress(vm.prompt("enter DEPLOYER_ADDRESS"));
+        }
+
+        try vm.envAddress("FARMING_TOKEN_ADDRESS") returns (address farmingToken_) {
+            FARMING_TOKEN = IERC20(farmingToken_);
+        } catch {
+            FARMING_TOKEN = IERC20(0xCE1bc72A070349cb444743Ec3b2b4d8BF398DAf5);
         }
 
         string memory etherscanApiKey = vm.envOr("ETHERSCAN_API_KEY", string("XXXXXXXXXXXXXXXXX"));
