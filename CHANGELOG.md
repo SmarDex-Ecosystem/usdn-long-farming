@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/SmarDex-Ecosystem/usdn-long-farming/compare/v1.0.0...v1.1.0) (2025-01-24)
+
+
+### Features
+
+* deploy contract on mainnet ([#37](https://github.com/SmarDex-Ecosystem/usdn-long-farming/issues/37)) ([80b1252](https://github.com/SmarDex-Ecosystem/usdn-long-farming/commit/80b1252a1aea22ed002560603444498224b99bb6))
+
+
+### Bug Fixes
+
+* deploy fork script ([#40](https://github.com/SmarDex-Ecosystem/usdn-long-farming/issues/40)) ([c2ed209](https://github.com/SmarDex-Ecosystem/usdn-long-farming/commit/c2ed209e7f32856e91fec605826e217ff011b981))
+
 ## [1.0.0](https://github.com/SmarDex-Ecosystem/usdn-long-farming/compare/v0.2.0...v1.0.0) (2025-01-22)
 
 
