@@ -23,7 +23,6 @@
             just
             lcov
             nodejs_20
-            slither-analyzer
             trufflehog
             typescript
           ];
