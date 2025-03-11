@@ -35,7 +35,7 @@ async function main() {
   const highestTick = await protocol.read.getHighestPopulatedTick();
   console.log('highest tick', highestTick);
   let currentTick = highestTick + 100;
-  while (currentTick <= highestTick + 2000) {
+  while (currentTick <= Math.max(highestTick + 2000, 82000)) {
     let tickVersion = await protocol.read.getTickVersion([currentTick]);
     if (tickVersion === 0n) {
       currentTick += 100;
