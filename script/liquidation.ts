@@ -62,11 +62,13 @@ async function main() {
         }
         return true;
       })
-      .map(([res, i]) => {
-        return [res.result?.[1] as bigint, i] as const;
+      .map(([_, i]) => {
+        return i;
       });
-    for (const [amount, i] of pos) {
-      console.log('position should be slashed', [currentTick, tickVersion, i], formatEther(amount));
+    const farmingContract = getContract({ client, ...farming });
+    for (const i of pos) {
+      const pendingRewards = await farmingContract.read.pendingRewards([currentTick, tickVersion, BigInt(i)]);
+      console.log('position should be slashed', [currentTick, tickVersion, i], formatEther(pendingRewards / 10n));
     }
     currentTick += 100;
   }
