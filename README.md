@@ -65,7 +65,6 @@ The environment provides the following tools:
 
 - load `.env` file as environment variables
 - foundry
-- slither
 - Node 20 / Typescript
 - just
 - TruffleHog
@@ -134,7 +133,3 @@ The pre-commit configuration for Husky runs `forge fmt --check` to check the cod
 
 In order to setup the git pre-commit hook, you need to first install foundry, just and TruffleHog, then run
 `npm install`.
-
-### Slither
-
-Slither is integrated into a GitHub workflow and runs on every push to the master branch.

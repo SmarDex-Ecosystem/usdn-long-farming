@@ -282,7 +282,6 @@ contract UsdnLongFarming is ERC165, ReentrancyGuard, IUsdnLongFarming, Ownable2S
         // farming harvest
         uint256[] memory campaignsIds = new uint256[](1);
         campaignsIds[0] = CAMPAIGN_ID;
-        // slither-disable-next-line reentrancy-no-eth
         REWARDS_PROVIDER.harvest(campaignsIds);
 
         uint256 periodRewards = REWARD_TOKEN.balanceOf(address(this)) - rewardsBalanceBefore;
